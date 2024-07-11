@@ -1,6 +1,5 @@
 plugins {
     application
-    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 repositories {
@@ -8,6 +7,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":javafx"))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -20,13 +20,12 @@ java {
 
 application {
     mainClass = "code.editor.App"
+    mainModule = "code.editor"
+    if (providers.systemProperty("debug").isPresent) {
+        applicationDefaultJvmArgs = applicationDefaultJvmArgs.plus(listOf("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"))
+    }
 }
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-}
-
-javafx {
-    version = "22"
-    modules("javafx.base", "javafx.graphics")
 }

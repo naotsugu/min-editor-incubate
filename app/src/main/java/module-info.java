@@ -1,5 +1,5 @@
 module code.editor {
-    requires javafx.base;
+    requires code.javafx;
     requires javafx.graphics;
     exports code.editor;
 }
