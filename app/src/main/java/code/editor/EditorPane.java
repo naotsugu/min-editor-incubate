@@ -14,6 +14,8 @@ public class EditorPane extends StackPane {
     public EditorPane() {
         canvas = new Canvas(640, 480);
         gc = canvas.getGraphicsContext2D();
+        getChildren().add(canvas);
+        gc.fillText("Hello", 20, 20);
     }
 
 }
