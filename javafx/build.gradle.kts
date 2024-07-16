@@ -127,7 +127,7 @@ extraJavaModuleInfo {
             "javafx.media",
             "javafx.swing",
             "javafx.web",
-            "code.editor")
+            "code.javafx")
         exports("com.sun.javafx.util",
             "javafx.controls",
             "javafx.fxml",
