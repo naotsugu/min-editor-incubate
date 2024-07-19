@@ -23,6 +23,8 @@ val artifact = when {
 dependencies {
     api("org.openjfx:javafx-graphics:22:${artifact}")
     api("org.openjfx:javafx-base:22:${artifact}")
+//    testImplementation(libs.junit.jupiter)
+//    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
@@ -30,11 +32,13 @@ java {
         languageVersion = JavaLanguageVersion.of(22)
     }
 }
+//tasks.named<Test>("test") {
+//    useJUnitPlatform()
+//}
 
 extraJavaModuleInfo {
     module("org.openjfx:javafx-graphics", "javafx.graphics") {
         patchRealModule()
-        closeModule()
         requires("java.desktop")
         requires("java.xml")
         requires("jdk.unsupported")
@@ -80,17 +84,20 @@ extraJavaModuleInfo {
         exports("com.sun.javafx.embed",
             "javafx.swing")
         exports("com.sun.javafx.font",
-            "javafx.web")
+            "javafx.web",
+            "code.javafx")
         exports("com.sun.javafx.geom",
             "javafx.controls",
             "javafx.media",
             "javafx.swing",
-            "javafx.web")
+            "javafx.web",
+            "code.javafx")
         exports("com.sun.javafx.geom.transform",
             "javafx.controls",
             "javafx.media",
             "javafx.swing",
-            "javafx.web")
+            "javafx.web",
+            "code.javafx")
         exports("com.sun.javafx.iio",
             "javafx.web")
         exports("com.sun.javafx.menu",
@@ -109,7 +116,8 @@ extraJavaModuleInfo {
             "javafx.web")
         exports("com.sun.javafx.scene.text",
             "javafx.controls",
-            "javafx.web")
+            "javafx.web",
+            "code.javafx")
         exports("com.sun.javafx.scene.traversal",
             "javafx.controls",
             "javafx.web")

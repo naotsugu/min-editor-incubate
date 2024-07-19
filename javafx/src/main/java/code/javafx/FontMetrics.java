@@ -1,9 +1,17 @@
 package code.javafx;
 
+import com.sun.javafx.font.CharToGlyphMapper;
+import com.sun.javafx.font.FontResource;
+import com.sun.javafx.font.FontStrike;
+import com.sun.javafx.font.PGFont;
+import com.sun.javafx.geom.transform.BaseTransform;
+import com.sun.javafx.scene.text.FontHelper;
 import com.sun.javafx.tk.FontLoader;
 import com.sun.javafx.tk.Toolkit;
 import javafx.scene.text.Font;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FontMetrics {
 
@@ -14,14 +22,28 @@ public class FontMetrics {
     /** The font that was used to construct these metrics. */
     private final Font font;
 
+    private final FontStrike strike;
+    private final FontResource resource;
+    private final CharToGlyphMapper mapper;
+    private final Map<Integer, Float> advanceCache = new ConcurrentHashMap<>();
+
     /**
      * Constructor.
      * @param font the font that was used to construct these metrics
      */
-    private FontMetrics(Font font) {
+    FontMetrics(Font font) {
         this.fontLoader = Toolkit.getToolkit().getFontLoader();
         this.font = Objects.requireNonNull(font);
         this.fontMetrics = fontLoader.getFontMetrics(font);
+
+        var pgFont = (PGFont) FontHelper.getNativeFont(font);
+        this.strike = pgFont.getStrike(BaseTransform.IDENTITY_TRANSFORM, FontResource.AA_GREYSCALE);
+        this.resource = strike.getFontResource();
+        this.mapper  = resource.getGlyphMapper();
+    }
+
+    public static FontMetrics of(Font font) {
+        return new FontMetrics(font);
     }
 
     /**
@@ -107,13 +129,24 @@ public class FontMetrics {
     }
 
     /**
-     * Computes the width of the char when rendered with the font represented
-     * by this FontMetrics instance.
-     * @param ch the char
-     * @return the width of the char
+     * Access to individual character advances are frequently needed for layout
+     * understand that advance may vary for single glyph if ligatures or kerning
+     * are enabled
+     * @param codePoint the code point
+     * @return advance of single char
      */
-    public float getCharWidth(char ch) {
-        return fontLoader.getCharWidth(ch, font);
+    public float getAdvance(int codePoint) {
+        return advanceCache.computeIfAbsent(codePoint,
+                cp -> resource.getAdvance(mapper.charToGlyph(cp), strike.getSize()));
+    }
+
+    /**
+     * Get the total advance.
+     * @param str the string
+     * @return advance of string
+     */
+    public float getAdvance(String str) {
+        return (float) str.codePoints().mapToDouble(this::getAdvance).sum();
     }
 
 }
