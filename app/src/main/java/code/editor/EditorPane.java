@@ -1,6 +1,6 @@
 package code.editor;
 
-import code.javafx.FontMetrics;
+import code.editor.javafx.FontMetrics;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
@@ -18,14 +18,14 @@ public class EditorPane extends StackPane {
         gc = canvas.getGraphicsContext2D();
         getChildren().add(canvas);
 
-        var fm = FontMetrics.of(Font.font("Consolas", 15));
+        var font = Font.font("Consolas", 24);
+        var fm = FontMetrics.of(font);
         double x = 20;
-        double y = 20;
-
+        double y = 50;
+        gc.setFont(fm.getFont());
         for (char ch : "This is a text".toCharArray()) {
             gc.fillText(ch + "", x, y);
-            x += fm.getAdvance(ch);
-
+            x += fm.getAdvance(ch);;
         }
     }
 

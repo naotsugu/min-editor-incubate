@@ -1,4 +1,4 @@
-package code.javafx;
+package code.editor.javafx;
 
 import com.sun.javafx.tk.Toolkit;
 

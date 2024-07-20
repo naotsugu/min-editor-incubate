@@ -1,4 +1,4 @@
-package code.javafx;
+package code.editor.javafx;
 
 import com.sun.javafx.font.CharToGlyphMapper;
 import com.sun.javafx.font.FontResource;
@@ -45,6 +45,7 @@ public class FontMetrics {
     public static FontMetrics of(Font font) {
         return new FontMetrics(font);
     }
+
 
     /**
      * The distance from the baseline to the max character height.

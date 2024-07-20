@@ -3,7 +3,7 @@ plugins {
 }
 
 rootProject.name = "min-editor-incubate"
-include("javafx", "app")
+include("app")
 
 include(":piecetable")
 project(":piecetable").projectDir = file("piecetable/lib")
