@@ -150,4 +150,8 @@ public class FontMetrics {
         return (float) str.codePoints().mapToDouble(this::getAdvance).sum();
     }
 
+    public float getAdvance(char high, char low) {
+        return getAdvance(Character.toCodePoint(high, low));
+    }
+
 }

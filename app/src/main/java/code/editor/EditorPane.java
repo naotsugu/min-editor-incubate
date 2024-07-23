@@ -22,6 +22,7 @@ public class EditorPane extends StackPane {
         var fm = FontMetrics.of(font);
         double x = 20;
         double y = 50;
+
         gc.setFont(fm.getFont());
         for (char ch : "This is a text".toCharArray()) {
             gc.fillText(ch + "", x, y);

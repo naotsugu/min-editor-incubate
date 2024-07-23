@@ -1,7 +1,6 @@
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform;
-
 plugins {
     application
+    id("org.openjfx.javafxplugin") version "0.1.0"
     id("org.gradlex.extra-java-module-info") version "1.8"
 }
 
@@ -9,20 +8,7 @@ repositories {
     mavenCentral()
 }
 
-val os   = DefaultNativePlatform.getCurrentOperatingSystem()
-val arch = DefaultNativePlatform.getCurrentArchitecture()
-val artifact = when {
-    os.isMacOsX  && arch.isArm64 -> "mac-aarch64"
-    os.isMacOsX  && arch.isAmd64 -> "mac"
-    os.isLinux   && arch.isArm64 -> "linux-aarch64"
-    os.isLinux   && arch.isAmd64 -> "linux"
-    os.isWindows && arch.isAmd64 -> "win"
-    else -> throw Error("Unsupported OS: $os, ARCH: $arch")
-}
-
 dependencies {
-    implementation("org.openjfx:javafx-graphics:22:${artifact}")
-    implementation("org.openjfx:javafx-base:22:${artifact}")
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -43,6 +29,11 @@ application {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+
+javafx {
+    version = "22"
+    modules("javafx.controls")
 }
 
 extraJavaModuleInfo {
