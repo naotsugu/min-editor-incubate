@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":piecetable"))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
