@@ -20,14 +20,15 @@ public class RowText {
     }
 
     static RowText of(int row, String string, FontMetrics fm) {
-        CpAttr[] cpAttrs = new CpAttr[string.codePointCount(0, string.length())];
-        int j = 0;
+        CpAttr[] cpAttrs = new CpAttr[string.length()];
         for (int i = 0; i < string.length(); i++) {
             char ch1 = string.charAt(i);
-            char ch2 = Character.isHighSurrogate(ch1)
-                    ? string.charAt(++i)
-                    : (char) 0;
-            cpAttrs[j++] = new CpAttr(true, fm.getAdvance(ch1, ch2));
+            if (Character.isHighSurrogate(ch1)) {
+                cpAttrs[i] = new CpAttr(true, fm.getAdvance(ch1, string.charAt(i + 1)));
+                i++;
+            } else {
+                cpAttrs[i] = new CpAttr(false, fm.getAdvance(ch1, (char) 0));
+            }
         }
         return new RowText(row, string, fm.getLineHeight(), fm.getMaxAscent(), cpAttrs);
     }
@@ -42,6 +43,7 @@ public class RowText {
         int fromIndex = 0;
         int toIndex = 0;
         for (CpAttr cp : cpAttrs) {
+            if (cp == null) continue;
             if (w + cp.advance > width) {
                 ret.add(new LineText(this, fromIndex, toIndex));
                 fromIndex = toIndex;

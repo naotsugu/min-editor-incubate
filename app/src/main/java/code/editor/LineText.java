@@ -1,5 +1,8 @@
 package code.editor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LineText {
     private RowText parent;
     private int fromIndex;
@@ -13,7 +16,11 @@ public class LineText {
 
     float lineHeight() {
         return parent.lineHeight;
-    };
+    }
+
+    public int length() {
+        return toIndex - fromIndex;
+    }
 
     public boolean hasPrevLine() {
         return fromIndex > 0;
@@ -21,6 +28,10 @@ public class LineText {
 
     public boolean hasNext() {
         return parent.string.length() > toIndex;
+    }
+
+    public String text() {
+        return parent.string.substring(fromIndex, toIndex);
     }
 
 }
