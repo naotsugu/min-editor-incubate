@@ -18,7 +18,7 @@ public class ScreenText {
         this.width = width;
         this.height = height;
         this.document = document;
-        this.fm = FontMetrics.of(Font.font("Consolas", 20));
+        this.fm = FontMetrics.of(Font.font("Consolas", 18));
 
         double h = 0;
         System.out.println(document.rows());
@@ -27,12 +27,10 @@ public class ScreenText {
                     .split(wrap ? width : 0)) {
                 lines.add(lineText);
                 h += lineText.lineHeight();
-                if (h >= height) {
-                    break;
-                }
+                if (h >= height) break;
             }
+            if (h >= height) break;
         }
-
     }
 
 }

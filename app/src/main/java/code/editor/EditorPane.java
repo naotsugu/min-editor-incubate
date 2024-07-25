@@ -24,7 +24,7 @@ public class EditorPane extends StackPane {
         getChildren().add(canvas);
 
         gc.setFont(screenText.fm.getFont());
-        double x = 20;
+        double x = 0;
         double y = 20;
         for (LineText lineText : screenText.lines) {
             gc.fillText(lineText.text(), x, y);
