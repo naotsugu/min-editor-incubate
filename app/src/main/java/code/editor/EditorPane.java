@@ -1,9 +1,12 @@
 package code.editor;
 
+import code.editor.javafx.FontMetrics;
 import com.mammb.code.piecetable.Document;
+import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
 import java.nio.file.Path;
 
 public class EditorPane extends StackPane {
@@ -13,23 +16,18 @@ public class EditorPane extends StackPane {
     /** The graphics context. */
     private final GraphicsContext gc;
 
-    private final Document document;
-    private final ScreenText screenText;
-
     public EditorPane() {
         canvas = new Canvas(640, 480);
-        gc = canvas.getGraphicsContext2D();
-        document = Document.of(Path.of("build.gradle.kts"));
-        screenText = new ScreenText(canvas.getWidth(), canvas.getHeight(), document);
         getChildren().add(canvas);
 
-        gc.setFont(screenText.fm.getFont());
-        double x = 0;
-        double y = 20;
-        for (LineText lineText : screenText.lines) {
-            gc.fillText(lineText.text(), x, y);
-            y += lineText.lineHeight();
-        }
+        gc = canvas.getGraphicsContext2D();
+        Document doc = Document.of(Path.of("build.gradle.kts"));
+        FontMetrics fm = FontMetrics.of(Font.font("Consolas", 16));
+        gc.setFont(fm.getFont());
+        gc.setTextBaseline(VPos.TOP);
+
+        ScreenText st = new ScreenText.PlainScreenText(640, 480, doc, fm);
+        st.draw(new Draw.FxDraw(gc));
     }
 
 }
