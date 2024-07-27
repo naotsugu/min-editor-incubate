@@ -2,10 +2,16 @@ package code.editor;
 
 import code.editor.javafx.FontMetrics;
 import com.mammb.code.piecetable.Document;
-import javafx.geometry.VPos;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import java.nio.file.Path;
 
@@ -16,18 +22,32 @@ public class EditorPane extends StackPane {
     /** The graphics context. */
     private final GraphicsContext gc;
 
+
     public EditorPane() {
+
+        setCursor(Cursor.TEXT);
+        setBackground(new Background(new BackgroundFill(
+                Color.web("#292929"),
+                CornerRadii.EMPTY, Insets.EMPTY)));
+
         canvas = new Canvas(640, 480);
         getChildren().add(canvas);
 
         gc = canvas.getGraphicsContext2D();
-        Document doc = Document.of(Path.of("build.gradle.kts"));
-        FontMetrics fm = FontMetrics.of(Font.font("Consolas", 16));
+        var doc = Document.of(Path.of("build.gradle.kts"));
+        var fm = FontMetrics.of(Font.font("Consolas", 16));
         gc.setFont(fm.getFont());
-        gc.setTextBaseline(VPos.TOP);
 
-        ScreenText st = new ScreenText.PlainScreenText(640, 480, doc, fm);
-        st.draw(new Draw.FxDraw(gc));
+        Draw draw = new Draw.FxDraw(gc);
+
+        var st = ScreenText.of(doc, fm);
+
+        layoutBoundsProperty().addListener((ob, o, n) -> {
+            canvas.setWidth(n.getWidth());
+            canvas.setHeight(n.getHeight());
+            st.size(n.getWidth(), n.getHeight());
+            st.draw(draw);
+        });
     }
 
 }
