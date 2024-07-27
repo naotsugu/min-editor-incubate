@@ -8,8 +8,9 @@ import java.util.List;
 public interface ScreenText {
 
     void draw(Draw draw);
-
     void size(double width, double height);
+    void scrollNext(int n);
+    void scrollPrev(int n);
 
 
     static ScreenText of(Document doc, FontMetrics fm) {
@@ -59,6 +60,26 @@ public interface ScreenText {
             }
             this.width = width;
             this.height = height;
+        }
+
+        @Override
+        public void scrollNext(int n) {
+            int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
+            buffer.subList(0, Math.min(n, buffer.size())).clear();
+            for (int i = next; i < (next + n) && i < doc.rows(); i++) {
+                buffer.add(new TextRow(i, doc, fm));
+            }
+        }
+
+        @Override
+        public void scrollPrev(int n) {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            n = Math.max(0, top - n);
+            if (n == 0) return;
+            buffer.subList(buffer.size() - n, buffer.size()).clear();
+            for (int i = 1; i <= n; i++) {
+                buffer.addFirst(new TextRow(top - i, doc, fm));
+            }
         }
     }
 
@@ -130,6 +151,15 @@ public interface ScreenText {
             }
             this.width = width;
             this.height = height;
+        }
+
+        @Override
+        public void scrollNext(int n) {
+        }
+
+        @Override
+        public void scrollPrev(int n) {
+
         }
     }
 
