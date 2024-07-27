@@ -16,8 +16,8 @@ public interface ScreenText {
         return new PlainScreenText(doc, fm);
     }
 
-    static ScreenText wrapOf(double width, double height, Document doc, FontMetrics fm) {
-        return new WrapScreenText(width, height, doc, fm);
+    static ScreenText wrapOf(Document doc, FontMetrics fm) {
+        return new WrapScreenText(doc, fm);
     }
 
     /**
@@ -45,15 +45,16 @@ public interface ScreenText {
 
         @Override
         public void size(double width, double height) {
-            if (width <= 0 || height <=0 ) return;
+            if (width <= 0 || height <= 0) return;
             if (this.height > height) {
                 int fromIndex = (int) (height / fm.getLineHeight()) + 1;
                 if (fromIndex < buffer.size() - 1) {
                     buffer.subList(fromIndex, buffer.size()).clear();
                 }
             } else if (this.height < height) {
+                int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
                 for (int i = buffer.size(); i <= height / fm.getLineHeight() && i < doc.rows(); i++) {
-                    buffer.add(new TextRow(i, doc, fm));
+                    buffer.add(new TextRow(top + i, doc, fm));
                 }
             }
             this.width = width;
@@ -65,32 +66,22 @@ public interface ScreenText {
      * WrapScreenText
      */
     class WrapScreenText implements ScreenText {
-        double width;
-        double height;
-        double wrap;
-        final Document doc;
-        final FontMetrics fm;
+        double width = 0;
+        double height = 0;
+        double wrap = 0;
+        private final Document doc;
+        private final FontMetrics fm;
         List<TextLine> buffer = new ArrayList<>();
         List<TextMap> wrapLayout = new ArrayList<>();
 
-        public WrapScreenText(double width, double height, Document doc, FontMetrics fm) {
-            this.width = width;
-            this.height = height;
-            this.wrap = width - fm.getLineHeight() / 3;
+        public WrapScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
             this.fm = fm;
-            for (int i = 0; i < doc.rows(); i++) {
-                for (TextLine line : new TextRow(i, doc, fm).wrap(wrap)) {
-                    wrapLayout.add(line.map);
-                    if (buffer.size() < height / fm.getLineHeight()) {
-                        buffer.add(line);
-                    }
-                }
-            }
         }
 
         @Override
         public void draw(Draw draw) {
+            draw.clear();
             double y = 0;
             for (TextLine line : buffer) {
                 draw.text(line.text(), 0, y);
@@ -101,10 +92,50 @@ public interface ScreenText {
         @Override
         public void size(double width, double height) {
 
+            if (width <= 0 || height <=0 ||
+                    (this.width == width && this.height == height)) return;
+
+            if (this.width != width) {
+                TextMap top = buffer.isEmpty() ? TextMap.empty : buffer.getFirst().map;
+                this.wrap = width - fm.getLineHeight() / 3;
+                wrapLayout.clear();
+                buffer.clear();
+                for (int i = 0; i < doc.rows(); i++) {
+                    for (TextLine line : new TextRow(i, doc, fm).wrap(wrap)) {
+                        wrapLayout.add(line.map);
+                        if (top.row <= line.map.row) {
+                            if (top.row == line.map.row && top.subLine > line.map.subLine) continue;
+                            if (buffer.size() < height / fm.getLineHeight()) {
+                                buffer.add(line);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (this.height > height) {
+                    int fromIndex = (int) (height / fm.getLineHeight()) + 1;
+                    if (fromIndex < buffer.size() - 1) {
+                        buffer.subList(fromIndex, buffer.size()).clear();
+                    }
+                } else if (this.height < height) {
+                    TextMap bottom = buffer.isEmpty() ? TextMap.empty : buffer.getLast().map;
+                    for (int i = bottom.row; i < doc.rows(); i++) {
+                        List<TextLine> lines = new TextRow(i, doc, fm).wrap(wrap);
+                        for (TextLine line : lines) {
+                            if (bottom.row == line.map.row && bottom.subLine <= line.map.subLine) continue;
+                            buffer.add(line);
+                        }
+                    }
+                }
+            }
+            this.width = width;
+            this.height = height;
         }
     }
 
-    record TextMap(int row, int subLine, int fromIndex, int toIndex) { }
+    record TextMap(int row, int subLine, int fromIndex, int toIndex) {
+        static TextMap empty = new TextMap(0, 0, 0, 0);
+    }
 
     class TextRow {
         int row;
