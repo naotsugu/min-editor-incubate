@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -47,6 +48,17 @@ public class EditorPane extends StackPane {
             canvas.setHeight(n.getHeight());
             st.size(n.getWidth(), n.getHeight());
             st.draw(draw);
+        });
+
+        setOnScroll((ScrollEvent e) -> {
+            if (e.getEventType() == ScrollEvent.SCROLL && e.getDeltaY() != 0) {
+                if (e.getDeltaY() < 0) {
+                    st.scrollNext(1);
+                } else {
+                    st.scrollPrev(1);
+                }
+                st.draw(draw);
+            }
         });
     }
 

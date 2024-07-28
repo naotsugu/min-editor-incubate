@@ -9,8 +9,9 @@ public interface ScreenText {
 
     void draw(Draw draw);
     void size(double width, double height);
-    void scrollNext(int n);
-    void scrollPrev(int n);
+    void scrollNext(int delta);
+    void scrollPrev(int delta);
+    void scrollAt(int n);
 
 
     static ScreenText of(Document doc, FontMetrics fm) {
@@ -48,13 +49,13 @@ public interface ScreenText {
         public void size(double width, double height) {
             if (width <= 0 || height <= 0) return;
             if (this.height > height) {
-                int fromIndex = (int) (height / fm.getLineHeight()) + 1;
+                int fromIndex = (int) Math.ceil(height / fm.getLineHeight()) + 1;
                 if (fromIndex < buffer.size() - 1) {
                     buffer.subList(fromIndex, buffer.size()).clear();
                 }
             } else if (this.height < height) {
                 int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-                for (int i = buffer.size(); i <= height / fm.getLineHeight() && i < doc.rows(); i++) {
+                for (int i = buffer.size(); i <= Math.ceil(height / fm.getLineHeight()) && i < doc.rows(); i++) {
                     buffer.add(new TextRow(top + i, doc, fm));
                 }
             }
@@ -63,24 +64,37 @@ public interface ScreenText {
         }
 
         @Override
-        public void scrollNext(int n) {
+        public void scrollNext(int delta) {
+            if (delta <= 0) return;
             int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
-            buffer.subList(0, Math.min(n, buffer.size())).clear();
-            for (int i = next; i < (next + n) && i < doc.rows(); i++) {
+            buffer.subList(0, Math.min(delta, buffer.size())).clear();
+            for (int i = next; i < (next + delta) && i < doc.rows(); i++) {
                 buffer.add(new TextRow(i, doc, fm));
             }
         }
 
         @Override
-        public void scrollPrev(int n) {
+        public void scrollPrev(int delta) {
+            if (delta <= 0) return;
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            n = Math.max(0, top - n);
-            if (n == 0) return;
-            buffer.subList(buffer.size() - n, buffer.size()).clear();
-            for (int i = 1; i <= n; i++) {
+            delta = Math.min(top, delta);
+            if (delta == 0) return;
+            buffer.subList(buffer.size() - delta, buffer.size()).clear();
+            for (int i = 1; i <= delta; i++) {
                 buffer.addFirst(new TextRow(top - i, doc, fm));
             }
         }
+
+        @Override
+        public void scrollAt(int row) {
+            row = Math.clamp(row, 0, doc.rows() - 1);
+            buffer.clear();
+            for (int i = row; i < doc.rows(); i++) {
+                buffer.add(new TextRow(i, doc, fm));
+                if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) break;
+            }
+        }
+
     }
 
     /**
@@ -90,6 +104,7 @@ public interface ScreenText {
         double width = 0;
         double height = 0;
         double wrap = 0;
+        int topLine = 0;
         private final Document doc;
         private final FontMetrics fm;
         List<TextLine> buffer = new ArrayList<>();
@@ -103,7 +118,7 @@ public interface ScreenText {
         @Override
         public void draw(Draw draw) {
             draw.clear();
-            double y = 0;
+            double y = 5;
             for (TextLine line : buffer) {
                 draw.text(line.text(), 0, y);
                 y += line.lineHeight();
@@ -154,12 +169,28 @@ public interface ScreenText {
         }
 
         @Override
-        public void scrollNext(int n) {
+        public void scrollNext(int delta) {
+            scrollAt(topLine + delta);
         }
 
         @Override
-        public void scrollPrev(int n) {
+        public void scrollPrev(int delta) {
+            scrollAt(topLine - delta);
+        }
 
+        @Override
+        public void scrollAt(int line) {
+            topLine = Math.clamp(line, 0, wrapLayout.size() - 1);
+            buffer.clear();
+            TextMap map = wrapLayout.get(topLine);
+            for (int i = map.row; i < doc.rows(); i++) {
+                List<TextLine> lines = new TextRow(i, doc, fm).wrap(wrap);
+                int start = (i == map.row) ? map.subLine : 0;
+                for (int j = start; j < lines.size(); j++) {
+                    buffer.add(lines.get(j));
+                    if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) break;
+                }
+            }
         }
     }
 
@@ -171,11 +202,13 @@ public interface ScreenText {
         int row;
         String text;
         float[] advances;
+        StyleSpan[] styles;
         float lineHeight;
         public TextRow(int row, Document document, FontMetrics fm) {
             this.row = row;
             this.text = document.getText(row).toString();
             this.advances = advances(text, fm);
+            this.styles = new StyleSpan[text.length()];
             this.lineHeight = fm.getLineHeight();
         }
         private List<TextLine> wrap(double width) {
@@ -212,6 +245,8 @@ public interface ScreenText {
         }
         float lineHeight() { return parent.lineHeight; }
         String text() { return parent.text.substring(map.fromIndex, map.toIndex); }
+        boolean hasNextLine() { return map.toIndex < parent.text.length(); }
+        boolean hasPrevLine() { return map.fromIndex > 0; }
     }
 
     private static float[] advances(String text, FontMetrics fm) {
