@@ -234,6 +234,10 @@ public interface ScreenText {
                     new TextMap(row, wrapped.size(), fromIndex, text.length())));
             return wrapped;
         }
+
+        List<StyledText> styledText() {
+            return null;
+        }
     }
 
     class TextLine {
@@ -247,6 +251,7 @@ public interface ScreenText {
         String text() { return parent.text.substring(map.fromIndex, map.toIndex); }
         boolean hasNextLine() { return map.toIndex < parent.text.length(); }
         boolean hasPrevLine() { return map.fromIndex > 0; }
+        List<StyledText> styledText() { return null; }
     }
 
     private static float[] advances(String text, FontMetrics fm) {
@@ -262,5 +267,18 @@ public interface ScreenText {
         }
         return advances;
     }
+
+    sealed interface Style {}
+    record TextColor(String colorString) implements Style {}
+    record BgColor(String colorString) implements Style {}
+    record Selected() implements Style {}
+    record Emphasize() implements Style {}
+
+    interface StyleSpan {
+        Style style();
+        int length();
+    }
+    record StyleSpanRecord(Style style, int length) implements StyleSpan { }
+    record StyledText(String text, List<Style> styles) { }
 
 }
