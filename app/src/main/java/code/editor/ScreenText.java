@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface ScreenText {
 
@@ -42,7 +43,11 @@ public interface ScreenText {
             draw.clear();
             double y = 5;
             for (TextRow row : buffer) {
-                draw.text(row.text, 5, y);
+                double x = 1;
+                for (StyledText st : row.styledTexts()) {
+                    draw.text(st.text, x, y);
+                    x += st.width;
+                }
                 y += row.lineHeight;
             }
         }
@@ -122,7 +127,11 @@ public interface ScreenText {
             draw.clear();
             double y = 5;
             for (TextLine line : buffer) {
-                draw.text(line.text(), 0, y);
+                double x = 1;
+                for (StyledText st : line.styledTexts()) {
+                    draw.text(st.text, x, y);
+                    x += st.width;
+                }
                 y += line.lineHeight();
             }
         }
@@ -237,8 +246,8 @@ public interface ScreenText {
             return wrapped;
         }
 
-        List<StyledText> styledText() {
-            return null;
+        List<StyledText> styledTexts() {
+            return styles.apply(text, advances);
         }
     }
 
@@ -253,7 +262,7 @@ public interface ScreenText {
         String text() { return parent.text.substring(map.fromIndex, map.toIndex); }
         boolean hasNextLine() { return map.toIndex < parent.text.length(); }
         boolean hasPrevLine() { return map.fromIndex > 0; }
-        List<StyledText> styledText() { return null; }
+        List<StyledText> styledTexts() { return parent.styles.apply(map.fromIndex, map.toIndex, parent.text, parent.advances); }
     }
 
     private static float[] advances(String text, FontMetrics fm) {
@@ -270,6 +279,12 @@ public interface ScreenText {
         return advances;
     }
 
+    private static float width(float[] advances, int from, int to) {
+        float ret = 0;
+        for (int i = from; i < to; i++) ret += advances[i];
+        return ret;
+    }
+
     sealed interface Style {}
     record TextColor(String colorString) implements Style {}
     record BgColor(String colorString) implements Style {}
@@ -277,7 +292,7 @@ public interface ScreenText {
     record Emphasize() implements Style {}
 
     record StyleSpan(Style style, int offset, int length) { }
-    record StyledText(String text, List<Style> styles) { }
+    record StyledText(String text, float width, List<Style> styles) { }
     class Styles {
         private final Set<Integer> bounds = new HashSet<>();
         private final List<StyleSpan> spans = new ArrayList<>();
@@ -286,17 +301,37 @@ public interface ScreenText {
             bounds.add(span.offset + span.length);
             spans.add(span);
         }
-        List<StyledText> apply(String text) {
+        List<StyledText> apply(String text, float[] advances) {
+            return apply(0, text.length(), text, advances);
+        }
+        List<StyledText> apply(int from, int to, String text, float[] advances) {
+            if (bounds.isEmpty()) {
+                return List.of(new StyledText(
+                        text.substring(from, to),
+                        width(advances, from, to),
+                        List.of()));
+            }
+            List<Integer> list = bounds.stream()
+                    .filter(i -> from <= i && i <= to)
+                    .sorted()
+                    .collect(Collectors.toList());
+            if (list.getFirst() != from) {
+                list.addFirst(from);
+            }
+            if (list.getLast() != to) {
+                list.addLast(to);
+            }
             List<StyledText> ret = new ArrayList<>();
-            bounds.add(0);
-            bounds.add(text.length());
-            List<Integer> list = bounds.stream().sorted().toList();
             for (int i = 0; i < list.size() - 1; i++) {
+                int start = list.get(i);
+                int end   = list.get(i + 1);
                 ret.add(new StyledText(
-                        text.substring(list.get(i), list.get(i + 1)),
+                        text.substring(start, end),
+                        width(advances, start, end),
                         stylesOf(list.get(i))));
             }
             return ret;
+
         }
         private List<Style> stylesOf(int index) {
             return spans.stream()
