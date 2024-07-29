@@ -3,7 +3,9 @@ package code.editor;
 import code.editor.javafx.FontMetrics;
 import com.mammb.code.piecetable.Document;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public interface ScreenText {
 
@@ -202,13 +204,13 @@ public interface ScreenText {
         int row;
         String text;
         float[] advances;
-        StyleSpan[] styles;
+        Styles styles;
         float lineHeight;
         public TextRow(int row, Document document, FontMetrics fm) {
             this.row = row;
             this.text = document.getText(row).toString();
             this.advances = advances(text, fm);
-            this.styles = new StyleSpan[text.length()];
+            this.styles = new Styles();
             this.lineHeight = fm.getLineHeight();
         }
         private List<TextLine> wrap(double width) {
@@ -274,11 +276,34 @@ public interface ScreenText {
     record Selected() implements Style {}
     record Emphasize() implements Style {}
 
-    interface StyleSpan {
-        Style style();
-        int length();
-    }
-    record StyleSpanRecord(Style style, int length) implements StyleSpan { }
+    record StyleSpan(Style style, int offset, int length) { }
     record StyledText(String text, List<Style> styles) { }
+    class Styles {
+        private final Set<Integer> bounds = new HashSet<>();
+        private final List<StyleSpan> spans = new ArrayList<>();
+        void put(StyleSpan span) {
+            bounds.add(span.offset);
+            bounds.add(span.offset + span.length);
+            spans.add(span);
+        }
+        List<StyledText> apply(String text) {
+            List<StyledText> ret = new ArrayList<>();
+            bounds.add(0);
+            bounds.add(text.length());
+            List<Integer> list = bounds.stream().sorted().toList();
+            for (int i = 0; i < list.size() - 1; i++) {
+                ret.add(new StyledText(
+                        text.substring(list.get(i), list.get(i + 1)),
+                        stylesOf(list.get(i))));
+            }
+            return ret;
+        }
+        private List<Style> stylesOf(int index) {
+            return spans.stream()
+                    .filter(span -> span.offset <= index && index < (span.offset + span.length))
+                    .map(span -> span.style)
+                    .toList();
+        }
+    }
 
 }
