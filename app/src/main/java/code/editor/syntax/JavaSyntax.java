@@ -35,26 +35,28 @@ public class JavaSyntax implements Syntax {
 
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
-            if (Character.isJavaIdentifierStart(ch)) {
-                int start = i;
-                sb.setLength(0);
-                sb.append(ch);
-                for (int j = start + 1; j < text.length(); j++) {
-                    char n = text.charAt(j);
-                    if (Character.isJavaIdentifierPart(n)) {
-                        sb.append(n);
-                        i++;
-                    } else {
-                        break;
-                    }
-                }
-                if (keywords.match(sb.toString())) {
-                    ret.add(new ScreenText.StyleSpan(
-                            new ScreenText.TextColor("#FF8A65"), start, sb.length()));
-                }
+            if (Character.isAlphabetic(ch)) {
+                i = match(keywords, text, i, ret, "#FF8A65");
             }
         }
         return ret;
+    }
+
+    static int match(Trie keywords, String text, int offset, List<ScreenText.StyleSpan> spans, String colorString) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = offset; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (Character.isJavaIdentifierPart(ch)) {
+                sb.append(ch);
+            } else {
+                break;
+            }
+        }
+        if (!sb.isEmpty() && keywords.match(sb.toString())) {
+            spans.add(new ScreenText.StyleSpan(
+                    new ScreenText.TextColor(colorString), offset, sb.length()));
+        }
+        return offset + sb.length();
     }
 
 }

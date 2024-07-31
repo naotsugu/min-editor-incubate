@@ -74,7 +74,14 @@ public interface ScreenText {
 
         @Override
         public void scrollNext(int delta) {
-            if (delta <= 0) return;
+            assert delta > 0;
+
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            int maxTop = (int) (doc.rows() - Math.ceil(height / fm.getLineHeight()) * 0.6);
+            if (top + delta >= maxTop) {
+                delta = maxTop - top;
+            }
+
             int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
             buffer.subList(0, Math.min(delta, buffer.size())).clear();
             for (int i = next; i < (next + delta) && i < doc.rows(); i++) {
@@ -84,11 +91,13 @@ public interface ScreenText {
 
         @Override
         public void scrollPrev(int delta) {
-            if (delta <= 0) return;
+            assert delta > 0;
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            delta = Math.min(top, delta);
+            delta = Math.clamp(delta, 0, top);
             if (delta == 0) return;
-            buffer.subList(buffer.size() - delta, buffer.size()).clear();
+            if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) {
+                buffer.subList(buffer.size() - delta, buffer.size()).clear();
+            }
             for (int i = 1; i <= delta; i++) {
                 buffer.addFirst(createRow(top - i));
             }
@@ -189,6 +198,10 @@ public interface ScreenText {
 
         @Override
         public void scrollNext(int delta) {
+            int maxTop = (int) (wrapLayout.size() - Math.ceil(height / fm.getLineHeight()) * 0.6);
+            if (topLine + delta >= maxTop) {
+                delta = maxTop - topLine;
+            }
             scrollAt(topLine + delta);
         }
 
