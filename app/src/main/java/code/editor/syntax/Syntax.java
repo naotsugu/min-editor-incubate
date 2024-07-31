@@ -22,6 +22,24 @@ public interface Syntax {
         };
     }
 
+    static int read(Trie keywords, String colorString, String text, int offset, List<ScreenText.StyleSpan> spans) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = offset; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (Character.isJavaIdentifierPart(ch)) {
+                sb.append(ch);
+            } else {
+                break;
+            }
+        }
+        if (!sb.isEmpty() && keywords.match(sb.toString())) {
+            spans.add(new ScreenText.StyleSpan(
+                    new ScreenText.TextColor(colorString), offset, sb.length()));
+        }
+        return offset + sb.length();
+    }
+
+
     interface Lexer {
 
     }

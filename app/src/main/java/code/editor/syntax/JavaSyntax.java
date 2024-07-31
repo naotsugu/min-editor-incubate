@@ -1,7 +1,6 @@
 package code.editor.syntax;
 
 import code.editor.ScreenText;
-import code.editor.Trie;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,33 +29,16 @@ public class JavaSyntax implements Syntax {
             return Collections.emptyList();
         }
 
-        List<ScreenText.StyleSpan> ret = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
+        List<ScreenText.StyleSpan> spans = new ArrayList<>();
 
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
-            if (Character.isAlphabetic(ch)) {
-                i = match(keywords, text, i, ret, "#FF8A65");
+            if (ch == '"') {
+
+            } else if (Character.isAlphabetic(ch)) {
+                i = Syntax.read(keywords, "#FF8A65", text, i, spans);
             }
         }
-        return ret;
+        return spans;
     }
-
-    static int match(Trie keywords, String text, int offset, List<ScreenText.StyleSpan> spans, String colorString) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = offset; i < text.length(); i++) {
-            char ch = text.charAt(i);
-            if (Character.isJavaIdentifierPart(ch)) {
-                sb.append(ch);
-            } else {
-                break;
-            }
-        }
-        if (!sb.isEmpty() && keywords.match(sb.toString())) {
-            spans.add(new ScreenText.StyleSpan(
-                    new ScreenText.TextColor(colorString), offset, sb.length()));
-        }
-        return offset + sb.length();
-    }
-
 }

@@ -1,4 +1,4 @@
-package code.editor;
+package code.editor.syntax;
 
 import java.util.HashMap;
 import java.util.List;
