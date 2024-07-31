@@ -39,6 +39,19 @@ public interface Syntax {
         return offset + sb.length();
     }
 
+    static int read(char to, char esc, String colorString, String text, int offset, List<ScreenText.StyleSpan> spans) {
+        for (int i = offset + 1; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch == esc) continue;
+            if (ch == to) {
+                spans.add(new ScreenText.StyleSpan(
+                        new ScreenText.TextColor(colorString), offset, i - offset + 1));
+                return i;
+            }
+        }
+        return offset;
+    }
+
 
     interface Lexer {
 

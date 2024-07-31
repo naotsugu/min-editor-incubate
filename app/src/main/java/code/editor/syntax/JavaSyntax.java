@@ -34,11 +34,12 @@ public class JavaSyntax implements Syntax {
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
             if (ch == '"') {
-
+                i = Syntax.read('"', '\\', "#A5D6A7", text, i, spans);
             } else if (Character.isAlphabetic(ch)) {
                 i = Syntax.read(keywords, "#FF8A65", text, i, spans);
             }
         }
         return spans;
     }
+
 }
