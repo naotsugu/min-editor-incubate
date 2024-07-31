@@ -45,7 +45,7 @@ public interface ScreenText {
             for (TextRow row : buffer) {
                 double x = 1;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text, x, y);
+                    draw.text(st.text, x, y, st.styles);
                     x += st.width;
                 }
                 y += row.lineHeight;
@@ -63,7 +63,7 @@ public interface ScreenText {
             } else if (this.height < height) {
                 int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
                 for (int i = buffer.size(); i <= Math.ceil(height / fm.getLineHeight()) && i < doc.rows(); i++) {
-                    buffer.add(new TextRow(top + i, doc, fm));
+                    buffer.add(createRow(top + i));
                 }
             }
             this.width = width;
@@ -76,7 +76,7 @@ public interface ScreenText {
             int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
             buffer.subList(0, Math.min(delta, buffer.size())).clear();
             for (int i = next; i < (next + delta) && i < doc.rows(); i++) {
-                buffer.add(new TextRow(i, doc, fm));
+                buffer.add(createRow(i));
             }
         }
 
@@ -88,7 +88,7 @@ public interface ScreenText {
             if (delta == 0) return;
             buffer.subList(buffer.size() - delta, buffer.size()).clear();
             for (int i = 1; i <= delta; i++) {
-                buffer.addFirst(new TextRow(top - i, doc, fm));
+                buffer.addFirst(createRow(top - i));
             }
         }
 
@@ -97,9 +97,16 @@ public interface ScreenText {
             row = Math.clamp(row, 0, doc.rows() - 1);
             buffer.clear();
             for (int i = row; i < doc.rows(); i++) {
-                buffer.add(new TextRow(i, doc, fm));
+                buffer.add(createRow(i));
                 if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) break;
             }
+        }
+
+        private TextRow createRow(int i) {
+            var row = new TextRow(i, doc.getText(i).toString(), fm);
+            int n = row.text.indexOf("java");
+            if (n > 0) row.styles.put(new StyleSpan(new TextColor("#EF9A9A"), n, 4));
+            return row;
         }
 
     }
@@ -148,7 +155,7 @@ public interface ScreenText {
                 wrapLayout.clear();
                 buffer.clear();
                 for (int i = 0; i < doc.rows(); i++) {
-                    for (TextLine line : new TextRow(i, doc, fm).wrap(wrap)) {
+                    for (TextLine line : new TextRow(i, doc.getText(i).toString(), fm).wrap(wrap)) {
                         wrapLayout.add(line.map);
                         if (top.row <= line.map.row) {
                             if (top.row == line.map.row && top.subLine > line.map.subLine) continue;
@@ -167,7 +174,7 @@ public interface ScreenText {
                 } else if (this.height < height) {
                     TextMap bottom = buffer.isEmpty() ? TextMap.empty : buffer.getLast().map;
                     for (int i = bottom.row; i < doc.rows(); i++) {
-                        List<TextLine> lines = new TextRow(i, doc, fm).wrap(wrap);
+                        List<TextLine> lines = new TextRow(i, doc.getText(i).toString(), fm).wrap(wrap);
                         for (TextLine line : lines) {
                             if (bottom.row == line.map.row && bottom.subLine <= line.map.subLine) continue;
                             buffer.add(line);
@@ -195,7 +202,7 @@ public interface ScreenText {
             buffer.clear();
             TextMap map = wrapLayout.get(topLine);
             for (int i = map.row; i < doc.rows(); i++) {
-                List<TextLine> lines = new TextRow(i, doc, fm).wrap(wrap);
+                List<TextLine> lines = new TextRow(i, doc.getText(i).toString(), fm).wrap(wrap);
                 int start = (i == map.row) ? map.subLine : 0;
                 for (int j = start; j < lines.size(); j++) {
                     buffer.add(lines.get(j));
@@ -215,9 +222,9 @@ public interface ScreenText {
         float[] advances;
         Styles styles;
         float lineHeight;
-        public TextRow(int row, Document document, FontMetrics fm) {
+        public TextRow(int row, String text, FontMetrics fm) {
             this.row = row;
-            this.text = document.getText(row).toString();
+            this.text = text;
             this.advances = advances(text, fm);
             this.styles = new Styles();
             this.lineHeight = fm.getLineHeight();
@@ -305,6 +312,7 @@ public interface ScreenText {
             return apply(0, text.length(), text, advances);
         }
         List<StyledText> apply(int from, int to, String text, float[] advances) {
+            assert text.length() == advances.length;
             if (bounds.isEmpty()) {
                 return List.of(new StyledText(
                         text.substring(from, to),

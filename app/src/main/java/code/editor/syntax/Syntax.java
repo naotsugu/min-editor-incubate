@@ -1,12 +1,10 @@
-package code.editor;
+package code.editor.syntax;
 
 public interface Syntax {
 
     interface Lexer {
 
     }
-
-
 
     class LexerSource {
         private CharSequence text;
