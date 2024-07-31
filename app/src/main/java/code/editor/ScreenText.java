@@ -1,6 +1,7 @@
 package code.editor;
 
 import code.editor.javafx.FontMetrics;
+import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ public interface ScreenText {
         double height = 0;
         final Document doc;
         final FontMetrics fm;
+        Syntax syntax = Syntax.of("java");
         List<TextRow> buffer = new ArrayList<>();
         public PlainScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
@@ -104,8 +106,7 @@ public interface ScreenText {
 
         private TextRow createRow(int i) {
             var row = new TextRow(i, doc.getText(i).toString(), fm);
-            int n = row.text.indexOf("java");
-            if (n > 0) row.styles.put(new StyleSpan(new TextColor("#EF9A9A"), n, 4));
+            row.styles.putAll(syntax.apply(row.text));
             return row;
         }
 
@@ -303,6 +304,9 @@ public interface ScreenText {
     class Styles {
         private final Set<Integer> bounds = new HashSet<>();
         private final List<StyleSpan> spans = new ArrayList<>();
+        void putAll(List<StyleSpan> spans) {
+            spans.forEach(this::put);
+        }
         void put(StyleSpan span) {
             bounds.add(span.offset);
             bounds.add(span.offset + span.length);

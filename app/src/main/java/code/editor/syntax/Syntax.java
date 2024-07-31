@@ -1,6 +1,26 @@
 package code.editor.syntax;
 
+import code.editor.ScreenText;
+import java.util.List;
+
 public interface Syntax {
+
+    List<ScreenText.StyleSpan> apply(String text);
+    String name();
+
+    static Syntax of(String name) {
+        return switch (name) {
+            case "java" -> new JavaSyntax();
+            default -> new Syntax() {
+                @Override public List<ScreenText.StyleSpan> apply(String text) {
+                    return List.of();
+                }
+                @Override public String name() {
+                    return name;
+                }
+            };
+        };
+    }
 
     interface Lexer {
 
