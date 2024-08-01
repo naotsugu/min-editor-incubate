@@ -2,7 +2,6 @@ package code.editor;
 
 import code.editor.javafx.FontMetrics;
 import com.mammb.code.piecetable.Document;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;

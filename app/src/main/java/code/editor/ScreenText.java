@@ -36,10 +36,14 @@ public interface ScreenText {
         final FontMetrics fm;
         Syntax syntax = Syntax.of("java");
         List<TextRow> buffer = new ArrayList<>();
+        List<Caret> carets = new ArrayList<>();
+
         public PlainScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
             this.fm = fm;
+            carets.add(new Caret());
         }
+
         @Override
         public void draw(Draw draw) {
             draw.clear();
@@ -51,6 +55,12 @@ public interface ScreenText {
                     x += st.width;
                 }
                 y += row.lineHeight;
+            }
+            for (Caret caret : carets) {
+                if (buffer.getFirst().row <= caret.row &&
+                        caret.row <= buffer.getLast().row) {
+
+                }
             }
         }
 
@@ -119,6 +129,33 @@ public interface ScreenText {
             return row;
         }
 
+        private int yToRow(double y) {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            return Math.min(doc.rows(), top + (int) Math.ceil(y / fm.getLineHeight()));
+        }
+
+        private double rowToY(int row) {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            return (row - top) * fm.getLineHeight();
+        }
+
+        private double colToX(int row, int col) {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            int line = (row - top);
+            if (0 <= line && line < buffer.size()) {
+                float[] advances = buffer.get(line).advances;
+                double x = 0;
+                for (int i = 0; i < advances.length && i < col; i++) {
+                    x += advances[i];
+                }
+                return x;
+            }
+            return 0;
+        }
+
+        private double xToCol(int row, double x) {
+            return 0;
+        }
     }
 
     /**
@@ -133,7 +170,6 @@ public interface ScreenText {
         private final FontMetrics fm;
         List<TextLine> buffer = new ArrayList<>();
         List<TextMap> wrapLayout = new ArrayList<>();
-
         public WrapScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
             this.fm = fm;
@@ -304,6 +340,18 @@ public interface ScreenText {
         float ret = 0;
         for (int i = from; i < to; i++) ret += advances[i];
         return ret;
+    }
+
+    class Caret {
+        int row;
+        int col;
+        public Caret(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+        public Caret() {
+            this(0, 0);
+        }
     }
 
     sealed interface Style {}

@@ -15,22 +15,27 @@ public interface Draw {
     void text(String text, double x, double y);
     void text(String text, double x, double y, List<ScreenText.Style> styles);
     void clear();
+    void caret(double x, double y, double height);
 
     class FxDraw implements Draw {
         final GraphicsContext gc;
         Color fgColor = Color.web("#C9D7E6");
         Color bgColor = Color.web("#292929");
+        Color caretColor = Color.web("#FFE0B2");
+
         Map<String, Color> colorMap = new HashMap<>();
         public FxDraw(GraphicsContext gc) {
             this.gc = gc;
             gc.setTextBaseline(VPos.TOP);
             gc.setLineCap(StrokeLineCap.BUTT);
         }
+        @Override
         public void text(String text, double x, double y) {
             gc.setStroke(fgColor);
             gc.setFill(fgColor);
             gc.fillText(text, x, y);
         }
+        @Override
         public void text(String text, double x, double y, List<ScreenText.Style> styles) {
             Optional<String> colorString = styles.stream().filter(ScreenText.TextColor.class::isInstance)
                     .map(ScreenText.TextColor.class::cast)
@@ -46,6 +51,13 @@ public interface Draw {
         public void clear() {
             Canvas canvas = gc.getCanvas();
             gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        }
+        @Override
+        public void caret(double x, double y, double height) {
+            gc.setLineDashes(0);
+            gc.setStroke(caretColor);
+            gc.setLineWidth(2);
+            gc.strokeLine(x, y + 1, x, y + height - 1);
         }
 
     }
