@@ -56,8 +56,8 @@ public interface Draw {
         public void caret(double x, double y, double height) {
             gc.setLineDashes(0);
             gc.setStroke(caretColor);
-            gc.setLineWidth(2);
-            gc.strokeLine(x, y + 1, x, y + height - 1);
+            gc.setLineWidth(1.5);
+            gc.strokeLine(x - 2, y + 1, x - 2, y + height - 1);
         }
 
     }

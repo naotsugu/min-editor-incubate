@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 public interface ScreenText {
 
+    int MARGIN_TOP = 5;
+    int MARGIN_LEFT = 2;
+
     void draw(Draw draw);
     void size(double width, double height);
     void scrollNext(int delta);
@@ -37,6 +40,7 @@ public interface ScreenText {
         Syntax syntax = Syntax.of("java");
         List<TextRow> buffer = new ArrayList<>();
         List<Caret> carets = new ArrayList<>();
+        int screenLines = 0;
 
         public PlainScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
@@ -47,9 +51,9 @@ public interface ScreenText {
         @Override
         public void draw(Draw draw) {
             draw.clear();
-            double y = 5;
+            double y = MARGIN_TOP;
             for (TextRow row : buffer) {
-                double x = 1;
+                double x = MARGIN_LEFT;
                 for (StyledText st : row.styledTexts()) {
                     draw.text(st.text, x, y, st.styles);
                     x += st.width;
@@ -57,9 +61,10 @@ public interface ScreenText {
                 y += row.lineHeight;
             }
             for (Caret caret : carets) {
-                if (buffer.getFirst().row <= caret.row &&
+                if (!buffer.isEmpty() &&
+                        buffer.getFirst().row <= caret.row &&
                         caret.row <= buffer.getLast().row) {
-
+                    draw.caret(rowToY(caret.row), colToX(caret.row, caret.col), fm.getLineHeight());
                 }
             }
         }
@@ -67,19 +72,23 @@ public interface ScreenText {
         @Override
         public void size(double width, double height) {
             if (width <= 0 || height <= 0) return;
+            int newScreenLines = screenLines(height);
             if (this.height > height) {
-                int fromIndex = (int) Math.ceil(height / fm.getLineHeight()) + 1;
+                // shrink height
+                int fromIndex = newScreenLines + 1;
                 if (fromIndex < buffer.size() - 1) {
                     buffer.subList(fromIndex, buffer.size()).clear();
                 }
             } else if (this.height < height) {
+                // grow height
                 int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-                for (int i = buffer.size(); i <= Math.ceil(height / fm.getLineHeight()) && i < doc.rows(); i++) {
+                for (int i = buffer.size(); i <= newScreenLines && i < doc.rows(); i++) {
                     buffer.add(createRow(top + i));
                 }
             }
             this.width = width;
             this.height = height;
+            this.screenLines = newScreenLines;
         }
 
         @Override
@@ -87,7 +96,7 @@ public interface ScreenText {
             assert delta > 0;
 
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            int maxTop = (int) (doc.rows() - Math.ceil(height / fm.getLineHeight()) * 0.6);
+            int maxTop = (int) (doc.rows() - screenLines * 0.6);
             if (top + delta >= maxTop) {
                 delta = maxTop - top;
             }
@@ -105,7 +114,7 @@ public interface ScreenText {
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
             delta = Math.clamp(delta, 0, top);
             if (delta == 0) return;
-            if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) {
+            if (buffer.size() >= screenLines) {
                 buffer.subList(buffer.size() - delta, buffer.size()).clear();
             }
             for (int i = 1; i <= delta; i++) {
@@ -119,7 +128,7 @@ public interface ScreenText {
             buffer.clear();
             for (int i = row; i < doc.rows(); i++) {
                 buffer.add(createRow(i));
-                if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) break;
+                if (buffer.size() >= screenLines) break;
             }
         }
 
@@ -130,13 +139,14 @@ public interface ScreenText {
         }
 
         private int yToRow(double y) {
+            y = Math.max(0, y - MARGIN_TOP);
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            return Math.min(doc.rows(), top + (int) Math.ceil(y / fm.getLineHeight()));
+            return Math.min(doc.rows(), top + screenLines(y)) + MARGIN_TOP;
         }
 
         private double rowToY(int row) {
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            return (row - top) * fm.getLineHeight();
+            return (row - top) * fm.getLineHeight() + MARGIN_TOP;
         }
 
         private double colToX(int row, int col) {
@@ -144,18 +154,36 @@ public interface ScreenText {
             int line = (row - top);
             if (0 <= line && line < buffer.size()) {
                 float[] advances = buffer.get(line).advances;
-                double x = 0;
+                double x = MARGIN_LEFT;
                 for (int i = 0; i < advances.length && i < col; i++) {
                     x += advances[i];
                 }
                 return x;
             }
-            return 0;
+            return MARGIN_LEFT;
         }
 
         private double xToCol(int row, double x) {
+            if (x <= MARGIN_LEFT) return MARGIN_LEFT;
+            x = Math.max(0, x - MARGIN_LEFT);
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            int line = (row - top);
+            if (0 <= line && line < buffer.size()) {
+                float[] advances = buffer.get(line).advances;
+                for (int i = 0; i < advances.length; i++) {
+                    x -= advances[i];
+                    if (x <= 0) {
+                        return i;
+                    }
+                }
+                return advances.length;
+            }
             return 0;
         }
+        private int screenLines(double h) {
+            return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
+        }
+
     }
 
     /**
@@ -170,6 +198,7 @@ public interface ScreenText {
         private final FontMetrics fm;
         List<TextLine> buffer = new ArrayList<>();
         List<TextMap> wrapLayout = new ArrayList<>();
+        int screenLines = 0;
         public WrapScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
             this.fm = fm;
@@ -178,9 +207,9 @@ public interface ScreenText {
         @Override
         public void draw(Draw draw) {
             draw.clear();
-            double y = 5;
+            double y = MARGIN_TOP;
             for (TextLine line : buffer) {
-                double x = 1;
+                double x = MARGIN_LEFT;
                 for (StyledText st : line.styledTexts()) {
                     draw.text(st.text, x, y);
                     x += st.width;
@@ -197,7 +226,7 @@ public interface ScreenText {
 
             if (this.width != width) {
                 TextMap top = buffer.isEmpty() ? TextMap.empty : buffer.getFirst().map;
-                this.wrap = width - fm.getLineHeight() / 3;
+                this.wrap = width - MARGIN_LEFT - fm.getLineHeight() / 3;
                 wrapLayout.clear();
                 buffer.clear();
                 for (int i = 0; i < doc.rows(); i++) {
@@ -230,11 +259,12 @@ public interface ScreenText {
             }
             this.width = width;
             this.height = height;
+            this.screenLines = screenLines(height);
         }
 
         @Override
         public void scrollNext(int delta) {
-            int maxTop = (int) (wrapLayout.size() - Math.ceil(height / fm.getLineHeight()) * 0.6);
+            int maxTop = (int) (wrapLayout.size() - screenLines * 0.6);
             if (topLine + delta >= maxTop) {
                 delta = maxTop - topLine;
             }
@@ -256,9 +286,13 @@ public interface ScreenText {
                 int start = (i == map.row) ? map.subLine : 0;
                 for (int j = start; j < lines.size(); j++) {
                     buffer.add(lines.get(j));
-                    if (buffer.size() >= Math.ceil(height / fm.getLineHeight())) break;
+                    if (buffer.size() >= screenLines) break;
                 }
             }
+        }
+
+        private int screenLines(double h) {
+            return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
         }
     }
 
