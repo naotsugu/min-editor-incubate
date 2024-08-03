@@ -6,6 +6,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -22,6 +23,7 @@ public class EditorPane extends StackPane {
     /** The graphics context. */
     private final GraphicsContext gc;
 
+    private final Draw draw;
 
     public EditorPane() {
 
@@ -31,6 +33,7 @@ public class EditorPane extends StackPane {
                 CornerRadii.EMPTY, Insets.EMPTY)));
 
         canvas = new Canvas(640, 480);
+        canvas.setFocusTraversable(true);
         getChildren().add(canvas);
 
         gc = canvas.getGraphicsContext2D();
@@ -38,7 +41,7 @@ public class EditorPane extends StackPane {
         var fm = FontMetrics.of(Font.font("Consolas", 16));
         gc.setFont(fm.getFont());
 
-        Draw draw = new Draw.FxDraw(gc);
+        draw = new Draw.FxDraw(gc);
 
         var st = ScreenText.of(doc, fm);
 
@@ -59,6 +62,18 @@ public class EditorPane extends StackPane {
                 st.draw(draw);
             }
         });
+
+        setOnKeyPressed((KeyEvent e) -> {
+            execute(st, Action.of(e));
+        });
+
     }
 
+    private Action execute(ScreenText st, Action action) {
+        switch (action.type()) {
+            case CARET_RIGHT -> { st.moveCaretRight(); st.draw(draw); }
+            case CARET_LEFT  -> { st.moveCaretLeft(); st.draw(draw); }
+        }
+        return action;
+    }
 }

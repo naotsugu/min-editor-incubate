@@ -13,13 +13,15 @@ public interface ScreenText {
 
     int MARGIN_TOP = 5;
     int MARGIN_LEFT = 2;
+    int TAB_SIZE = 4;
 
     void draw(Draw draw);
     void size(double width, double height);
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int n);
-
+    void moveCaretRight();
+    void moveCaretLeft();
 
     static ScreenText of(Document doc, FontMetrics fm) {
         return new PlainScreenText(doc, fm);
@@ -64,7 +66,7 @@ public interface ScreenText {
                 if (!buffer.isEmpty() &&
                         buffer.getFirst().row <= caret.row &&
                         caret.row <= buffer.getLast().row) {
-                    draw.caret(rowToY(caret.row), colToX(caret.row, caret.col), fm.getLineHeight());
+                    draw.caret(colToX(caret.row, caret.col), rowToY(caret.row), fm.getLineHeight());
                 }
             }
         }
@@ -129,6 +131,32 @@ public interface ScreenText {
             for (int i = row; i < doc.rows(); i++) {
                 buffer.add(createRow(i));
                 if (buffer.size() >= screenLines) break;
+            }
+        }
+
+        @Override
+        public void moveCaretRight() {
+            for (Caret caret : carets) {
+                TextRow textRow = buffer.get(caret.row);
+                caret.col += textRow.isHighSurrogate(caret.col) ? 2 : 1;
+                if (caret.col > textRow.realLength()) {
+                    caret.col = 0;
+                    caret.row = Math.min(caret.row + 1, doc.rows());
+                }
+            }
+        }
+
+        @Override
+        public void moveCaretLeft() {
+            for (Caret caret : carets) {
+                if (caret.isZero()) continue;
+                TextRow textRow = buffer.get(caret.row);
+                if (caret.col == 0) {
+                    caret.row = Math.max(0, caret.row - 1);
+                    caret.col = buffer.get(caret.row).realLength();
+                } else {
+                    caret.col -= textRow.isLowSurrogate(caret.col - 1) ? 2 : 1;
+                }
             }
         }
 
@@ -291,6 +319,16 @@ public interface ScreenText {
             }
         }
 
+        @Override
+        public void moveCaretRight() {
+
+        }
+
+        @Override
+        public void moveCaretLeft() {
+
+        }
+
         private int screenLines(double h) {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
         }
@@ -340,6 +378,19 @@ public interface ScreenText {
         List<StyledText> styledTexts() {
             return styles.apply(text, advances);
         }
+        boolean isSurrogate(int index) { return Character.isSurrogate(text.charAt(index)); }
+        boolean isHighSurrogate(int index) { return Character.isHighSurrogate(text.charAt(index)); }
+        boolean isLowSurrogate(int index) { return Character.isLowSurrogate(text.charAt(index)); }
+        int length() { return text.length(); }
+        int realLength() {
+            if (text.length() >= 2 && text.charAt(text.length() - 2) == '\r' && text.charAt(text.length() - 1) == '\n') {
+                return text.length() - 2;
+            }
+            if (!text.isEmpty() && text.charAt(text.length() - 1) == '\n') {
+                return text.length() - 1;
+            }
+            return text.length();
+        }
     }
 
     class TextLine {
@@ -363,6 +414,10 @@ public interface ScreenText {
             if (Character.isHighSurrogate(ch1)) {
                 advances[i] = fm.getAdvance(ch1, text.charAt(i + 1));
                 i++;
+            } else if (Character.isISOControl(ch1)) {
+                i++;
+            } else if (ch1 == '\t') {
+                advances[i] = fm.getAdvance(" ".repeat(TAB_SIZE));
             } else {
                 advances[i] = fm.getAdvance(ch1, (char) 0);
             }
@@ -386,6 +441,7 @@ public interface ScreenText {
         public Caret() {
             this(0, 0);
         }
+        public boolean isZero() { return row == 0 && col == 0; }
     }
 
     sealed interface Style {}

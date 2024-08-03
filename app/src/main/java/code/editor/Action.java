@@ -2,10 +2,7 @@ package code.editor;
 
 import javafx.scene.input.KeyEvent;
 
-import static javafx.scene.input.KeyCode.DOWN;
-import static javafx.scene.input.KeyCode.LEFT;
-import static javafx.scene.input.KeyCode.RIGHT;
-import static javafx.scene.input.KeyCode.UP;
+import static javafx.scene.input.KeyCode.*;
 
 public interface Action {
 
@@ -21,6 +18,10 @@ public interface Action {
 
     static Action of(Action.Type type) {
         return new ActionRecord(type, "", System.currentTimeMillis());
+    }
+
+    static Action of(Action.Type type, String attr) {
+        return new ActionRecord(type, attr, System.currentTimeMillis());
     }
 
     /**
