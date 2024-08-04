@@ -1,6 +1,7 @@
 package code.editor;
 
 import code.editor.javafx.FontMetrics;
+import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -43,7 +44,7 @@ public class EditorPane extends StackPane {
 
         draw = new Draw.FxDraw(gc);
 
-        var st = ScreenText.of(doc, fm);
+        var st = ScreenText.wrapOf(doc, fm, Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
