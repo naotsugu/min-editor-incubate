@@ -4,6 +4,7 @@ import code.editor.javafx.FontMetrics;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,7 +75,7 @@ public interface ScreenText {
         @Override
         public void size(double width, double height) {
             if (width <= 0 || height <= 0) return;
-            int newScreenLines = screenLines(height);
+            int newScreenLines = screenLineSize(height);
             if (this.height > height) {
                 // shrink height
                 int fromIndex = newScreenLines + 1;
@@ -137,9 +138,9 @@ public interface ScreenText {
         @Override
         public void moveCaretRight() {
             for (Caret caret : carets) {
-                TextRow textRow = buffer.get(caret.row);
-                caret.col += textRow.isHighSurrogate(caret.col) ? 2 : 1;
-                if (caret.col > textRow.realLength()) {
+                TextRow row = textRowAt(caret.row);
+                caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
+                if (caret.col > row.textLength()) {
                     caret.col = 0;
                     caret.row = Math.min(caret.row + 1, doc.rows());
                 }
@@ -150,12 +151,12 @@ public interface ScreenText {
         public void moveCaretLeft() {
             for (Caret caret : carets) {
                 if (caret.isZero()) continue;
-                TextRow textRow = buffer.get(caret.row);
-                if (caret.col == 0) {
-                    caret.row = Math.max(0, caret.row - 1);
-                    caret.col = buffer.get(caret.row).realLength();
-                } else {
+                TextRow textRow = textRowAt(caret.row);
+                if (caret.col > 0) {
                     caret.col -= textRow.isLowSurrogate(caret.col - 1) ? 2 : 1;
+                } else {
+                    caret.row = Math.max(0, caret.row - 1);
+                    caret.col = buffer.get(caret.row).textLength();
                 }
             }
         }
@@ -169,7 +170,7 @@ public interface ScreenText {
         private int yToRow(double y) {
             y = Math.max(0, y - MARGIN_TOP);
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            return Math.min(doc.rows(), top + screenLines(y)) + MARGIN_TOP;
+            return Math.min(doc.rows(), top + screenLineSize(y)) + MARGIN_TOP;
         }
 
         private double rowToY(int row) {
@@ -208,8 +209,21 @@ public interface ScreenText {
             }
             return 0;
         }
-        private int screenLines(double h) {
+        private int screenLineSize(double h) {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
+        }
+
+        private TextRow textRowAt(int row) {
+            if (!buffer.isEmpty()) {
+                return createRow(row);
+            }
+            var top = buffer.getFirst();
+            if (top.row == row) return top;
+            if (top.row <= row && row < top.row + buffer.size()) {
+                return buffer.get(row - top.row);
+            } else {
+                return createRow(row);
+            }
         }
 
     }
@@ -226,10 +240,12 @@ public interface ScreenText {
         private final FontMetrics fm;
         List<TextLine> buffer = new ArrayList<>();
         List<TextMap> wrapLayout = new ArrayList<>();
+        List<Caret> carets = new ArrayList<>();
         int screenLines = 0;
         public WrapScreenText(Document doc, FontMetrics fm) {
             this.doc = doc;
             this.fm = fm;
+            carets.add(new Caret());
         }
 
         @Override
@@ -243,6 +259,20 @@ public interface ScreenText {
                     x += st.width;
                 }
                 y += line.lineHeight();
+            }
+            for (Caret caret : carets) {
+                for (int i = 0; i < buffer.size(); i++) {
+                    TextLine textLine = buffer.get(i);
+                    if (textLine.row() == caret.row && textLine.map.fromIndex <= caret.col && caret.col < textLine.map.toIndex) {
+                        double cy = i * textLine.lineHeight() + MARGIN_TOP;
+                        double cx = MARGIN_LEFT;
+                        for (int j = textLine.map.fromIndex; i < textLine.map.toIndex && j < caret.col; j++) {
+                            cx += textLine.parent.advances[j];
+                        }
+                        draw.caret(cx, cy, fm.getLineHeight());
+                        break;
+                    }
+                }
             }
         }
 
@@ -321,21 +351,39 @@ public interface ScreenText {
 
         @Override
         public void moveCaretRight() {
-
+            for (Caret caret : carets) {
+                var row = new TextRow(caret.row, doc.getText(caret.row).toString(), fm);
+                caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
+                if (caret.col > row.textLength()) {
+                    caret.col = 0;
+                    caret.row = Math.min(caret.row + 1, doc.rows());
+                }
+            }
         }
 
         @Override
         public void moveCaretLeft() {
-
+            for (Caret caret : carets) {
+                if (caret.isZero()) continue;
+                var row = new TextRow(caret.row, doc.getText(caret.row).toString(), fm);
+                if (caret.col > 0) {
+                    caret.col -= row.isLowSurrogate(caret.col - 1) ? 2 : 1;
+                } else {
+                    caret.row = Math.max(0, caret.row - 1);
+                    caret.col = buffer.get(caret.row).textLength();
+                }
+            }
         }
 
         private int screenLines(double h) {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
         }
+
     }
 
     record TextMap(int row, int subLine, int fromIndex, int toIndex) {
         static TextMap empty = new TextMap(0, 0, 0, 0);
+        int length() { return toIndex - fromIndex; }
     }
 
     class TextRow {
@@ -382,7 +430,7 @@ public interface ScreenText {
         boolean isHighSurrogate(int index) { return Character.isHighSurrogate(text.charAt(index)); }
         boolean isLowSurrogate(int index) { return Character.isLowSurrogate(text.charAt(index)); }
         int length() { return text.length(); }
-        int realLength() {
+        int textLength() {
             if (text.length() >= 2 && text.charAt(text.length() - 2) == '\r' && text.charAt(text.length() - 1) == '\n') {
                 return text.length() - 2;
             }
@@ -400,11 +448,27 @@ public interface ScreenText {
             this.parent = parent;
             this.map = map;
         }
+        int row() { return map.row; }
+        int subLine() { return map.subLine; }
         float lineHeight() { return parent.lineHeight; }
+        float[] advances() { return Arrays.copyOfRange(parent.advances, map.fromIndex, map.toIndex); }
         String text() { return parent.text.substring(map.fromIndex, map.toIndex); }
         boolean hasNextLine() { return map.toIndex < parent.text.length(); }
         boolean hasPrevLine() { return map.fromIndex > 0; }
         List<StyledText> styledTexts() { return parent.styles.apply(map.fromIndex, map.toIndex, parent.text, parent.advances); }
+        boolean isSurrogate(int index) { return parent.isSurrogate(map.fromIndex + index); }
+        boolean isHighSurrogate(int index) { return parent.isHighSurrogate(map.fromIndex + index); }
+        boolean isLowSurrogate(int index) { return parent.isLowSurrogate(map.fromIndex + index); }
+        int length() { return map.length(); }
+        int textLength() {
+            if (map.length() >= 2 && parent.text.charAt(map.toIndex - 2) == '\r' && parent.text.charAt(map.toIndex - 1) == '\n') {
+                return map.length() - 2;
+            }
+            if (map.length() >= 1 && parent.text.charAt(map.toIndex - 1) == '\n') {
+                return map.length() - 1;
+            }
+            return map.length();
+        }
     }
 
     private static float[] advances(String text, FontMetrics fm) {
