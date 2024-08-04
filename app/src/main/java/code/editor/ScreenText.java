@@ -282,7 +282,7 @@ public interface ScreenText {
                     if (textLine.row() == caret.row && textLine.map.fromIndex <= caret.col && caret.col < textLine.map.toIndex) {
                         double cy = i * textLine.lineHeight();
                         double cx = 0;
-                        for (int j = textLine.map.fromIndex; i < textLine.map.toIndex && j < caret.col; j++) {
+                        for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < caret.col; j++) {
                             cx += textLine.parent.advances[j];
                         }
                         draw.caret(cx + MARGIN_LEFT, cy + MARGIN_TOP, fm.getLineHeight());
@@ -353,7 +353,7 @@ public interface ScreenText {
 
         @Override
         public void scrollAt(int line) {
-            topLine = Math.clamp(line, 0, wrapLayout.size() - 1);
+            topLine = Math.clamp(line, 0, wrapLayout.size());
             buffer.clear();
             TextMap map = wrapLayout.get(topLine);
             for (int i = map.row; i < doc.rows(); i++) {
@@ -369,6 +369,7 @@ public interface ScreenText {
         @Override
         public void moveCaretRight() {
             for (Caret caret : carets) {
+                caret.vPos = -1;
                 var row = new TextRow(caret.row, doc.getText(caret.row).toString(), fm);
                 caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
                 if (caret.col > row.textLength()) {
@@ -381,6 +382,7 @@ public interface ScreenText {
         @Override
         public void moveCaretLeft() {
             for (Caret caret : carets) {
+                caret.vPos = -1;
                 if (caret.isZero()) continue;
                 var row = new TextRow(caret.row, doc.getText(caret.row).toString(), fm);
                 if (caret.col > 0) {
@@ -412,13 +414,48 @@ public interface ScreenText {
             return row;
         }
 
+        private Loc posToLoc(int row, int col) {
+            Indexed<TextLine> line = posToLine(row, col);
+            double y = (line.index - topLine) * fm.getLineHeight();
+            double x = 0;
+            TextLine textLine = line.value;
+            for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < col; j++) {
+                x += textLine.parent.advances[j];
+            }
+            return new Loc(x, y);
+        }
+
+        private Indexed<TextLine> posToLine(int row, int col) {
+            // calc loc from screen buffer
+            for (int i = 0; i < buffer.size(); i++) {
+                TextLine textLine = buffer.get(i);
+                TextMap map = textLine.map;
+                if (map.row == row && map.fromIndex <= col && col < map.toIndex) {
+                    return new Indexed<>(topLine + i, textLine);
+                }
+            }
+            // calc loc from wrapLayout
+            for (int i = 0; i < wrapLayout.size(); i++) {
+                TextMap map = wrapLayout.get(i);
+                if (map.row == row && map.fromIndex <= col && col < map.toIndex) {
+                    return new Indexed<>(i,
+                            new TextRow(map.row, doc.getText(map.row).toString(), fm).wrap(wrap).get(map.subLine));
+                }
+            }
+            return new Indexed<>(wrapLayout.size(),
+                    new TextRow(doc.rows(), doc.getText(doc.rows()).toString(), fm).wrap(wrap).getLast());
+        }
+
+
     }
 
-    record Pos(double x, double y) { }
+    record Loc(double x, double y) { }
+    record Pos(int row, int col) { }
     record TextMap(int row, int subLine, int fromIndex, int toIndex) {
         static TextMap empty = new TextMap(0, 0, 0, 0);
         int length() { return toIndex - fromIndex; }
     }
+    record Indexed<E>(int index, E value) { }
 
     class TextRow {
         int row;
