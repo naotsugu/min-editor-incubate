@@ -44,7 +44,7 @@ public class EditorPane extends StackPane {
 
         draw = new Draw.FxDraw(gc);
 
-        var st = ScreenText.wrapOf(doc, fm, Syntax.of("java"));
+        var st = ScreenText.of(doc, fm, Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
@@ -74,6 +74,8 @@ public class EditorPane extends StackPane {
         switch (action.type()) {
             case CARET_RIGHT -> { st.moveCaretRight(); st.draw(draw); }
             case CARET_LEFT  -> { st.moveCaretLeft(); st.draw(draw); }
+            case CARET_DOWN  -> { st.moveCaretDown(); st.draw(draw); }
+            case CARET_UP    -> { st.moveCaretUp(); st.draw(draw); }
         }
         return action;
     }
