@@ -396,12 +396,24 @@ public interface ScreenText {
 
         @Override
         public void moveCaretDown() {
-
+            for (Caret caret : carets) {
+                Loc loc = posToLoc(caret.row, caret.col);
+                caret.vPos = (caret.vPos < 0) ? loc.x : caret.vPos;
+                Pos pos = locToPos(caret.vPos,  loc.y + fm.getLineHeight());
+                caret.row = pos.row;
+                caret.col = pos.col;
+            }
         }
 
         @Override
         public void moveCaretUp() {
-
+            for (Caret caret : carets) {
+                Loc loc = posToLoc(caret.row, caret.col);
+                caret.vPos = (caret.vPos < 0) ? loc.x : caret.vPos;
+                Pos pos = locToPos(caret.vPos,  loc.y - fm.getLineHeight());
+                caret.row = pos.row;
+                caret.col = pos.col;
+            }
         }
 
         private int screenLineSize(double h) {
@@ -418,8 +430,8 @@ public interface ScreenText {
             Indexed<TextLine> line = posToLine(row, col);
             double y = (line.index - topLine) * fm.getLineHeight();
             double x = 0;
-            TextLine textLine = line.value;
-            for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < col; j++) {
+            TextLine textLine = line.value();
+            for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j <= col; j++) {
                 x += textLine.parent.advances[j];
             }
             return new Loc(x, y);
@@ -446,6 +458,17 @@ public interface ScreenText {
                     new TextRow(doc.rows(), doc.getText(doc.rows()).toString(), fm).wrap(wrap).getLast());
         }
 
+        private Pos locToPos(double x, double y) {
+            TextMap map = wrapLayout.get(topLine + (int) (y / fm.getLineHeight()));
+            TextLine textLine = posToLine(map.row, map.fromIndex).value();
+            int col = textLine.map.fromIndex;
+            for (int i = 0; i < textLine.textLength(); i++) {
+                x -= textLine.parent.advances[col];
+                if (x <= 0) break;
+                col++;
+            }
+            return new Pos(map.row, col);
+        }
 
     }
 

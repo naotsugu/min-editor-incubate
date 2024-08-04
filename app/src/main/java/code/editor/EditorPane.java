@@ -44,7 +44,7 @@ public class EditorPane extends StackPane {
 
         draw = new Draw.FxDraw(gc);
 
-        var st = ScreenText.of(doc, fm, Syntax.of("java"));
+        var st = ScreenText.wrapOf(doc, fm, Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
