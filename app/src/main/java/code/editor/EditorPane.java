@@ -27,7 +27,6 @@ public class EditorPane extends StackPane {
     private final Draw draw;
 
     public EditorPane() {
-
         setCursor(Cursor.TEXT);
         setBackground(new Background(new BackgroundFill(
                 Color.web("#292929"),
@@ -44,7 +43,7 @@ public class EditorPane extends StackPane {
 
         draw = new Draw.FxDraw(gc);
 
-        var st = ScreenText.wrapOf(doc, fm, Syntax.of("java"));
+        var st = ScreenText.of(doc, fm, Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());

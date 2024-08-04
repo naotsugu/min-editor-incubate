@@ -205,7 +205,7 @@ public interface ScreenText {
         private double colToX(int row, int col) {
             float[] advances = textRowAt(row).advances;
             double x = 0;
-            for (int i = 0; i < advances.length && i <= col; i++) {
+            for (int i = 0; i < advances.length && i < col; i++) {
                 x += advances[i];
             }
             return x;
@@ -217,7 +217,7 @@ public interface ScreenText {
             float[] advances = textRow.advances;
             for (int i = 0; i < advances.length; i++) {
                 x -= advances[i];
-                if (x <= 0) {
+                if (x < 0) {
                     return i;
                 }
             }
@@ -279,7 +279,7 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 for (int i = 0; i < buffer.size(); i++) {
                     TextLine textLine = buffer.get(i);
-                    if (textLine.row() == caret.row && textLine.map.fromIndex <= caret.col && caret.col < textLine.map.toIndex) {
+                    if (textLine.contains(caret.row, caret.col)) {
                         double cy = i * textLine.lineHeight();
                         double cx = 0;
                         for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < caret.col; j++) {
@@ -431,7 +431,7 @@ public interface ScreenText {
             double y = (line.index - topLine) * fm.getLineHeight();
             double x = 0;
             TextLine textLine = line.value();
-            for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j <= col; j++) {
+            for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < col; j++) {
                 x += textLine.parent.advances[j];
             }
             return new Loc(x, y);
@@ -441,17 +441,15 @@ public interface ScreenText {
             // calc loc from screen buffer
             for (int i = 0; i < buffer.size(); i++) {
                 TextLine textLine = buffer.get(i);
-                TextMap map = textLine.map;
-                if (map.row == row && map.fromIndex <= col && col < map.toIndex) {
+                if (textLine.contains(row, col)) {
                     return new Indexed<>(topLine + i, textLine);
                 }
             }
             // calc loc from wrapLayout
             for (int i = 0; i < wrapLayout.size(); i++) {
                 TextMap map = wrapLayout.get(i);
-                if (map.row == row && map.fromIndex <= col && col < map.toIndex) {
-                    return new Indexed<>(i,
-                            new TextRow(map.row, doc.getText(map.row).toString(), fm).wrap(wrap).get(map.subLine));
+                if (map.contains(row, col)) {
+                    return new Indexed<>(i, new TextRow(map.row, doc.getText(map.row).toString(), fm).wrap(wrap).get(map.subLine));
                 }
             }
             return new Indexed<>(wrapLayout.size(),
@@ -463,9 +461,8 @@ public interface ScreenText {
             TextLine textLine = posToLine(map.row, map.fromIndex).value();
             int col = textLine.map.fromIndex;
             for (int i = 0; i < textLine.textLength(); i++) {
-                x -= textLine.parent.advances[col];
-                if (x <= 0) break;
-                col++;
+                x -= textLine.parent.advances[col++];
+                if (x < 0) break;
             }
             return new Pos(map.row, col);
         }
@@ -477,6 +474,7 @@ public interface ScreenText {
     record TextMap(int row, int subLine, int fromIndex, int toIndex) {
         static TextMap empty = new TextMap(0, 0, 0, 0);
         int length() { return toIndex - fromIndex; }
+        boolean contains(int row, int col) { return this.row == row && this.fromIndex <= col && col < this.toIndex; }
     }
     record Indexed<E>(int index, E value) { }
 
@@ -546,13 +544,12 @@ public interface ScreenText {
         int subLine() { return map.subLine; }
         float lineHeight() { return parent.lineHeight; }
         String text() { return parent.text.substring(map.fromIndex, map.toIndex); }
-        boolean hasNextLine() { return map.toIndex < parent.text.length(); }
-        boolean hasPrevLine() { return map.fromIndex > 0; }
         List<StyledText> styledTexts() { return parent.styles.apply(map.fromIndex, map.toIndex, parent.text, parent.advances); }
         boolean isSurrogate(int index) { return parent.isSurrogate(map.fromIndex + index); }
         boolean isHighSurrogate(int index) { return parent.isHighSurrogate(map.fromIndex + index); }
         boolean isLowSurrogate(int index) { return parent.isLowSurrogate(map.fromIndex + index); }
         int length() { return map.length(); }
+        boolean contains(int row, int col) { return map.contains(row, col); }
         int textLength() {
             if (map.length() >= 2 && parent.text.charAt(map.toIndex - 2) == '\r' && parent.text.charAt(map.toIndex - 1) == '\n') {
                 return map.length() - 2;
