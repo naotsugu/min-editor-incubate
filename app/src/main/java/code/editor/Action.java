@@ -8,6 +8,7 @@ public interface Action {
 
     /** The action event type.*/
     enum Type {
+        TYPED, DELETE, BACK_SPACE,
         CARET_RIGHT, CARET_LEFT, CARET_UP, CARET_DOWN,
         SELECT_CARET_RIGHT, SELECT_CARET_LEFT, SELECT_CARET_UP, SELECT_CARET_DOWN,
         EMPTY,
@@ -47,6 +48,17 @@ public interface Action {
         else if (e.getCode() == LEFT) return e.isShiftDown() ? Action.of(Action.Type.SELECT_CARET_LEFT) : Action.of(Action.Type.CARET_LEFT);
         else if (e.getCode() == UP) return e.isShiftDown() ? Action.of(Action.Type.SELECT_CARET_UP) : Action.of(Action.Type.CARET_UP);
         else if (e.getCode() == DOWN) return e.isShiftDown() ? Action.of(Action.Type.SELECT_CARET_DOWN) : Action.of(Action.Type.CARET_DOWN);
-        else return Action.of(Action.Type.EMPTY);
+        else if (e.getCode() == DELETE) return Action.of(Action.Type.DELETE);
+        else if (e.getCode() == BACK_SPACE) return Action.of(Action.Type.BACK_SPACE);
+        else {
+            if (e.getEventType() == KeyEvent.KEY_TYPED && !e.getCharacter().isEmpty()) {
+                int ascii = e.getCharacter().getBytes()[0];
+                String ch = (ascii == 13) // 13:CR
+                        ? "\n"
+                        : e.getCharacter();
+                return Action.of(Action.Type.TYPED, ch);
+            }
+            return Action.of(Action.Type.EMPTY);
+        }
     }
 }

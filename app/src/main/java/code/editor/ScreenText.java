@@ -24,6 +24,10 @@ public interface ScreenText {
     void moveCaretLeft();
     void moveCaretDown();
     void moveCaretUp();
+    void input(String text);
+    void delete();
+    void backSpace();
+
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
         return new PlainScreenText(doc, fm, syntax);
@@ -189,6 +193,53 @@ public interface ScreenText {
                 caret.row--;
                 caret.col = xToCol(caret.row, caret.vPos);
             }
+        }
+
+        @Override
+        public void input(String text) {
+            for (Caret caret : carets) {
+                caret.vPos = -1;
+                doc.insert(caret.row, caret.col, text);
+                int bufferIndex = bufferIndexOf(caret.row);
+                if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(caret.row));
+                caret.col += text.length();
+            }
+        }
+
+        @Override
+        public void delete() {
+            for (Caret caret : carets) {
+                caret.vPos = -1;
+                // TODO end of line delete
+                doc.delete(caret.row, caret.col,
+                        Character.isHighSurrogate(doc.getText(caret.row).charAt(caret.col)) ? 2 : 1);
+                int bufferIndex = bufferIndexOf(caret.row);
+                if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(caret.row));
+            }
+        }
+
+        @Override
+        public void backSpace() {
+            for (Caret caret : carets) {
+                caret.vPos = -1;
+                if (caret.isZero()) continue;
+                if (caret.col == 0) {
+                    moveCaretLeft();
+                    delete();
+                } else {
+                    int len = Character.isLowSurrogate(doc.getText(caret.row).charAt(caret.col - 1)) ? 2 : 1;
+                    caret.col -= len;
+                    doc.delete(caret.row, caret.col, len);
+                    int bufferIndex = bufferIndexOf(caret.row);
+                    if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(caret.row));
+                }
+            }
+        }
+
+        private int bufferIndexOf(int row) {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            int index = row - top;
+            return (0 <= index && index < buffer.size()) ? index : -1;
         }
 
         private TextRow createRow(int i) {
@@ -414,6 +465,21 @@ public interface ScreenText {
                 caret.row = pos.row;
                 caret.col = pos.col;
             }
+        }
+
+        @Override
+        public void input(String text) {
+            System.out.println(text);
+        }
+
+        @Override
+        public void delete() {
+
+        }
+
+        @Override
+        public void backSpace() {
+
         }
 
         private int screenLineSize(double h) {

@@ -63,14 +63,16 @@ public class EditorPane extends StackPane {
             }
         });
 
-        setOnKeyPressed((KeyEvent e) -> {
-            execute(st, Action.of(e));
-        });
+        setOnKeyPressed((KeyEvent e) -> execute(st, Action.of(e)));
+        setOnKeyTyped((KeyEvent e) -> execute(st, Action.of(e)));
 
     }
 
     private Action execute(ScreenText st, Action action) {
         switch (action.type()) {
+            case TYPED       -> { st.input(action.attr()); st.draw(draw); }
+            case DELETE      -> { st.delete(); st.draw(draw); }
+            case BACK_SPACE  -> { st.backSpace(); st.draw(draw); }
             case CARET_RIGHT -> { st.moveCaretRight(); st.draw(draw); }
             case CARET_LEFT  -> { st.moveCaretLeft(); st.draw(draw); }
             case CARET_DOWN  -> { st.moveCaretDown(); st.draw(draw); }
