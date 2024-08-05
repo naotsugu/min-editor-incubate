@@ -56,11 +56,11 @@ public interface ScreenText {
         @Override
         public void draw(Draw draw) {
             draw.clear();
-            double y = MARGIN_TOP;
+            double y = 0;
             for (TextRow row : buffer) {
-                double x = MARGIN_LEFT;
+                double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text, x, y, st.styles);
+                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
                     x += st.width;
                 }
                 y += row.lineHeight;
