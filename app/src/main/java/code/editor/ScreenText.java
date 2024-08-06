@@ -4,6 +4,9 @@ import code.editor.javafx.FontMetrics;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -268,9 +271,7 @@ public interface ScreenText {
             float[] advances = textRow.advances;
             for (int i = 0; i < advances.length; i++) {
                 x -= advances[i];
-                if (x < 0) {
-                    return i;
-                }
+                if (x < 0) return i;
             }
             return textRow.textLength();
         }
@@ -290,7 +291,6 @@ public interface ScreenText {
                 return createRow(row);
             }
         }
-
     }
 
     /**
@@ -305,7 +305,7 @@ public interface ScreenText {
         private final FontMetrics fm;
         Syntax syntax;
         List<TextLine> buffer = new ArrayList<>();
-        List<TextMap> wrapLayout = new ArrayList<>();
+        List<RowMap> wrapLayout = new ArrayList<>();
         List<Caret> carets = new ArrayList<>();
         int screenLineSize = 0;
         public WrapScreenText(Document doc, FontMetrics fm, Syntax syntax) {
@@ -346,13 +346,13 @@ public interface ScreenText {
         @Override
         public void size(double width, double height) {
 
-            if (width <= 0 || height <=0 ||
+            if (width <= 0 || height <= 0 ||
                     (this.width == width && this.height == height)) return;
 
             int newScreenLineSize = screenLineSize(height);
 
             if (this.width != width) {
-                TextMap top = buffer.isEmpty() ? TextMap.empty : buffer.getFirst().map;
+                RowMap top = buffer.isEmpty() ? RowMap.empty : buffer.getFirst().map;
                 this.wrap = width - MARGIN_LEFT - fm.getLineHeight() / 3;
                 wrapLayout.clear();
                 buffer.clear();
@@ -374,7 +374,7 @@ public interface ScreenText {
                         buffer.subList(fromIndex, buffer.size()).clear();
                     }
                 } else if (this.height < height) {
-                    TextMap bottom = buffer.isEmpty() ? TextMap.empty : buffer.getLast().map;
+                    RowMap bottom = buffer.isEmpty() ? RowMap.empty : buffer.getLast().map;
                     for (int i = bottom.row; i < doc.rows(); i++) {
                         for (TextLine line : createRow(i).wrap(wrap)) {
                             if (bottom.row == line.map.row && bottom.subLine <= line.map.subLine) continue;
@@ -406,7 +406,7 @@ public interface ScreenText {
         public void scrollAt(int line) {
             topLine = Math.clamp(line, 0, wrapLayout.size());
             buffer.clear();
-            TextMap map = wrapLayout.get(topLine);
+            RowMap map = wrapLayout.get(topLine);
             for (int i = map.row; i < doc.rows(); i++) {
                 List<TextLine> lines = createRow(i).wrap(wrap);
                 int start = (i == map.row) ? map.subLine : 0;
@@ -469,17 +469,63 @@ public interface ScreenText {
 
         @Override
         public void input(String text) {
-            System.out.println(text);
+            for (Caret caret : carets) {
+                caret.vPos = -1;
+                doc.insert(caret.row, caret.col, text);
+                List<TextLine> lines = createRow(caret.row).wrap(wrap);
+                int[] bufferIndex = bufferIndexOf(caret.row);
+                if (bufferIndex.length > 1) {
+                    buffer.subList(bufferIndex[0], bufferIndex[1]).clear();
+                    buffer.addAll(bufferIndex[0], lines);
+                    clampBuffer();
+                    wrapLayout.subList(topLine + bufferIndex[0], topLine + bufferIndex[1]).clear();
+                    wrapLayout.addAll(topLine + bufferIndex[0], lines.stream().map(l -> l.map).toList());
+                } else {
+                    int[] wrapIndex = wrapLayoutIndexOf(caret.row);
+                    wrapLayout.subList(wrapIndex[0], wrapIndex[1]).clear();
+                    wrapLayout.addAll(wrapIndex[0], lines.stream().map(l -> l.map).toList());
+                }
+                caret.col += text.length();
+            }
         }
 
         @Override
         public void delete() {
-
+            for (Caret caret : carets) {
+                
+            }
         }
 
         @Override
         public void backSpace() {
+        }
 
+        private int[] bufferIndexOf(int row) {
+            int from = -1, to = -1;
+            for (int i = 0; i < buffer.size(); i++) {
+                TextLine line = buffer.get(i);
+                if (line.map.row == row && from < 0) {
+                    from = i;
+                } else if (line.map.row > row) {
+                    to = i;
+                    break;
+                }
+            }
+            return (from < 0) ? new int[0] : new int[] { from, to };
+        }
+
+        private int[] wrapLayoutIndexOf(int row) {
+            int from = Collections.binarySearch(wrapLayout, new RowMap(row, 0, 0, 0), Comparator.comparing(RowMap::row));
+            if (from < 0) return new int[0];
+            int to = from;
+            for (int i = from; i < wrapLayout.size(); i++) {
+                RowMap map = wrapLayout.get(i);
+                if (map.row > row) {
+                    to = i;
+                    break;
+                }
+            }
+            return new int[] { from, to };
         }
 
         private int screenLineSize(double h) {
@@ -490,6 +536,13 @@ public interface ScreenText {
             var row = new TextRow(i, doc.getText(i).toString(), fm);
             row.styles.putAll(syntax.apply(row.text));
             return row;
+        }
+
+        private void clampBuffer() {
+            int screenLineSize = screenLineSize(height);
+            if (buffer.size() > screenLineSize) {
+                buffer.subList(screenLineSize, buffer.size()).clear();
+            }
         }
 
         private Loc posToLoc(int row, int col) {
@@ -513,7 +566,7 @@ public interface ScreenText {
             }
             // calc loc from wrapLayout
             for (int i = 0; i < wrapLayout.size(); i++) {
-                TextMap map = wrapLayout.get(i);
+                RowMap map = wrapLayout.get(i);
                 if (map.contains(row, col)) {
                     return new Indexed<>(i, new TextRow(map.row, doc.getText(map.row).toString(), fm).wrap(wrap).get(map.subLine));
                 }
@@ -523,7 +576,7 @@ public interface ScreenText {
         }
 
         private Pos locToPos(double x, double y) {
-            TextMap map = wrapLayout.get(topLine + (int) (y / fm.getLineHeight()));
+            RowMap map = wrapLayout.get(topLine + (int) (y / fm.getLineHeight()));
             TextLine textLine = posToLine(map.row, map.fromIndex).value();
             int col = textLine.map.fromIndex;
             for (int i = 0; i < textLine.textLength(); i++) {
@@ -537,10 +590,12 @@ public interface ScreenText {
 
     record Loc(double x, double y) { }
     record Pos(int row, int col) { }
-    record TextMap(int row, int subLine, int fromIndex, int toIndex) {
-        static TextMap empty = new TextMap(0, 0, 0, 0);
+    record RowMap(int row, int subLine, int fromIndex, int toIndex) {
+        static RowMap empty = new RowMap(0, 0, 0, 0);
         int length() { return toIndex - fromIndex; }
-        boolean contains(int row, int col) { return this.row == row && this.fromIndex <= col && col < this.toIndex; }
+        boolean contains(int row, int col) {
+            return this.row == row && this.fromIndex <= col && col < this.toIndex;
+        }
     }
     record Indexed<E>(int index, E value) { }
 
@@ -560,7 +615,7 @@ public interface ScreenText {
         private List<TextLine> wrap(double width) {
             if (width <= 0) {
                 return List.of(new TextLine(this,
-                        new TextMap(row, 0, 0, text.length())));
+                        new RowMap(row, 0, 0, text.length())));
             }
             double w = 0;
             int fromIndex = 0;
@@ -570,14 +625,14 @@ public interface ScreenText {
                 if (advance <= 0) continue;
                 if (w + advance > width) {
                     wrapped.add(new TextLine(this,
-                            new TextMap(row, wrapped.size(), fromIndex, i)));
+                            new RowMap(row, wrapped.size(), fromIndex, i)));
                     w = 0;
                     fromIndex = i;
                 }
                 w += advance;
             }
             wrapped.add(new TextLine(this,
-                    new TextMap(row, wrapped.size(), fromIndex, text.length())));
+                    new RowMap(row, wrapped.size(), fromIndex, text.length())));
             return wrapped;
         }
 
@@ -601,8 +656,8 @@ public interface ScreenText {
 
     class TextLine {
         TextRow parent;
-        TextMap map;
-        public TextLine(TextRow parent, TextMap map) {
+        RowMap map;
+        public TextLine(TextRow parent, RowMap map) {
             this.parent = parent;
             this.map = map;
         }
