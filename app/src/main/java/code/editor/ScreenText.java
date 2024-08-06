@@ -472,19 +472,7 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 doc.insert(caret.row, caret.col, text);
-                List<TextLine> lines = createRow(caret.row).wrap(wrap);
-                int[] bufferIndex = bufferIndexOf(caret.row);
-                if (bufferIndex.length > 1) {
-                    buffer.subList(bufferIndex[0], bufferIndex[1]).clear();
-                    buffer.addAll(bufferIndex[0], lines);
-                    clampBuffer();
-                    wrapLayout.subList(topLine + bufferIndex[0], topLine + bufferIndex[1]).clear();
-                    wrapLayout.addAll(topLine + bufferIndex[0], lines.stream().map(l -> l.map).toList());
-                } else {
-                    int[] wrapIndex = wrapLayoutIndexOf(caret.row);
-                    wrapLayout.subList(wrapIndex[0], wrapIndex[1]).clear();
-                    wrapLayout.addAll(wrapIndex[0], lines.stream().map(l -> l.map).toList());
-                }
+                refreshBuffer(caret.row, countLines(text));
                 caret.col += text.length();
             }
         }
@@ -492,7 +480,7 @@ public interface ScreenText {
         @Override
         public void delete() {
             for (Caret caret : carets) {
-                
+                caret.vPos = -1;
             }
         }
 
@@ -500,31 +488,52 @@ public interface ScreenText {
         public void backSpace() {
         }
 
-        private int[] bufferIndexOf(int row) {
+        private void refreshBuffer(int row, int ln) {
+            List<TextLine> lines = new ArrayList<>();
+            for (int i = row; i < row + ln; i++) {
+                lines.addAll(createRow(i).wrap(wrap));
+            }
+            int[] bufferIndex = bufferIndexOf(row, ln);
+            if (bufferIndex.length > 1) {
+                buffer.subList(bufferIndex[0], bufferIndex[1]).clear();
+                buffer.addAll(bufferIndex[0], lines);
+                clampBuffer();
+                wrapLayout.subList(topLine + bufferIndex[0], topLine + bufferIndex[1]).clear();
+                wrapLayout.addAll(topLine + bufferIndex[0], lines.stream().map(l -> l.map).toList());
+            } else {
+                int[] wrapIndex = wrapLayoutIndexOf(row, ln);
+                wrapLayout.subList(wrapIndex[0], wrapIndex[1]).clear();
+                wrapLayout.addAll(wrapIndex[0], lines.stream().map(l -> l.map).toList());
+            }
+        }
+
+        private int[] bufferIndexOf(int row, int len) {
             int from = -1, to = -1;
             for (int i = 0; i < buffer.size(); i++) {
                 TextLine line = buffer.get(i);
                 if (line.map.row == row && from < 0) {
                     from = i;
-                } else if (line.map.row > row) {
+                } else if (line.map.row > (row + len - 1)) {
                     to = i;
                     break;
                 }
             }
+            if (to < 0) to = buffer.size();
             return (from < 0) ? new int[0] : new int[] { from, to };
         }
 
-        private int[] wrapLayoutIndexOf(int row) {
+        private int[] wrapLayoutIndexOf(int row, int len) {
             int from = Collections.binarySearch(wrapLayout, new RowMap(row, 0, 0, 0), Comparator.comparing(RowMap::row));
             if (from < 0) return new int[0];
-            int to = from;
+            int to = -1;
             for (int i = from; i < wrapLayout.size(); i++) {
                 RowMap map = wrapLayout.get(i);
-                if (map.row > row) {
+                if (map.row > (row + len - 1)) {
                     to = i;
                     break;
                 }
             }
+            if (to < 0) to = wrapLayout.size();
             return new int[] { from, to };
         }
 
@@ -704,6 +713,10 @@ public interface ScreenText {
         float ret = 0;
         for (int i = from; i < to; i++) ret += advances[i];
         return ret;
+    }
+
+    private static int countLines(String text) {
+        return 1 + (int) text.codePoints().filter(c -> c == '\n').count();
     }
 
     class Caret {
