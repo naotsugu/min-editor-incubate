@@ -450,7 +450,7 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 Loc loc = posToLoc(caret.row, caret.col);
                 caret.vPos = (caret.vPos < 0) ? loc.x : caret.vPos;
-                Pos pos = locToPos(caret.vPos,  loc.y + fm.getLineHeight());
+                Pos pos = locToPos(caret.vPos, loc.y + fm.getLineHeight());
                 caret.row = pos.row;
                 caret.col = pos.col;
             }
