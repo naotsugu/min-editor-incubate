@@ -481,19 +481,34 @@ public interface ScreenText {
         public void delete() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
+                delete(caret.row, caret.col,
+                        Character.isHighSurrogate(doc.getText(caret.row).charAt(caret.col)) ? 2 : 1);
             }
+        }
+
+        private void delete(int row, int col, int len) {
+            var text = doc.getText(row, col, len);
+            int lines = countLines(text);
+            doc.delete(row, col, len);
+            refreshBuffer(row, lines);
         }
 
         @Override
         public void backSpace() {
+            for (Caret caret : carets) {
+                caret.vPos = -1;
+                if (caret.isZero()) continue;
+                moveCaretLeft();
+                delete();
+            }
         }
 
-        private void refreshBuffer(int row, int ln) {
+        private void refreshBuffer(int row, int rowLen) {
             List<TextLine> lines = new ArrayList<>();
-            for (int i = row; i < row + ln; i++) {
+            for (int i = row; i < row + rowLen; i++) {
                 lines.addAll(createRow(i).wrap(wrap));
             }
-            int[] bufferIndex = bufferIndexOf(row, ln);
+            int[] bufferIndex = bufferIndexOf(row, rowLen);
             if (bufferIndex.length > 1) {
                 buffer.subList(bufferIndex[0], bufferIndex[1]).clear();
                 buffer.addAll(bufferIndex[0], lines);
@@ -501,7 +516,7 @@ public interface ScreenText {
                 wrapLayout.subList(topLine + bufferIndex[0], topLine + bufferIndex[1]).clear();
                 wrapLayout.addAll(topLine + bufferIndex[0], lines.stream().map(l -> l.map).toList());
             } else {
-                int[] wrapIndex = wrapLayoutIndexOf(row, ln);
+                int[] wrapIndex = wrapLayoutIndexOf(row, rowLen);
                 wrapLayout.subList(wrapIndex[0], wrapIndex[1]).clear();
                 wrapLayout.addAll(wrapIndex[0], lines.stream().map(l -> l.map).toList());
             }
@@ -541,10 +556,10 @@ public interface ScreenText {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
         }
 
-        private TextRow createRow(int i) {
-            var row = new TextRow(i, doc.getText(i).toString(), fm);
-            row.styles.putAll(syntax.apply(row.text));
-            return row;
+        private TextRow createRow(int row) {
+            var textRow = new TextRow(row, doc.getText(row).toString(), fm);
+            textRow.styles.putAll(syntax.apply(textRow.text));
+            return textRow;
         }
 
         private void clampBuffer() {
@@ -589,8 +604,8 @@ public interface ScreenText {
             TextLine textLine = posToLine(map.row, map.fromIndex).value();
             int col = textLine.map.fromIndex;
             for (int i = 0; i < textLine.textLength(); i++) {
+                if (x <= 0) break;
                 x -= textLine.parent.advances[col++];
-                if (x < 0) break;
             }
             return new Pos(map.row, col);
         }
@@ -715,7 +730,7 @@ public interface ScreenText {
         return ret;
     }
 
-    private static int countLines(String text) {
+    private static int countLines(CharSequence text) {
         return 1 + (int) text.codePoints().filter(c -> c == '\n').count();
     }
 
