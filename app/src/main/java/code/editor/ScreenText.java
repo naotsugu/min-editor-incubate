@@ -66,6 +66,7 @@ public interface ScreenText {
         @Override
         public void draw(Draw draw) {
             draw.clear();
+            if (buffer.isEmpty()) return;
             double y = 0;
             for (TextRow row : buffer) {
                 double x = 0;
@@ -76,9 +77,7 @@ public interface ScreenText {
                 y += row.lineHeight;
             }
             for (Caret caret : carets) {
-                if (!buffer.isEmpty() &&
-                        buffer.getFirst().row <= caret.row &&
-                        caret.row <= buffer.getLast().row) {
+                if (buffer.getFirst().row <= caret.row && caret.row <= buffer.getLast().row) {
                     double x = colToX(caret.row, caret.col);
                     caret.vPos = (caret.vPos < 0) ? x : caret.vPos;
                     draw.caret(
@@ -775,8 +774,13 @@ public interface ScreenText {
     class Caret {
         int row = 0, col = 0;
         double vPos = 0; // not contains margin
+        int pinRow = -1, pinCol = -1;
         Caret(int row, int col) { this.row = row; this.col = col; this.vPos = -1; }
+        public void at(int row, int col) { this.row = row; this.col = col; }
+        public void pin(int row, int col) { pinRow = row; pinCol = col; }
+        public void unPin() { pinRow = -1; pinCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
+        public boolean isPined() { return pinRow >= 0 && pinCol >= 0; }
     }
 
     sealed interface Style {}
