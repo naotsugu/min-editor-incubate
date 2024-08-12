@@ -1,10 +1,11 @@
 package code.editor;
 
 import code.editor.javafx.FontMetrics;
+import code.editor.Lang.*;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
+import com.mammb.code.piecetable.TextEdit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 public interface ScreenText {
 
     int MARGIN_TOP = 5;
-    int MARGIN_LEFT = 2;
+    int MARGIN_LEFT = 5;
     int TAB_SIZE = 4;
 
     void draw(Draw draw);
@@ -30,6 +31,8 @@ public interface ScreenText {
     void input(String text);
     void delete();
     void backSpace();
+    void undo();
+    void redo();
 
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
@@ -46,7 +49,7 @@ public interface ScreenText {
     class PlainScreenText implements ScreenText {
         double width = 0;
         double height = 0;
-        final Document doc;
+        final TextEdit ed;
         final FontMetrics fm;
         Syntax syntax;
         List<TextRow> buffer = new ArrayList<>();
@@ -54,10 +57,10 @@ public interface ScreenText {
         int screenLineSize = 0;
 
         public PlainScreenText(Document doc, FontMetrics fm, Syntax syntax) {
-            this.doc = doc;
+            this.ed = TextEdit.of(doc);
             this.fm = fm;
             this.syntax = syntax;
-            carets.add(new Caret());
+            carets.add(new Caret(0, 0));
         }
 
         @Override
@@ -99,7 +102,7 @@ public interface ScreenText {
             } else if (this.height < height) {
                 // grow height
                 int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-                for (int i = buffer.size(); i <= newScreenLineSize && i < doc.rows(); i++) {
+                for (int i = buffer.size(); i <= newScreenLineSize && i < ed.rows(); i++) {
                     buffer.add(createRow(top + i));
                 }
             }
@@ -113,14 +116,14 @@ public interface ScreenText {
             assert delta > 0;
 
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            int maxTop = (int) (doc.rows() - screenLineSize * 0.6);
+            int maxTop = (int) (ed.rows() - screenLineSize * 0.6);
             if (top + delta >= maxTop) {
                 delta = maxTop - top;
             }
 
             int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
             buffer.subList(0, Math.min(delta, buffer.size())).clear();
-            for (int i = next; i < (next + delta) && i < doc.rows(); i++) {
+            for (int i = next; i < (next + delta) && i < ed.rows(); i++) {
                 buffer.add(createRow(i));
             }
         }
@@ -141,9 +144,9 @@ public interface ScreenText {
 
         @Override
         public void scrollAt(int row) {
-            row = Math.clamp(row, 0, doc.rows() - 1);
+            row = Math.clamp(row, 0, ed.rows() - 1);
             buffer.clear();
-            for (int i = row; i < doc.rows(); i++) {
+            for (int i = row; i < ed.rows(); i++) {
                 buffer.add(createRow(i));
                 if (buffer.size() >= screenLineSize) break;
             }
@@ -158,7 +161,7 @@ public interface ScreenText {
                 caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
                 if (caret.col > row.textLength()) {
                     caret.col = 0;
-                    caret.row = Math.min(caret.row + 1, doc.rows());
+                    caret.row = Math.min(caret.row + 1, ed.rows());
                 }
             }
         }
@@ -181,7 +184,7 @@ public interface ScreenText {
         @Override
         public void moveCaretDown() {
             for (Caret caret : carets) {
-                if (caret.row == doc.rows()) continue;
+                if (caret.row == ed.rows()) continue;
                 caret.vPos = (caret.vPos < 0) ? colToX(caret.row, caret.col) : caret.vPos;
                 caret.row++;
                 caret.col = xToCol(caret.row, caret.vPos);
@@ -202,9 +205,8 @@ public interface ScreenText {
         public void input(String text) {
             for (Caret caret : carets) {
                 caret.vPos = -1;
-                doc.insert(caret.row, caret.col, text);
-                int bufferIndex = bufferIndexOf(caret.row);
-                if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(caret.row));
+                ed.insert(caret.row, caret.col, text);
+                refreshBuffer(caret.row);
                 caret.col += text.length();
             }
         }
@@ -214,10 +216,9 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 // TODO end of line delete
-                doc.delete(caret.row, caret.col,
-                        Character.isHighSurrogate(doc.getText(caret.row).charAt(caret.col)) ? 2 : 1);
-                int bufferIndex = bufferIndexOf(caret.row);
-                if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(caret.row));
+                ed.delete(caret.row, caret.col,
+                        Character.isHighSurrogate(ed.getText(caret.row).charAt(caret.col)) ? 2 : 1);
+                refreshBuffer(caret.row);
             }
         }
 
@@ -230,13 +231,36 @@ public interface ScreenText {
                     moveCaretLeft();
                     delete();
                 } else {
-                    int len = Character.isLowSurrogate(doc.getText(caret.row).charAt(caret.col - 1)) ? 2 : 1;
+                    int len = Character.isLowSurrogate(ed.getText(caret.row).charAt(caret.col - 1)) ? 2 : 1;
                     caret.col -= len;
-                    doc.delete(caret.row, caret.col, len);
-                    int bufferIndex = bufferIndexOf(caret.row);
-                    if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(caret.row));
+                    ed.delete(caret.row, caret.col, len);
+                    refreshBuffer(caret.row);
                 }
             }
+        }
+
+        @Override
+        public void undo() {
+            carets.clear();
+            ed.undo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
+            refreshBuffer(carets);
+        }
+
+        @Override
+        public void redo() {
+            carets.clear();
+            ed.redo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
+            refreshBuffer(carets);
+        }
+
+        private void refreshBuffer(List<Caret> carets) {
+            carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBuffer);
+        }
+
+        private void refreshBuffer(int row) {
+            int bufferIndex = bufferIndexOf(row);
+            if (bufferIndex >= 0) buffer.set(bufferIndex, createRow(row));
+
         }
 
         private int bufferIndexOf(int row) {
@@ -246,7 +270,7 @@ public interface ScreenText {
         }
 
         private TextRow createRow(int i) {
-            var row = new TextRow(i, doc.getText(i).toString(), fm);
+            var row = new TextRow(i, ed.getText(i), fm);
             row.styles.putAll(syntax.apply(row.text));
             return row;
         }
@@ -301,7 +325,7 @@ public interface ScreenText {
         double height = 0;
         double wrap = 0;
         int topLine = 0;
-        private final Document doc;
+        private final TextEdit ed;
         private final FontMetrics fm;
         Syntax syntax;
         List<TextLine> buffer = new ArrayList<>();
@@ -309,10 +333,10 @@ public interface ScreenText {
         List<Caret> carets = new ArrayList<>();
         int screenLineSize = 0;
         public WrapScreenText(Document doc, FontMetrics fm, Syntax syntax) {
-            this.doc = doc;
+            this.ed = TextEdit.of(doc);
             this.fm = fm;
             this.syntax = syntax;
-            carets.add(new Caret());
+            carets.add(new Caret(0, 0));
         }
 
         @Override
@@ -356,7 +380,7 @@ public interface ScreenText {
                 this.wrap = width - MARGIN_LEFT - fm.getLineHeight() / 3;
                 wrapLayout.clear();
                 buffer.clear();
-                for (int i = 0; i < doc.rows(); i++) {
+                for (int i = 0; i < ed.rows(); i++) {
                     for (TextLine line : createRow(i).wrap(wrap)) {
                         wrapLayout.add(line.map);
                         if (top.row <= line.map.row) {
@@ -375,7 +399,7 @@ public interface ScreenText {
                     }
                 } else if (this.height < height) {
                     RowMap bottom = buffer.isEmpty() ? RowMap.empty : buffer.getLast().map;
-                    for (int i = bottom.row; i < doc.rows(); i++) {
+                    for (int i = bottom.row; i < ed.rows(); i++) {
                         for (TextLine line : createRow(i).wrap(wrap)) {
                             if (bottom.row == line.map.row && bottom.subLine <= line.map.subLine) continue;
                             buffer.add(line);
@@ -407,7 +431,7 @@ public interface ScreenText {
             topLine = Math.clamp(line, 0, wrapLayout.size());
             buffer.clear();
             RowMap map = wrapLayout.get(topLine);
-            for (int i = map.row; i < doc.rows(); i++) {
+            for (int i = map.row; i < ed.rows(); i++) {
                 List<TextLine> lines = createRow(i).wrap(wrap);
                 int start = (i == map.row) ? map.subLine : 0;
                 for (int j = start; j < lines.size(); j++) {
@@ -421,11 +445,11 @@ public interface ScreenText {
         public void moveCaretRight() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
-                var row = new TextRow(caret.row, doc.getText(caret.row).toString(), fm);
+                var row = new TextRow(caret.row, ed.getText(caret.row), fm);
                 caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
                 if (caret.col > row.textLength()) {
                     caret.col = 0;
-                    caret.row = Math.min(caret.row + 1, doc.rows());
+                    caret.row = Math.min(caret.row + 1, ed.rows());
                 }
             }
         }
@@ -435,7 +459,7 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 if (caret.isZero()) continue;
-                var row = new TextRow(caret.row, doc.getText(caret.row).toString(), fm);
+                var row = new TextRow(caret.row, ed.getText(caret.row), fm);
                 if (caret.col > 0) {
                     caret.col -= row.isLowSurrogate(caret.col - 1) ? 2 : 1;
                 } else {
@@ -449,10 +473,10 @@ public interface ScreenText {
         public void moveCaretDown() {
             for (Caret caret : carets) {
                 Loc loc = posToLoc(caret.row, caret.col);
-                caret.vPos = (caret.vPos < 0) ? loc.x : caret.vPos;
-                Pos pos = locToPos(caret.vPos, loc.y + fm.getLineHeight());
-                caret.row = pos.row;
-                caret.col = pos.col;
+                caret.vPos = (caret.vPos < 0) ? loc.x() : caret.vPos;
+                Pos pos = locToPos(caret.vPos, loc.y() + fm.getLineHeight());
+                caret.row = pos.row();
+                caret.col = pos.col();
             }
         }
 
@@ -460,10 +484,10 @@ public interface ScreenText {
         public void moveCaretUp() {
             for (Caret caret : carets) {
                 Loc loc = posToLoc(caret.row, caret.col);
-                caret.vPos = (caret.vPos < 0) ? loc.x : caret.vPos;
-                Pos pos = locToPos(caret.vPos,  loc.y - fm.getLineHeight());
-                caret.row = pos.row;
-                caret.col = pos.col;
+                caret.vPos = (caret.vPos < 0) ? loc.x() : caret.vPos;
+                Pos pos = locToPos(caret.vPos,  loc.y() - fm.getLineHeight());
+                caret.row = pos.row();
+                caret.col = pos.col();
             }
         }
 
@@ -471,7 +495,7 @@ public interface ScreenText {
         public void input(String text) {
             for (Caret caret : carets) {
                 caret.vPos = -1;
-                doc.insert(caret.row, caret.col, text);
+                ed.insert(caret.row, caret.col, text);
                 refreshBuffer(caret.row, countLines(text));
                 caret.col += text.length();
             }
@@ -482,15 +506,13 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 delete(caret.row, caret.col,
-                        Character.isHighSurrogate(doc.getText(caret.row).charAt(caret.col)) ? 2 : 1);
+                        Character.isHighSurrogate(ed.getText(caret.row).charAt(caret.col)) ? 2 : 1);
             }
         }
 
         private void delete(int row, int col, int len) {
-            var text = doc.getText(row, col, len);
-            int lines = countLines(text);
-            doc.delete(row, col, len);
-            refreshBuffer(row, lines);
+            var delText = ed.delete(row, col, len);
+            refreshBuffer(row, countLines(delText));
         }
 
         @Override
@@ -503,12 +525,31 @@ public interface ScreenText {
             }
         }
 
-        private void refreshBuffer(int row, int rowLen) {
+        @Override
+        public void undo() {
+            carets.clear();
+            ed.undo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
+            refreshBuffer(carets);
+        }
+
+        @Override
+        public void redo() {
+            carets.clear();
+            ed.redo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
+            refreshBuffer(carets);
+        }
+
+        private void refreshBuffer(List<Caret> carets) {
+            carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBuffer);
+        }
+        private void refreshBuffer(int row) { refreshBuffer(row, 1); }
+        private void refreshBuffer(int row, int nRow) {
+            assert row >= 0 && nRow > 0;
             List<TextLine> lines = new ArrayList<>();
-            for (int i = row; i < row + rowLen; i++) {
+            for (int i = row; i < row + nRow; i++) {
                 lines.addAll(createRow(i).wrap(wrap));
             }
-            int[] bufferIndex = bufferIndexOf(row, rowLen);
+            int[] bufferIndex = bufferIndexOf(row, nRow);
             if (bufferIndex.length > 1) {
                 buffer.subList(bufferIndex[0], bufferIndex[1]).clear();
                 buffer.addAll(bufferIndex[0], lines);
@@ -516,19 +557,19 @@ public interface ScreenText {
                 wrapLayout.subList(topLine + bufferIndex[0], topLine + bufferIndex[1]).clear();
                 wrapLayout.addAll(topLine + bufferIndex[0], lines.stream().map(l -> l.map).toList());
             } else {
-                int[] wrapIndex = wrapLayoutIndexOf(row, rowLen);
+                int[] wrapIndex = wrapLayoutIndexOf(row, nRow);
                 wrapLayout.subList(wrapIndex[0], wrapIndex[1]).clear();
                 wrapLayout.addAll(wrapIndex[0], lines.stream().map(l -> l.map).toList());
             }
         }
 
-        private int[] bufferIndexOf(int row, int len) {
+        private int[] bufferIndexOf(int row, int nLine) {
             int from = -1, to = -1;
             for (int i = 0; i < buffer.size(); i++) {
                 TextLine line = buffer.get(i);
                 if (line.map.row == row && from < 0) {
                     from = i;
-                } else if (line.map.row > (row + len - 1)) {
+                } else if (line.map.row > (row + nLine - 1)) {
                     to = i;
                     break;
                 }
@@ -557,7 +598,7 @@ public interface ScreenText {
         }
 
         private TextRow createRow(int row) {
-            var textRow = new TextRow(row, doc.getText(row).toString(), fm);
+            var textRow = new TextRow(row, ed.getText(row), fm);
             textRow.styles.putAll(syntax.apply(textRow.text));
             return textRow;
         }
@@ -571,7 +612,7 @@ public interface ScreenText {
 
         private Loc posToLoc(int row, int col) {
             Indexed<TextLine> line = posToLine(row, col);
-            double y = (line.index - topLine) * fm.getLineHeight();
+            double y = (line.index() - topLine) * fm.getLineHeight();
             double x = 0;
             TextLine textLine = line.value();
             for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < col; j++) {
@@ -592,11 +633,11 @@ public interface ScreenText {
             for (int i = 0; i < wrapLayout.size(); i++) {
                 RowMap map = wrapLayout.get(i);
                 if (map.contains(row, col)) {
-                    return new Indexed<>(i, new TextRow(map.row, doc.getText(map.row).toString(), fm).wrap(wrap).get(map.subLine));
+                    return new Indexed<>(i, new TextRow(map.row, ed.getText(map.row), fm).wrap(wrap).get(map.subLine));
                 }
             }
             return new Indexed<>(wrapLayout.size(),
-                    new TextRow(doc.rows(), doc.getText(doc.rows()).toString(), fm).wrap(wrap).getLast());
+                    new TextRow(ed.rows(), ed.getText(ed.rows()), fm).wrap(wrap).getLast());
         }
 
         private Pos locToPos(double x, double y) {
@@ -612,8 +653,6 @@ public interface ScreenText {
 
     }
 
-    record Loc(double x, double y) { }
-    record Pos(int row, int col) { }
     record RowMap(int row, int subLine, int fromIndex, int toIndex) {
         static RowMap empty = new RowMap(0, 0, 0, 0);
         int length() { return toIndex - fromIndex; }
@@ -621,7 +660,6 @@ public interface ScreenText {
             return this.row == row && this.fromIndex <= col && col < this.toIndex;
         }
     }
-    record Indexed<E>(int index, E value) { }
 
     class TextRow {
         int row;
@@ -737,6 +775,7 @@ public interface ScreenText {
     class Caret {
         int row = 0, col = 0;
         double vPos = 0; // not contains margin
+        Caret(int row, int col) { this.row = row; this.col = col; this.vPos = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
     }
 

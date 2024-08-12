@@ -17,6 +17,7 @@ public interface Draw {
     void clear();
     void caret(double x, double y, double height);
 
+
     class FxDraw implements Draw {
         final GraphicsContext gc;
         Color fgColor = Color.web("#C9D7E6");
