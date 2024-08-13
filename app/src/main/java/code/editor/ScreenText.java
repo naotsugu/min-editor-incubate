@@ -381,11 +381,32 @@ public interface ScreenText {
         @Override
         public void draw(Draw draw) {
             draw.clear();
+
+            for (Caret caret : carets) {
+                if (caret.isPinedForward()) {
+                    Loc loc1 = posToLoc(caret.pinRow, caret.pinCol);
+                    Loc loc2 = posToLoc(caret.row, caret.col);
+                    double x1 = loc1.x() + MARGIN_LEFT;
+                    double y1 = loc1.y() + MARGIN_TOP;
+                    double x2 = loc2.x() + MARGIN_LEFT;
+                    double y2 = loc2.y() + MARGIN_TOP;
+                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                } else if (caret.isPinedBackward()) {
+                    Loc loc1 = posToLoc(caret.row, caret.col);
+                    Loc loc2 = posToLoc(caret.pinRow, caret.pinCol);
+                    double x1 = loc1.x() + MARGIN_LEFT;
+                    double y1 = loc1.y() + MARGIN_TOP;
+                    double x2 = loc2.x() + MARGIN_LEFT;
+                    double y2 = loc2.y() + MARGIN_TOP;
+                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                }
+            }
+
             double y = 0;
             for (TextLine line : buffer) {
                 double x = 0;
                 for (StyledText st : line.styledTexts()) {
-                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.width, fm.getLineHeight(), st.styles);
+                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
                     x += st.width;
                 }
                 y += line.lineHeight();
@@ -830,6 +851,7 @@ public interface ScreenText {
     private static int countLines(CharSequence text) {
         return 1 + (int) text.codePoints().filter(c -> c == '\n').count();
     }
+
 
     class Caret {
         int row = 0, col = 0;
