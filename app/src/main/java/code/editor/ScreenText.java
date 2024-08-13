@@ -38,6 +38,8 @@ public interface ScreenText {
     void undo();
     void redo();
 
+    Loc posToLoc(int row, int col);
+
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
         return new PlainScreenText(doc, fm, syntax);
@@ -73,19 +75,19 @@ public interface ScreenText {
             if (buffer.isEmpty()) return;
 
             for (Caret caret : carets) {
+                Loc loc1, loc2;
                 if (caret.isPinedForward()) {
-                    double x1 = colToX(caret.pinRow, caret.pinCol) + MARGIN_LEFT;
-                    double y1 = rowToY(caret.pinRow) + MARGIN_TOP;
-                    double x2 = colToX(caret.row, caret.col) + MARGIN_LEFT;
-                    double y2 = rowToY(caret.row) + MARGIN_TOP;
-                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                    loc1 = posToLoc(caret.pinRow, caret.pinCol);
+                    loc2 = posToLoc(caret.row, caret.col);
                 } else if (caret.isPinedBackward()) {
-                    double x1 = colToX(caret.row, caret.col) + MARGIN_LEFT;
-                    double y1 = rowToY(caret.row) + MARGIN_TOP;
-                    double x2 = colToX(caret.pinRow, caret.pinCol) + MARGIN_LEFT;
-                    double y2 = rowToY(caret.pinRow) + MARGIN_TOP;
-                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                    loc1 = posToLoc(caret.row, caret.col);
+                    loc2 = posToLoc(caret.pinRow, caret.pinCol);
+                } else {
+                    continue;
                 }
+                draw.fillSelection(loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
+                        loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
+                        fm.getLineHeight(), MARGIN_LEFT, width);
             }
 
             double y = 0;
@@ -314,6 +316,11 @@ public interface ScreenText {
             return row;
         }
 
+        @Override
+        public Loc posToLoc(int row, int col) {
+            return new Loc(colToX(row, col), rowToY(row));
+        }
+
         private double rowToY(int row) {
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
             return (row - top) * fm.getLineHeight();
@@ -383,23 +390,20 @@ public interface ScreenText {
             draw.clear();
 
             for (Caret caret : carets) {
+                Loc loc1, loc2;
                 if (caret.isPinedForward()) {
-                    Loc loc1 = posToLoc(caret.pinRow, caret.pinCol);
-                    Loc loc2 = posToLoc(caret.row, caret.col);
-                    double x1 = loc1.x() + MARGIN_LEFT;
-                    double y1 = loc1.y() + MARGIN_TOP;
-                    double x2 = loc2.x() + MARGIN_LEFT;
-                    double y2 = loc2.y() + MARGIN_TOP;
-                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                    loc1 = posToLoc(caret.pinRow, caret.pinCol);
+                    loc2 = posToLoc(caret.row, caret.col);
                 } else if (caret.isPinedBackward()) {
-                    Loc loc1 = posToLoc(caret.row, caret.col);
-                    Loc loc2 = posToLoc(caret.pinRow, caret.pinCol);
-                    double x1 = loc1.x() + MARGIN_LEFT;
-                    double y1 = loc1.y() + MARGIN_TOP;
-                    double x2 = loc2.x() + MARGIN_LEFT;
-                    double y2 = loc2.y() + MARGIN_TOP;
-                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                    loc1 = posToLoc(caret.row, caret.col);
+                    loc2 = posToLoc(caret.pinRow, caret.pinCol);
+                } else {
+                    continue;
                 }
+                draw.fillSelection(
+                        loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
+                        loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
+                        fm.getLineHeight(), MARGIN_LEFT, width);
             }
 
             double y = 0;
@@ -690,7 +694,8 @@ public interface ScreenText {
             }
         }
 
-        private Loc posToLoc(int row, int col) {
+        @Override
+        public Loc posToLoc(int row, int col) {
             Indexed<TextLine> line = posToLine(row, col);
             double y = (line.index() - topLine) * fm.getLineHeight();
             double x = 0;
@@ -851,7 +856,6 @@ public interface ScreenText {
     private static int countLines(CharSequence text) {
         return 1 + (int) text.codePoints().filter(c -> c == '\n').count();
     }
-
 
     class Caret {
         int row = 0, col = 0;
