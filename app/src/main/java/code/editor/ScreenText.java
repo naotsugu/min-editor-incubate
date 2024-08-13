@@ -25,9 +25,13 @@ public interface ScreenText {
     void scrollPrev(int delta);
     void scrollAt(int n);
     void moveCaretRight();
+    void moveCaretSelectRight();
     void moveCaretLeft();
+    void moveCaretSelectLeft();
     void moveCaretDown();
+    void moveCaretSelectDown();
     void moveCaretUp();
+    void moveCaretSelectUp();
     void input(String text);
     void delete();
     void backSpace();
@@ -71,7 +75,7 @@ public interface ScreenText {
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
+                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.width, fm.getLineHeight(), st.styles);
                     x += st.width;
                 }
                 y += row.lineHeight;
@@ -166,6 +170,11 @@ public interface ScreenText {
         }
 
         @Override
+        public void moveCaretSelectRight() {
+
+        }
+
+        @Override
         public void moveCaretLeft() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
@@ -181,6 +190,11 @@ public interface ScreenText {
         }
 
         @Override
+        public void moveCaretSelectLeft() {
+
+        }
+
+        @Override
         public void moveCaretDown() {
             for (Caret caret : carets) {
                 if (caret.row == ed.rows()) continue;
@@ -191,6 +205,11 @@ public interface ScreenText {
         }
 
         @Override
+        public void moveCaretSelectDown() {
+
+        }
+
+        @Override
         public void moveCaretUp() {
             for (Caret caret : carets) {
                 if (caret.row == 0) continue;
@@ -198,6 +217,11 @@ public interface ScreenText {
                 caret.row--;
                 caret.col = xToCol(caret.row, caret.vPos);
             }
+        }
+
+        @Override
+        public void moveCaretSelectUp() {
+
         }
 
         @Override
@@ -345,7 +369,7 @@ public interface ScreenText {
             for (TextLine line : buffer) {
                 double x = 0;
                 for (StyledText st : line.styledTexts()) {
-                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
+                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.width, fm.getLineHeight(), st.styles);
                     x += st.width;
                 }
                 y += line.lineHeight();
@@ -454,6 +478,11 @@ public interface ScreenText {
         }
 
         @Override
+        public void moveCaretSelectRight() {
+
+        }
+
+        @Override
         public void moveCaretLeft() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
@@ -469,6 +498,11 @@ public interface ScreenText {
         }
 
         @Override
+        public void moveCaretSelectLeft() {
+
+        }
+
+        @Override
         public void moveCaretDown() {
             for (Caret caret : carets) {
                 Loc loc = posToLoc(caret.row, caret.col);
@@ -480,6 +514,11 @@ public interface ScreenText {
         }
 
         @Override
+        public void moveCaretSelectDown() {
+
+        }
+
+        @Override
         public void moveCaretUp() {
             for (Caret caret : carets) {
                 Loc loc = posToLoc(caret.row, caret.col);
@@ -488,6 +527,11 @@ public interface ScreenText {
                 caret.row = pos.row();
                 caret.col = pos.col();
             }
+        }
+
+        @Override
+        public void moveCaretSelectUp() {
+
         }
 
         @Override
@@ -778,6 +822,7 @@ public interface ScreenText {
         Caret(int row, int col) { this.row = row; this.col = col; this.vPos = -1; }
         public void at(int row, int col) { this.row = row; this.col = col; }
         public void pin(int row, int col) { pinRow = row; pinCol = col; }
+        public void pin() { pinRow = row; pinCol = col; }
         public void unPin() { pinRow = -1; pinCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
         public boolean isPined() { return pinRow >= 0 && pinCol >= 0; }

@@ -79,6 +79,10 @@ public class EditorPane extends StackPane {
             case CARET_UP    -> { st.moveCaretUp(); st.draw(draw); }
             case UNDO        -> { st.undo(); st.draw(draw); }
             case REDO        -> { st.redo(); st.draw(draw); }
+            case SELECT_CARET_RIGHT -> { st.moveCaretSelectRight(); st.draw(draw); }
+            case SELECT_CARET_LEFT -> { st.moveCaretSelectLeft(); st.draw(draw); }
+            case SELECT_CARET_DOWN -> { st.moveCaretSelectDown(); st.draw(draw); }
+            case SELECT_CARET_UP -> { st.moveCaretSelectUp(); st.draw(draw); }
         }
         return action;
     }

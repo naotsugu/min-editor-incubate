@@ -14,6 +14,7 @@ public interface Draw {
 
     void text(String text, double x, double y);
     void text(String text, double x, double y, List<ScreenText.Style> styles);
+    void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles);
     void clear();
     void caret(double x, double y, double height);
 
@@ -46,6 +47,17 @@ public interface Draw {
             gc.setStroke(color);
             gc.setFill(color);
             gc.fillText(text, x, y);
+        }
+        @Override
+        public void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles) {
+            Optional<String> colorString = styles.stream().filter(ScreenText.BgColor.class::isInstance)
+                    .map(ScreenText.BgColor.class::cast)
+                    .map(ScreenText.BgColor::colorString)
+                    .findFirst();
+            Color color = colorString.isPresent() ? colorMap.computeIfAbsent(colorString.get(), Color::web) : bgColor;
+            gc.setFill(color);
+            gc.fillRect(x, y, w, h);
+            text(text, x, y, styles);
         }
 
         @Override
