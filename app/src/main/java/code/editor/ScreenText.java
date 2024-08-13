@@ -71,6 +71,7 @@ public interface ScreenText {
         public void draw(Draw draw) {
             draw.clear();
             if (buffer.isEmpty()) return;
+
             double y = 0;
             for (TextRow row : buffer) {
                 double x = 0;
@@ -157,71 +158,70 @@ public interface ScreenText {
 
         @Override
         public void moveCaretRight() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                // TODO skip if eof
-                TextRow row = textRowAt(caret.row);
-                caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
-                if (caret.col > row.textLength()) {
-                    caret.col = 0;
-                    caret.row = Math.min(caret.row + 1, ed.rows());
-                }
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretRight(c); });
         }
-
         @Override
         public void moveCaretSelectRight() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin(); moveCaretRight(c); });
         }
-
-        @Override
-        public void moveCaretLeft() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                if (caret.isZero()) continue;
-                TextRow textRow = textRowAt(caret.row);
-                if (caret.col > 0) {
-                    caret.col -= textRow.isLowSurrogate(caret.col - 1) ? 2 : 1;
-                } else {
-                    caret.row = Math.max(0, caret.row - 1);
-                    caret.col = buffer.get(caret.row).textLength();
-                }
+        private void moveCaretRight(Caret caret) {
+            caret.vPos = -1;
+            // TODO skip if eof
+            TextRow row = textRowAt(caret.row);
+            caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
+            if (caret.col > row.textLength()) {
+                caret.col = 0;
+                caret.row = Math.min(caret.row + 1, ed.rows());
             }
         }
-
+        @Override
+        public void moveCaretLeft() {
+            carets.forEach(c -> { c.unPin(); moveCaretLeft(c); });
+        }
         @Override
         public void moveCaretSelectLeft() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin(); moveCaretLeft(c); });
+        }
+        private void moveCaretLeft(Caret caret) {
+            caret.vPos = -1;
+            if (caret.isZero()) return;
+            TextRow textRow = textRowAt(caret.row);
+            if (caret.col > 0) {
+                caret.col -= textRow.isLowSurrogate(caret.col - 1) ? 2 : 1;
+            } else {
+                caret.row = Math.max(0, caret.row - 1);
+                caret.col = buffer.get(caret.row).textLength();
+            }
         }
 
         @Override
         public void moveCaretDown() {
-            for (Caret caret : carets) {
-                if (caret.row == ed.rows()) continue;
-                caret.vPos = (caret.vPos < 0) ? colToX(caret.row, caret.col) : caret.vPos;
-                caret.row++;
-                caret.col = xToCol(caret.row, caret.vPos);
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretDown(c); });
         }
-
         @Override
         public void moveCaretSelectDown() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin(); moveCaretDown(c); });
+        }
+        private void moveCaretDown(Caret caret) {
+            if (caret.row == ed.rows()) return;
+            caret.vPos = (caret.vPos < 0) ? colToX(caret.row, caret.col) : caret.vPos;
+            caret.row++;
+            caret.col = xToCol(caret.row, caret.vPos);
         }
 
         @Override
         public void moveCaretUp() {
-            for (Caret caret : carets) {
-                if (caret.row == 0) continue;
-                caret.vPos = (caret.vPos < 0) ? colToX(caret.row, caret.col) : caret.vPos;
-                caret.row--;
-                caret.col = xToCol(caret.row, caret.vPos);
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretUp(c); });
         }
-
         @Override
         public void moveCaretSelectUp() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin(); moveCaretUp(c); });
+        }
+        private void moveCaretUp(Caret caret) {
+            if (caret.row == 0) return;
+            caret.vPos = (caret.vPos < 0) ? colToX(caret.row, caret.col) : caret.vPos;
+            caret.row--;
+            caret.col = xToCol(caret.row, caret.vPos);
         }
 
         @Override
@@ -466,72 +466,72 @@ public interface ScreenText {
 
         @Override
         public void moveCaretRight() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                var row = new TextRow(caret.row, ed.getText(caret.row), fm);
-                caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
-                if (caret.col > row.textLength()) {
-                    caret.col = 0;
-                    caret.row = Math.min(caret.row + 1, ed.rows());
-                }
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretRight(c); });
         }
-
         @Override
         public void moveCaretSelectRight() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin(); moveCaretRight(c); });
+        }
+        public void moveCaretRight(Caret caret) {
+            caret.vPos = -1;
+            var row = new TextRow(caret.row, ed.getText(caret.row), fm);
+            caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
+            if (caret.col > row.textLength()) {
+                caret.col = 0;
+                caret.row = Math.min(caret.row + 1, ed.rows());
+            }
         }
 
         @Override
         public void moveCaretLeft() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                if (caret.isZero()) continue;
-                var row = new TextRow(caret.row, ed.getText(caret.row), fm);
-                if (caret.col > 0) {
-                    caret.col -= row.isLowSurrogate(caret.col - 1) ? 2 : 1;
-                } else {
-                    caret.row = Math.max(0, caret.row - 1);
-                    caret.col = buffer.get(caret.row).textLength();
-                }
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretLeft(c); });
         }
-
         @Override
         public void moveCaretSelectLeft() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin();  moveCaretLeft(c); });
+        }
+        public void moveCaretLeft(Caret caret) {
+            caret.vPos = -1;
+            if (caret.isZero()) return;
+            var row = new TextRow(caret.row, ed.getText(caret.row), fm);
+            if (caret.col > 0) {
+                caret.col -= row.isLowSurrogate(caret.col - 1) ? 2 : 1;
+            } else {
+                caret.row = Math.max(0, caret.row - 1);
+                caret.col = buffer.get(caret.row).textLength();
+            }
         }
 
         @Override
         public void moveCaretDown() {
-            for (Caret caret : carets) {
-                Loc loc = posToLoc(caret.row, caret.col);
-                caret.vPos = (caret.vPos < 0) ? loc.x() : caret.vPos;
-                Pos pos = locToPos(caret.vPos, loc.y() + fm.getLineHeight());
-                caret.row = pos.row();
-                caret.col = pos.col();
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretDown(c); });
         }
-
         @Override
         public void moveCaretSelectDown() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin();  moveCaretDown(c); });
+        }
+        public void moveCaretDown(Caret caret) {
+            Loc loc = posToLoc(caret.row, caret.col);
+            caret.vPos = (caret.vPos < 0) ? loc.x() : caret.vPos;
+            Pos pos = locToPos(caret.vPos, loc.y() + fm.getLineHeight());
+            caret.row = pos.row();
+            caret.col = pos.col();
         }
 
         @Override
         public void moveCaretUp() {
-            for (Caret caret : carets) {
-                Loc loc = posToLoc(caret.row, caret.col);
-                caret.vPos = (caret.vPos < 0) ? loc.x() : caret.vPos;
-                Pos pos = locToPos(caret.vPos,  loc.y() - fm.getLineHeight());
-                caret.row = pos.row();
-                caret.col = pos.col();
-            }
+            carets.forEach(c -> { c.unPin(); moveCaretUp(c); });
         }
-
         @Override
         public void moveCaretSelectUp() {
-
+            carets.forEach(c -> {if (!c.isPined()) c.pin();  moveCaretUp(c); });
+        }
+        public void moveCaretUp(Caret caret) {
+            Loc loc = posToLoc(caret.row, caret.col);
+            caret.vPos = (caret.vPos < 0) ? loc.x() : caret.vPos;
+            Pos pos = locToPos(caret.vPos,  loc.y() - fm.getLineHeight());
+            caret.row = pos.row();
+            caret.col = pos.col();
         }
 
         @Override
