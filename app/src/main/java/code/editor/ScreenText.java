@@ -20,7 +20,7 @@ public interface ScreenText {
     int TAB_SIZE = 4;
 
     void draw(Draw draw);
-    void size(double width, double height);
+    void setSize(double width, double height);
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int n);
@@ -38,7 +38,9 @@ public interface ScreenText {
     void undo();
     void redo();
 
-    Loc posToLoc(int row, int col);
+    void click(double x, double y);
+    void clickDouble(double x, double y);
+    void clickTriple(double x, double y);
 
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
@@ -112,7 +114,7 @@ public interface ScreenText {
         }
 
         @Override
-        public void size(double width, double height) {
+        public void setSize(double width, double height) {
             if (width <= 0 || height <= 0) return;
             int newScreenLineSize = screenLineSize(height);
             if (this.height > height) {
@@ -294,6 +296,24 @@ public interface ScreenText {
             refreshBuffer(carets);
         }
 
+        @Override
+        public void click(double x, double y) {
+            int row = yToRow(y);
+            int col = xToCol(row, x);
+            carets.clear();
+            carets.add(new Caret(row, col));
+        }
+
+        @Override
+        public void clickDouble(double x, double y) {
+            // TODO
+        }
+
+        @Override
+        public void clickTriple(double x, double y) {
+            // TODO
+        }
+
         private void refreshBuffer(List<Caret> carets) {
             carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBuffer);
         }
@@ -316,8 +336,7 @@ public interface ScreenText {
             return row;
         }
 
-        @Override
-        public Loc posToLoc(int row, int col) {
+        private Loc posToLoc(int row, int col) {
             return new Loc(colToX(row, col), rowToY(row));
         }
 
@@ -345,8 +364,12 @@ public interface ScreenText {
             }
             return textRow.textLength();
         }
-        private int screenLineSize(double screenHeight) {
-            return (int) Math.ceil(Math.max(0, screenHeight - MARGIN_TOP) / fm.getLineHeight());
+        private int yToRow(double y) {
+            return (int) (Math.max(0, y - MARGIN_TOP) / fm.getLineHeight());
+        }
+
+        private int screenLineSize(double h) {
+            return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
         }
 
         private TextRow textRowAt(int row) {
@@ -432,7 +455,7 @@ public interface ScreenText {
         }
 
         @Override
-        public void size(double width, double height) {
+        public void setSize(double width, double height) {
 
             if (width <= 0 || height <= 0 ||
                     (this.width == width && this.height == height)) return;
@@ -623,6 +646,23 @@ public interface ScreenText {
             refreshBuffer(carets);
         }
 
+        @Override
+        public void click(double x, double y) {
+            Pos pos = locToPos(x, y);
+            carets.clear();
+            carets.add(new Caret(pos.row(), pos.col()));
+        }
+
+        @Override
+        public void clickDouble(double x, double y) {
+            // TODO
+        }
+
+        @Override
+        public void clickTriple(double x, double y) {
+            // TODO
+        }
+
         private void refreshBuffer(List<Caret> carets) {
             carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBuffer);
         }
@@ -694,8 +734,7 @@ public interface ScreenText {
             }
         }
 
-        @Override
-        public Loc posToLoc(int row, int col) {
+        private Loc posToLoc(int row, int col) {
             Indexed<TextLine> line = posToLine(row, col);
             double y = (line.index() - topLine) * fm.getLineHeight();
             double x = 0;

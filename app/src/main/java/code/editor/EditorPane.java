@@ -8,6 +8,8 @@ import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -48,7 +50,7 @@ public class EditorPane extends StackPane {
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
             canvas.setHeight(n.getHeight());
-            st.size(n.getWidth(), n.getHeight());
+            st.setSize(n.getWidth(), n.getHeight());
             st.draw(draw);
         });
 
@@ -58,6 +60,16 @@ public class EditorPane extends StackPane {
                     st.scrollNext(1);
                 } else {
                     st.scrollPrev(1);
+                }
+                st.draw(draw);
+            }
+        });
+        setOnMouseClicked((MouseEvent e) -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == canvas) {
+                switch (e.getClickCount()) {
+                    case 1 -> st.click(e.getX(), e.getY());
+                    case 2 -> st.clickDouble(e.getX(), e.getY());
+                    case 3 -> st.clickTriple(e.getX(), e.getY());
                 }
                 st.draw(draw);
             }
