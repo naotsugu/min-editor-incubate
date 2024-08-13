@@ -9,7 +9,7 @@ public class MarkdownSyntax implements Syntax {
         return "md";
     }
     @Override
-    public List<ScreenText.StyleSpan> apply(String text) {
+    public List<ScreenText.StyleSpan> apply(int row, String text) {
         return List.of();
     }
 

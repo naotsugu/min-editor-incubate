@@ -6,10 +6,10 @@ import java.util.List;
 public interface Syntax {
 
     String name();
-    List<ScreenText.StyleSpan> apply(String text);
+    List<ScreenText.StyleSpan> apply(int row, String text);
 
     record PassThrough(String name) implements Syntax {
-        @Override public List<ScreenText.StyleSpan> apply(String text) {
+        @Override public List<ScreenText.StyleSpan> apply(int row, String text) {
             return List.of();
         }
     }

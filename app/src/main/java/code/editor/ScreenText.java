@@ -270,7 +270,7 @@ public interface ScreenText {
 
         private TextRow createRow(int i) {
             var row = new TextRow(i, ed.getText(i), fm);
-            row.styles.putAll(syntax.apply(row.text));
+            row.styles.putAll(syntax.apply(i, row.text));
             return row;
         }
 
@@ -598,7 +598,7 @@ public interface ScreenText {
 
         private TextRow createRow(int row) {
             var textRow = new TextRow(row, ed.getText(row), fm);
-            textRow.styles.putAll(syntax.apply(textRow.text));
+            textRow.styles.putAll(syntax.apply(row, textRow.text));
             return textRow;
         }
 

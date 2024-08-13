@@ -24,7 +24,7 @@ public class JavaSyntax implements Syntax {
     }
 
     @Override
-    public List<ScreenText.StyleSpan> apply(String text) {
+    public List<ScreenText.StyleSpan> apply(int row, String text) {
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
         }
