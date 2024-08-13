@@ -15,6 +15,9 @@ public interface Draw {
     void text(String text, double x, double y);
     void text(String text, double x, double y, List<ScreenText.Style> styles);
     void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles);
+
+    void fillSelection(double x1, double y1, double x2, double y2, double lineHeight, double l, double r);
+
     void clear();
     void caret(double x, double y, double height);
 
@@ -23,6 +26,7 @@ public interface Draw {
         final GraphicsContext gc;
         Color fgColor = Color.web("#C9D7E6");
         Color bgColor = Color.web("#292929");
+        Color sbgColor = Color.web("#214283");
         Color caretColor = Color.web("#FFE0B2");
 
         Map<String, Color> colorMap = new HashMap<>();
@@ -58,6 +62,26 @@ public interface Draw {
             gc.setFill(color);
             gc.fillRect(x, y, w, h);
             text(text, x, y, styles);
+        }
+
+        @Override
+        public void fillSelection(double x1, double y1, double x2, double y2, double lineHeight, double l, double r) {
+            gc.setFill(sbgColor);
+            if (y1 == y2) {
+                gc.fillRect(x1, y1, x2 - x1, lineHeight);
+            } else {
+                double[] x = new double[8];
+                double[] y = new double[8];
+                x[0] = x1; y[0]= y1;
+                x[1] = r;  y[1]= y1;
+                x[2] = r;  y[2]= y2;
+                x[3] = x2; y[3]= y2;
+                x[4] = x2; y[4]= y2 + lineHeight;
+                x[5] = l;  y[5]= y2 + lineHeight;
+                x[6] = l;  y[6]= y1 + lineHeight;
+                x[7] = x1; y[7]= y1 + lineHeight;
+                gc.fillPolygon(x, y, 8);
+            }
         }
 
         @Override

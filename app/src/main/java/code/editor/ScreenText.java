@@ -72,11 +72,27 @@ public interface ScreenText {
             draw.clear();
             if (buffer.isEmpty()) return;
 
+            for (Caret caret : carets) {
+                if (caret.isPinedForward()) {
+                    double x1 = colToX(caret.pinRow, caret.pinCol) + MARGIN_LEFT;
+                    double y1 = rowToY(caret.pinRow) + MARGIN_TOP;
+                    double x2 = colToX(caret.row, caret.col) + MARGIN_LEFT;
+                    double y2 = rowToY(caret.row) + MARGIN_TOP;
+                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                } else if (caret.isPinedBackward()) {
+                    double x1 = colToX(caret.row, caret.col) + MARGIN_LEFT;
+                    double y1 = rowToY(caret.row) + MARGIN_TOP;
+                    double x2 = colToX(caret.pinRow, caret.pinCol) + MARGIN_LEFT;
+                    double y2 = rowToY(caret.pinRow) + MARGIN_TOP;
+                    draw.fillSelection(x1, y1, x2, y2, fm.getLineHeight(), MARGIN_LEFT, width);
+                }
+            }
+
             double y = 0;
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.width, fm.getLineHeight(), st.styles);
+                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
                     x += st.width;
                 }
                 y += row.lineHeight;
@@ -826,6 +842,8 @@ public interface ScreenText {
         public void unPin() { pinRow = -1; pinCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
         public boolean isPined() { return pinRow >= 0 && pinCol >= 0; }
+        public boolean isPinedForward() { return isPined() && ((row == pinRow && col > pinCol) || (row > pinRow)); }
+        public boolean isPinedBackward() { return isPined() && ((row == pinRow && col < pinCol) || (row < pinRow)); }
     }
 
     sealed interface Style {}
