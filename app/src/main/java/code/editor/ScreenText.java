@@ -77,16 +77,9 @@ public interface ScreenText {
             if (buffer.isEmpty()) return;
 
             for (Caret caret : carets) {
-                Loc loc1, loc2;
-                if (caret.isPinedForward()) {
-                    loc1 = posToLoc(caret.pinRow, caret.pinCol);
-                    loc2 = posToLoc(caret.row, caret.col);
-                } else if (caret.isPinedBackward()) {
-                    loc1 = posToLoc(caret.row, caret.col);
-                    loc2 = posToLoc(caret.pinRow, caret.pinCol);
-                } else {
-                    continue;
-                }
+                if (!caret.isPined()) continue;
+                Loc loc1 = posToLoc(caret.pinRow, caret.pinCol);
+                Loc loc2 = posToLoc(caret.row, caret.col);
                 draw.fillSelection(loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
                         loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
                         fm.getLineHeight(), MARGIN_LEFT, width);
@@ -413,16 +406,9 @@ public interface ScreenText {
             draw.clear();
 
             for (Caret caret : carets) {
-                Loc loc1, loc2;
-                if (caret.isPinedForward()) {
-                    loc1 = posToLoc(caret.pinRow, caret.pinCol);
-                    loc2 = posToLoc(caret.row, caret.col);
-                } else if (caret.isPinedBackward()) {
-                    loc1 = posToLoc(caret.row, caret.col);
-                    loc2 = posToLoc(caret.pinRow, caret.pinCol);
-                } else {
-                    continue;
-                }
+                if (!caret.isPined()) continue;
+                Loc loc1 = posToLoc(caret.pinRow, caret.pinCol);
+                Loc loc2 = posToLoc(caret.row, caret.col);
                 draw.fillSelection(
                         loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
                         loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
@@ -880,7 +866,7 @@ public interface ScreenText {
             } else if (ch1 == '\t') {
                 advances[i] = fm.getAdvance(" ".repeat(TAB_SIZE));
             } else {
-                advances[i] = fm.getAdvance(ch1, (char) 0);
+                advances[i] = fm.getAdvance(ch1);
             }
         }
         return advances;

@@ -40,7 +40,11 @@ public class EditorPane extends StackPane {
 
         gc = canvas.getGraphicsContext2D();
         var doc = Document.of(Path.of("build.gradle.kts"));
-        var fm = FontMetrics.of(Font.font("Consolas", 16));
+
+        String fontName = System.getProperty("os.name").toLowerCase().startsWith("windows")
+                ? "MS Gothic" : "Consolas";
+        var fm = FontMetrics.of(Font.font(fontName, 15));
+
         gc.setFont(fm.getFont());
 
         draw = new Draw.FxDraw(gc);
