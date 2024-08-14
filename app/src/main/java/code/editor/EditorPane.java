@@ -4,9 +4,12 @@ import code.editor.javafx.FontMetrics;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.InputMethodEvent;
+import javafx.scene.input.InputMethodRequests;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -49,7 +52,7 @@ public class EditorPane extends StackPane {
 
         draw = new Draw.FxDraw(gc);
 
-        var st = ScreenText.wrapOf(doc, fm, Syntax.of("java"));
+        var st = ScreenText.of(doc, fm, Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
@@ -81,6 +84,29 @@ public class EditorPane extends StackPane {
 
         setOnKeyPressed((KeyEvent e) -> execute(st, Action.of(e)));
         setOnKeyTyped((KeyEvent e) -> execute(st, Action.of(e)));
+
+        canvas.setInputMethodRequests(new InputMethodRequests() {
+            @Override public Point2D getTextLocation(int offset) {
+                Lang.Loc loc = st.imeOn();
+                return canvas.localToScreen(loc.x(), loc.y());
+            }
+            @Override public int getLocationOffset(int x, int y) { return 0; }
+            @Override public void cancelLatestCommittedText() { st.imeOff(); }
+            @Override public String getSelectedText() { return ""; }
+        });
+        canvas.setOnInputMethodTextChanged((InputMethodEvent e) -> {
+            if (!e.getCommitted().isEmpty()) {
+                execute(st, Action.of(Action.Type.TYPED, e.getCommitted()));
+                st.imeOff();
+            } else if (!e.getComposed().isEmpty()) {
+                if (!st.isImeOn()) st.imeOn();
+                for (var run : e.getComposed()) {
+
+                }
+            } else {
+                st.imeOff();
+            }
+        });
 
     }
 

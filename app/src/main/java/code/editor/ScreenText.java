@@ -5,6 +5,7 @@ import code.editor.Lang.*;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import com.mammb.code.piecetable.TextEdit;
+import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +42,12 @@ public interface ScreenText {
     void click(double x, double y);
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);
+
+    Loc imeOn();
+    void imeOff();
+    boolean isImeOn();
+    void imeComposedInput(String text);
+
 
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
@@ -296,15 +303,28 @@ public interface ScreenText {
             carets.clear();
             carets.add(new Caret(row, col));
         }
+        @Override
+        public void clickDouble(double x, double y) { /* Not yet implemented. */ }
+        @Override
+        public void clickTriple(double x, double y) { /* Not yet implemented. */ }
 
         @Override
-        public void clickDouble(double x, double y) {
-            // TODO
+        public Loc imeOn() {
+            Loc top = posToLoc(carets.getFirst().row, carets.getFirst().col);
+            return new Loc(top.x(), top.y() + fm.getLineHeight() + 5);
+        }
+        @Override
+        public void imeOff() {
+
+        }
+        @Override
+        public boolean isImeOn() {
+            return false;
         }
 
         @Override
-        public void clickTriple(double x, double y) {
-            // TODO
+        public void imeComposedInput(String text) {
+
         }
 
         private void refreshBuffer(List<Caret> carets) {
@@ -638,15 +658,28 @@ public interface ScreenText {
             carets.clear();
             carets.add(new Caret(pos.row(), pos.col()));
         }
+        @Override
+        public void clickDouble(double x, double y) { /* Not yet implemented. */ }
+        @Override
+        public void clickTriple(double x, double y) { /* Not yet implemented. */ }
 
         @Override
-        public void clickDouble(double x, double y) {
-            // TODO
+        public Loc imeOn() {
+            Loc top = posToLoc(carets.getFirst().row, carets.getFirst().col);
+            return new Loc(top.x(), top.y() + fm.getLineHeight() + 5);
+        }
+        @Override
+        public void imeOff() {
+
+        }
+        @Override
+        public boolean isImeOn() {
+            return false;
         }
 
         @Override
-        public void clickTriple(double x, double y) {
-            // TODO
+        public void imeComposedInput(String text) {
+
         }
 
         private void refreshBuffer(List<Caret> carets) {
