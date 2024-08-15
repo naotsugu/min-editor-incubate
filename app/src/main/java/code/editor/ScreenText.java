@@ -5,18 +5,12 @@ import code.editor.Lang.*;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import com.mammb.code.piecetable.TextEdit;
-import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public interface ScreenText {
@@ -40,7 +34,7 @@ public interface ScreenText {
     void moveCaretSelectUp();
     void input(String text);
     void delete();
-    void backSpace();
+    void backspace();
     void undo();
     void redo();
 
@@ -75,11 +69,13 @@ public interface ScreenText {
         List<TextRow> buffer = new ArrayList<>();
         List<Caret> carets = new ArrayList<>();
         int screenLineSize = 0;
+        RowDecorator rowDecorator;
 
         public PlainScreenText(Document doc, FontMetrics fm, Syntax syntax) {
             this.ed = TextEdit.of(doc);
             this.fm = fm;
             this.syntax = syntax;
+            this.rowDecorator = new RowDecorator(RowDecorator.syntaxOf(syntax));
             carets.add(new Caret(0, 0));
         }
 
@@ -271,7 +267,7 @@ public interface ScreenText {
         }
 
         @Override
-        public void backSpace() {
+        public void backspace() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 if (caret.isZero()) continue;
@@ -320,15 +316,28 @@ public interface ScreenText {
         }
         @Override
         public void imeOff() {
+            rowDecorator.clearIme();
+            for (Caret caret : carets) {
+                refreshBuffer(caret.row);
+            }
         }
         @Override
         public boolean isImeOn() {
-            return false;
+            return !rowDecorator.ime().isEmpty();
         }
 
         @Override
         public void imeComposedInput(String text) {
-
+            if (rowDecorator.ime().isEmpty()) {
+                for (Caret caret : carets) {
+                    rowDecorator.putIme(caret.row, caret.col, text);
+                }
+            } else {
+                rowDecorator.ime().forEach(c -> c.composed(text));
+            }
+            for (Caret caret : carets) {
+                refreshBuffer(caret.row);
+            }
         }
 
         private void refreshBuffer(List<Caret> carets) {
@@ -348,9 +357,8 @@ public interface ScreenText {
         }
 
         private TextRow createRow(int i) {
-            var row = new TextRow(i, ed.getText(i), fm);
-            row.styles.putAll(syntax.apply(i, row.text));
-            return row;
+            RowDecorator.Decorator decorator = rowDecorator.get(i);
+            return decorator.textRow(new TextRow(i, decorator.text(ed.getText(i)), fm));
         }
 
         private Loc posToLoc(int row, int col) {
@@ -418,13 +426,14 @@ public interface ScreenText {
         List<RowMap> wrapLayout = new ArrayList<>();
         List<Caret> carets = new ArrayList<>();
         int screenLineSize = 0;
-        final Map<Integer, TextRow> flashRows = new HashMap<>();
+        RowDecorator rowDecorator;
 
         public WrapScreenText(Document doc, FontMetrics fm, Syntax syntax) {
             this.ed = TextEdit.of(doc);
             this.fm = fm;
             this.syntax = syntax;
-            carets.add(new Caret(0, 0));
+            this.rowDecorator = new RowDecorator(RowDecorator.syntaxOf(syntax));
+            this.carets.add(new Caret(0, 0));
         }
 
         @Override
@@ -635,7 +644,7 @@ public interface ScreenText {
         }
 
         @Override
-        public void backSpace() {
+        public void backspace() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 if (caret.isZero()) continue;
@@ -747,12 +756,8 @@ public interface ScreenText {
         }
 
         private TextRow createRow(int row) {
-            if (flashRows.containsKey(row)) {
-                return flashRows.get(row);
-            }
-            var textRow = new TextRow(row, ed.getText(row), fm);
-            textRow.styles.putAll(syntax.apply(row, textRow.text));
-            return textRow;
+            RowDecorator.Decorator decorator = rowDecorator.get(row);
+            return decorator.textRow(new TextRow(row, decorator.text(ed.getText(row)), fm));
         }
 
         private void clampBuffer() {

@@ -10,6 +10,8 @@ import static javafx.scene.input.KeyCode.*;
 
 public interface Action {
 
+    Action EMPTY = Action.of(Type.EMPTY);
+
     /**
      * Get the action type.
      * @return the type

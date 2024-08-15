@@ -10,6 +10,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.InputMethodEvent;
 import javafx.scene.input.InputMethodRequests;
+import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -21,6 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 public class EditorPane extends StackPane {
 
@@ -96,25 +98,25 @@ public class EditorPane extends StackPane {
         });
         canvas.setOnInputMethodTextChanged((InputMethodEvent e) -> {
             if (!e.getCommitted().isEmpty()) {
-                execute(st, Action.of(Action.Type.TYPED, e.getCommitted()));
                 st.imeOff();
+                execute(st, Action.of(Action.Type.TYPED, e.getCommitted()));
             } else if (!e.getComposed().isEmpty()) {
                 if (!st.isImeOn()) st.imeOn();
-                for (var run : e.getComposed()) {
-
-                }
+                st.imeComposedInput(e.getComposed().stream().map(InputMethodTextRun::getText).collect(Collectors.joining()));
             } else {
                 st.imeOff();
             }
+            st.draw(draw);
         });
 
     }
 
     private Action execute(ScreenText st, Action action) {
+        if (st.isImeOn()) return Action.EMPTY;
         switch (action.type()) {
             case TYPED       -> { st.input(action.attr()); st.draw(draw); }
             case DELETE      -> { st.delete(); st.draw(draw); }
-            case BACK_SPACE  -> { st.backSpace(); st.draw(draw); }
+            case BACK_SPACE  -> { st.backspace(); st.draw(draw); }
             case CARET_RIGHT -> { st.moveCaretRight(); st.draw(draw); }
             case CARET_LEFT  -> { st.moveCaretLeft(); st.draw(draw); }
             case CARET_DOWN  -> { st.moveCaretDown(); st.draw(draw); }
