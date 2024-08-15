@@ -9,9 +9,14 @@ import javafx.scene.canvas.GraphicsContext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public interface ScreenText {
@@ -315,7 +320,6 @@ public interface ScreenText {
         }
         @Override
         public void imeOff() {
-
         }
         @Override
         public boolean isImeOn() {
@@ -414,6 +418,8 @@ public interface ScreenText {
         List<RowMap> wrapLayout = new ArrayList<>();
         List<Caret> carets = new ArrayList<>();
         int screenLineSize = 0;
+        final Map<Integer, TextRow> flashRows = new HashMap<>();
+
         public WrapScreenText(Document doc, FontMetrics fm, Syntax syntax) {
             this.ed = TextEdit.of(doc);
             this.fm = fm;
@@ -741,6 +747,9 @@ public interface ScreenText {
         }
 
         private TextRow createRow(int row) {
+            if (flashRows.containsKey(row)) {
+                return flashRows.get(row);
+            }
             var textRow = new TextRow(row, ed.getText(row), fm);
             textRow.styles.putAll(syntax.apply(row, textRow.text));
             return textRow;
@@ -935,6 +944,7 @@ public interface ScreenText {
     record BgColor(String colorString) implements Style {}
     record Selected() implements Style {}
     record Emphasize() implements Style {}
+    record UnderLine() implements Style {}
 
     record StyleSpan(Style style, int offset, int length) { }
     record StyledText(String text, float width, List<Style> styles) { }
