@@ -105,10 +105,10 @@ public interface ScreenText {
             }
             for (Caret caret : carets) {
                 if (buffer.getFirst().row <= caret.row && caret.row <= buffer.getLast().row) {
-                    double x = colToX(caret.row, caret.col);
+                    double x = colToX(caret.row, caret.col + imeFlash.composedText().length());
                     caret.vPos = (caret.vPos < 0) ? x : caret.vPos;
                     draw.caret(
-                            Math.min(x, caret.vPos) + MARGIN_LEFT + fm.getAdvance(imeFlash.composedText()),
+                            (imeFlash.composedText().isEmpty() ? Math.min(x, caret.vPos) : x) + MARGIN_LEFT,
                             rowToY(caret.row) + MARGIN_TOP,
                             fm.getLineHeight());
                 }
