@@ -102,7 +102,9 @@ public class EditorPane extends StackPane {
                 execute(st, Action.of(Action.Type.TYPED, e.getCommitted()));
             } else if (!e.getComposed().isEmpty()) {
                 if (!st.isImeOn()) st.imeOn();
-                st.imeComposedInput(e.getComposed().stream().map(InputMethodTextRun::getText).collect(Collectors.joining()));
+                st.imeComposedInput(e.getComposed().stream()
+                        .map(InputMethodTextRun::getText)
+                        .collect(Collectors.joining()));
             } else {
                 st.imeOff();
             }
@@ -124,9 +126,9 @@ public class EditorPane extends StackPane {
             case UNDO        -> { st.undo(); st.draw(draw); }
             case REDO        -> { st.redo(); st.draw(draw); }
             case SELECT_CARET_RIGHT -> { st.moveCaretSelectRight(); st.draw(draw); }
-            case SELECT_CARET_LEFT -> { st.moveCaretSelectLeft(); st.draw(draw); }
-            case SELECT_CARET_DOWN -> { st.moveCaretSelectDown(); st.draw(draw); }
-            case SELECT_CARET_UP -> { st.moveCaretSelectUp(); st.draw(draw); }
+            case SELECT_CARET_LEFT  -> { st.moveCaretSelectLeft(); st.draw(draw); }
+            case SELECT_CARET_DOWN  -> { st.moveCaretSelectDown(); st.draw(draw); }
+            case SELECT_CARET_UP    -> { st.moveCaretSelectUp(); st.draw(draw); }
         }
         return action;
     }

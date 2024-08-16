@@ -5,63 +5,48 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.WeakHashMap;
 
 public interface Draw {
 
-    void text(String text, double x, double y);
-    void text(String text, double x, double y, List<ScreenText.Style> styles);
     void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles);
-
     void fillSelection(double x1, double y1, double x2, double y2, double lineHeight, double l, double r);
-
     void clear();
     void caret(double x, double y, double height);
 
 
     class FxDraw implements Draw {
-        final GraphicsContext gc;
-        Color fgColor = Color.web("#C9D7E6");
-        Color bgColor = Color.web("#292929");
-        Color sbgColor = Color.web("#214283");
-        Color caretColor = Color.web("#FFE0B2");
+        private final GraphicsContext gc;
+        private final Map<String, Color> webColors = new WeakHashMap<>();
+        private final TextStyle textStyle = new TextStyle();
+        private Color fgColor = Color.web("#C9D7E6");
+        private Color bgColor = Color.web("#292929");
+        private Color sbgColor = Color.web("#214283");
+        private Color caretColor = Color.web("#FFE0B2");
 
-        Map<String, Color> colorMap = new HashMap<>();
         public FxDraw(GraphicsContext gc) {
             this.gc = gc;
             gc.setTextBaseline(VPos.TOP);
             gc.setLineCap(StrokeLineCap.BUTT);
         }
-        @Override
-        public void text(String text, double x, double y) {
-            gc.setStroke(fgColor);
-            gc.setFill(fgColor);
-            gc.fillText(text, x, y);
-        }
-        @Override
-        public void text(String text, double x, double y, List<ScreenText.Style> styles) {
-            Optional<String> colorString = styles.stream().filter(ScreenText.TextColor.class::isInstance)
-                    .map(ScreenText.TextColor.class::cast)
-                    .map(ScreenText.TextColor::colorString)
-                    .findFirst();
-            Color color = colorString.isPresent() ? colorMap.computeIfAbsent(colorString.get(), Color::web) : fgColor;
-            gc.setStroke(color);
-            gc.setFill(color);
-            gc.fillText(text, x, y);
-        }
+
         @Override
         public void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles) {
-            Optional<String> colorString = styles.stream().filter(ScreenText.BgColor.class::isInstance)
-                    .map(ScreenText.BgColor.class::cast)
-                    .map(ScreenText.BgColor::colorString)
-                    .findFirst();
-            Color color = colorString.isPresent() ? colorMap.computeIfAbsent(colorString.get(), Color::web) : bgColor;
-            gc.setFill(color);
+            apply(styles);
+            gc.setFill(textStyle.backColor == null ? bgColor : textStyle.backColor);
             gc.fillRect(x, y, w, h);
-            text(text, x, y, styles);
+            gc.setStroke(textStyle.textColor == null ? fgColor : textStyle.textColor);
+            gc.setFill(textStyle.textColor == null ? fgColor : textStyle.textColor);
+            gc.fillText(text, x, y);
+            if (textStyle.lineColor != null) {
+                System.out.println("" + textStyle.lineColor);
+                gc.setStroke(textStyle.lineColor);
+                gc.setLineWidth(1);
+                gc.setLineDashes(textStyle.lineDash);
+                gc.strokeLine(x, y + h - 4, x + w, y + h - 4);
+            }
         }
 
         @Override
@@ -95,6 +80,32 @@ public interface Draw {
             gc.setStroke(caretColor);
             gc.setLineWidth(1.5);
             gc.strokeLine(x - 1.5, y + 1, x - 1.5, y + height - 1);
+        }
+
+        private void apply(List<ScreenText.Style> styles) {
+            textStyle.clear();
+            for (ScreenText.Style style : styles) {
+                switch (style) {
+                    case ScreenText.TextColor s -> textStyle.textColor = webColors.computeIfAbsent(s.colorString(), Color::web);
+                    case ScreenText.BgColor   s -> textStyle.backColor = webColors.computeIfAbsent(s.colorString(), Color::web);
+                    case ScreenText.UnderLine s -> {
+                        textStyle.lineColor = webColors.computeIfAbsent(s.colorString(), Color::web);
+                        textStyle.lineDash = s.dash();
+                    }
+                    default -> { }
+                }
+            }
+        }
+
+        private static class TextStyle {
+            public Color textColor;
+            public Color backColor;
+            public Color lineColor;
+            public double lineDash;
+            public void clear() {
+                textColor = backColor = lineColor = null;
+                lineDash = 0;
+            }
         }
 
     }

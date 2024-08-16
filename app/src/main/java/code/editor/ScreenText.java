@@ -98,7 +98,10 @@ public interface ScreenText {
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
+                    draw.text(st.text,
+                            x + MARGIN_LEFT, y + MARGIN_TOP,
+                            st.width, fm.getLineHeight(),
+                            st.styles);
                     x += st.width;
                 }
                 y += row.lineHeight;
@@ -449,7 +452,10 @@ public interface ScreenText {
             for (TextLine line : buffer) {
                 double x = 0;
                 for (StyledText st : line.styledTexts()) {
-                    draw.text(st.text, x + MARGIN_LEFT, y + MARGIN_TOP, st.styles);
+                    draw.text(st.text,
+                            x + MARGIN_LEFT, y + MARGIN_TOP,
+                            st.width, fm.getLineHeight(),
+                            st.styles);
                     x += st.width;
                 }
                 y += line.lineHeight();
@@ -945,7 +951,7 @@ public interface ScreenText {
     record BgColor(String colorString) implements Style {}
     record Selected() implements Style {}
     record Emphasize() implements Style {}
-    record UnderLine(double dash) implements Style {}
+    record UnderLine(String colorString, double dash) implements Style {}
 
     record StyleSpan(Style style, int offset, int length) { }
     record StyledText(String text, float width, List<Style> styles) { }
