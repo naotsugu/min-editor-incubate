@@ -41,6 +41,7 @@ public interface Action {
     }
 
     static Action of(KeyEvent e) {
+        e.consume();
         if (e.getCode() == RIGHT) return e.isShiftDown()
                 ? Action.of(Action.Type.SELECT_CARET_RIGHT)
                 : Action.of(Action.Type.CARET_RIGHT);
@@ -64,10 +65,17 @@ public interface Action {
         else {
             if (keyInput.test(e)) {
                 int ascii = e.getCharacter().getBytes()[0];
+                if (ascii < 32 || ascii == 127) { // 127:DEL
+                    if (ascii != 9 && ascii != 10 && ascii != 13) { // 9:HT 10:LF 13:CR
+                        return Action.of(Action.Type.EMPTY);
+                    }
+                }
                 String ch = (ascii == 13) // 13:CR
                         ? "\n"
                         : e.getCharacter();
-                return Action.of(Action.Type.TYPED, ch);
+                return ch.isEmpty()
+                        ? Action.of(Action.Type.EMPTY)
+                        : Action.of(Action.Type.TYPED, ch);
             }
         }
         return Action.of(Action.Type.EMPTY);
