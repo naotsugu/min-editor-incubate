@@ -34,8 +34,7 @@ public class ImeFlash {
         List<StyleSpan> spans = new ArrayList<>();
         var sb = new StringBuilder();
         int from = 0;
-        for (int i = 0; i < pinedCols.size(); i++) {
-            int to = pinedCols.get(i);
+        for (int to : pinedCols) {
             sb.append(source, from, to);
             sb.append(composedText);
             spans.add(new StyleSpan(new ScreenText.UnderLine("#ffffff", 1.0), to, composedText.length()));
