@@ -1,7 +1,7 @@
 package code.editor;
 
 import code.editor.ScreenText.TextRow;
-import code.editor.ScreenText.StyleSpan;
+import code.editor.Style.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -37,7 +37,7 @@ public class ImeFlash {
         for (int to : pinedCols) {
             sb.append(source, from, to);
             sb.append(composedText);
-            spans.add(new StyleSpan(new ScreenText.UnderLine("#ffffff", 1.0), to, composedText.length()));
+            spans.add(new StyleSpan(new UnderLine("#ffffff", 1.0), to, composedText.length()));
             from = to;
         }
         sb.append(source.substring(from));

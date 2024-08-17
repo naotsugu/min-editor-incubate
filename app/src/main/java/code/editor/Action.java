@@ -5,7 +5,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-
 import java.util.function.Predicate;
 
 import static javafx.scene.input.KeyCode.*;
@@ -118,6 +117,4 @@ public interface Action {
           e.getCode().isArrowKey()    || e.getCode().isModifierKey() ||
           e.getCode().isMediaKey()    || !controlKeysFilter.test(e) ||
           e.getCharacter().isEmpty());
-
-
 }

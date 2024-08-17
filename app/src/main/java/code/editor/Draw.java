@@ -1,6 +1,7 @@
 package code.editor;
 
 import code.editor.javafx.FxFontMetrics;
+import code.editor.Style.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -12,7 +13,7 @@ import java.util.WeakHashMap;
 
 public interface Draw {
 
-    void text(String text, double x, double y, double w, List<ScreenText.Style> styles);
+    void text(String text, double x, double y, double w, List<Style> styles);
     void fillSelection(double x1, double y1, double x2, double y2, double l, double r);
     void clear();
     void caret(double x, double y);
@@ -42,7 +43,7 @@ public interface Draw {
         }
 
         @Override
-        public void text(String text, double x, double y, double w, List<ScreenText.Style> styles) {
+        public void text(String text, double x, double y, double w, List<Style> styles) {
             double h = fontMetrics.getLineHeight();
             y += fontMetrics.getAscent();
             apply(styles);
@@ -106,13 +107,13 @@ public interface Draw {
             return fontMetrics;
         }
 
-        private void apply(List<ScreenText.Style> styles) {
+        private void apply(List<Style> styles) {
             textStyle.clear();
-            for (ScreenText.Style style : styles) {
+            for (Style style : styles) {
                 switch (style) {
-                    case ScreenText.TextColor s -> textStyle.textColor = webColors.computeIfAbsent(s.colorString(), Color::web);
-                    case ScreenText.BgColor   s -> textStyle.backColor = webColors.computeIfAbsent(s.colorString(), Color::web);
-                    case ScreenText.UnderLine s -> {
+                    case TextColor s -> textStyle.textColor = webColors.computeIfAbsent(s.colorString(), Color::web);
+                    case BgColor   s -> textStyle.backColor = webColors.computeIfAbsent(s.colorString(), Color::web);
+                    case UnderLine s -> {
                         textStyle.lineColor = webColors.computeIfAbsent(s.colorString(), Color::web);
                         textStyle.lineDash = s.dash();
                     }

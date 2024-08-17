@@ -1,6 +1,6 @@
 package code.editor.syntax;
 
-import code.editor.ScreenText;
+import code.editor.Style.*;
 import java.util.List;
 
 public class MarkdownSyntax implements Syntax {
@@ -9,7 +9,7 @@ public class MarkdownSyntax implements Syntax {
         return "md";
     }
     @Override
-    public List<ScreenText.StyleSpan> apply(int row, String text) {
+    public List<StyleSpan> apply(int row, String text) {
         return List.of();
     }
 

@@ -1,6 +1,6 @@
 package code.editor.syntax;
 
-import code.editor.ScreenText;
+import code.editor.Style.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,12 +24,12 @@ public class JavaSyntax implements Syntax {
     }
 
     @Override
-    public List<ScreenText.StyleSpan> apply(int row, String text) {
+    public List<StyleSpan> apply(int row, String text) {
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
         }
 
-        List<ScreenText.StyleSpan> spans = new ArrayList<>();
+        List<StyleSpan> spans = new ArrayList<>();
 
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);

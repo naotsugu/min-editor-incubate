@@ -1,13 +1,11 @@
 package code.editor;
 
-import code.editor.javafx.FxFontMetrics;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.InputMethodEvent;
 import javafx.scene.input.InputMethodRequests;
 import javafx.scene.input.InputMethodTextRun;
@@ -20,7 +18,6 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
@@ -28,9 +25,7 @@ public class EditorPane extends StackPane {
 
     /** The canvas. */
     private final Canvas canvas;
-    /** The graphics context. */
-    private final GraphicsContext gc;
-
+    /** The draw. */
     private final Draw draw;
 
     public EditorPane() {
@@ -42,12 +37,9 @@ public class EditorPane extends StackPane {
         canvas = new Canvas(640, 480);
         canvas.setFocusTraversable(true);
         getChildren().add(canvas);
+        draw = new Draw.FxDraw(canvas.getGraphicsContext2D());
 
-        gc = canvas.getGraphicsContext2D();
         var doc = Document.of(Path.of("build.gradle.kts"));
-
-        draw = new Draw.FxDraw(gc);
-
         var st = ScreenText.of(doc, draw.fontMetrics(), Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {

@@ -1,15 +1,15 @@
 package code.editor.syntax;
 
-import code.editor.ScreenText;
+import code.editor.Style.*;
 import java.util.List;
 
 public interface Syntax {
 
     String name();
-    List<ScreenText.StyleSpan> apply(int row, String text);
+    List<StyleSpan> apply(int row, String text);
 
     record PassThrough(String name) implements Syntax {
-        @Override public List<ScreenText.StyleSpan> apply(int row, String text) {
+        @Override public List<StyleSpan> apply(int row, String text) {
             return List.of();
         }
     }
@@ -37,7 +37,7 @@ public interface Syntax {
         final String colorString;
     }
 
-    static int read(Trie keywords, String colorString, String text, int offset, List<ScreenText.StyleSpan> spans) {
+    static int read(Trie keywords, String colorString, String text, int offset, List<StyleSpan> spans) {
         StringBuilder sb = new StringBuilder();
         for (int i = offset; i < text.length(); i++) {
             char ch = text.charAt(i);
@@ -48,19 +48,19 @@ public interface Syntax {
             }
         }
         if (!sb.isEmpty() && keywords.match(sb.toString())) {
-            spans.add(new ScreenText.StyleSpan(
-                    new ScreenText.TextColor(colorString), offset, sb.length()));
+            spans.add(new StyleSpan(
+                    new TextColor(colorString), offset, sb.length()));
         }
         return offset + sb.length();
     }
 
-    static int read(char to, char esc, String colorString, String text, int offset, List<ScreenText.StyleSpan> spans) {
+    static int read(char to, char esc, String colorString, String text, int offset, List<StyleSpan> spans) {
         for (int i = offset + 1; i < text.length(); i++) {
             char ch = text.charAt(i);
             if (ch == esc) continue;
             if (ch == to) {
-                spans.add(new ScreenText.StyleSpan(
-                        new ScreenText.TextColor(colorString), offset, i - offset + 1));
+                spans.add(new StyleSpan(
+                        new TextColor(colorString), offset, i - offset + 1));
                 return i;
             }
         }

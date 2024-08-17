@@ -7,10 +7,8 @@ import com.mammb.code.piecetable.TextEdit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import code.editor.Style.*;
 
 public interface ScreenText {
 
@@ -43,7 +41,6 @@ public interface ScreenText {
     void click(double x, double y);
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);
-
     Loc imeOn();
     void imeOff();
     boolean isImeOn();
@@ -57,6 +54,9 @@ public interface ScreenText {
         return new WrapScreenText(doc, fm, syntax);
     }
 
+    /**
+     * AbstractScreenText.
+     */
     abstract class AbstractScreenText implements ScreenText {
         protected final TextEdit ed;
         protected final FontMetrics fm;
@@ -219,10 +219,9 @@ public interface ScreenText {
      * PlainScreenText.
      */
     class PlainScreenText extends AbstractScreenText {
-        double width = 0;
-        double height = 0;
-        int screenLineSize = 0;
-        List<TextRow> buffer = new ArrayList<>();
+        private double width = 0, height = 0;
+        private int screenLineSize = 0;
+        private final List<TextRow> buffer = new ArrayList<>();
 
         public PlainScreenText(Document doc, FontMetrics fm, Syntax syntax) {
             super(TextEdit.of(doc), fm, syntax);
@@ -246,11 +245,11 @@ public interface ScreenText {
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text,
+                    draw.text(st.text(),
                             x + MARGIN_LEFT, y + MARGIN_TOP,
-                            st.width,
-                            st.styles);
-                    x += st.width;
+                            st.width(),
+                            st.styles());
+                    x += st.width();
                 }
                 y += row.lineHeight;
             }
@@ -453,13 +452,12 @@ public interface ScreenText {
      * WrapScreenText
      */
     class WrapScreenText extends AbstractScreenText {
-        double width = 0;
-        double height = 0;
-        double wrap = 0;
-        int topLine = 0;
-        int screenLineSize = 0;
-        List<TextLine> buffer = new ArrayList<>();
-        List<RowMap> wrapLayout = new ArrayList<>();
+        private double width = 0, height = 0;
+        private double wrap = 0;
+        private int topLine = 0;
+        private int screenLineSize = 0;
+        private final List<TextLine> buffer = new ArrayList<>();
+        private final List<RowMap> wrapLayout = new ArrayList<>();
 
         public WrapScreenText(Document doc, FontMetrics fm, Syntax syntax) {
             super(TextEdit.of(doc), fm, syntax);
@@ -483,11 +481,11 @@ public interface ScreenText {
             for (TextLine line : buffer) {
                 double x = 0;
                 for (StyledText st : line.styledTexts()) {
-                    draw.text(st.text,
+                    draw.text(st.text(),
                             x + MARGIN_LEFT, y + MARGIN_TOP,
-                            st.width,
-                            st.styles);
-                    x += st.width;
+                            st.width(),
+                            st.styles());
+                    x += st.width();
                 }
                 y += line.lineHeight();
             }
@@ -734,7 +732,6 @@ public interface ScreenText {
             }
             return new Pos(map.row, col);
         }
-
     }
 
     record RowMap(int row, int subLine, int fromIndex, int toIndex) {
@@ -846,12 +843,6 @@ public interface ScreenText {
         return advances;
     }
 
-    private static float width(float[] advances, int from, int to) {
-        float ret = 0;
-        for (int i = from; i < to; i++) ret += advances[i];
-        return ret;
-    }
-
     private static int countLines(CharSequence text) {
         return 1 + (int) text.codePoints().filter(c -> c == '\n').count();
     }
@@ -867,70 +858,6 @@ public interface ScreenText {
         public void clearMark() { markedRow = -1; markedCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
         public boolean isMarked() { return markedRow >= 0 && markedCol >= 0; }
-    }
-
-    sealed interface Style {}
-    record TextColor(String colorString) implements Style {}
-    record BgColor(String colorString) implements Style {}
-    record Selected() implements Style {}
-    record Emphasize() implements Style {}
-    record UnderLine(String colorString, double dash) implements Style {}
-
-    record StyleSpan(Style style, int offset, int length) { }
-    record StyledText(String text, float width, List<Style> styles) { }
-    class Styles {
-        private final Set<Integer> bounds = new HashSet<>();
-        private final List<StyleSpan> spans = new ArrayList<>();
-        void putAll(List<StyleSpan> spans) {
-            spans.forEach(this::put);
-        }
-        void put(StyleSpan span) {
-            bounds.add(span.offset);
-            bounds.add(span.offset + span.length);
-            spans.add(span);
-        }
-        List<StyledText> apply(String text, float[] advances) {
-            return apply(0, text.length(), text, advances);
-        }
-        List<StyledText> apply(int from, int to, String text, float[] advances) {
-            assert text.length() == advances.length;
-
-            List<Integer> list = bounds.stream()
-                    .filter(i -> from <= i && i <= to)
-                    .sorted()
-                    .collect(Collectors.toList());
-
-            if (list.isEmpty()) {
-                return List.of(new StyledText(
-                        text.substring(from, to),
-                        width(advances, from, to),
-                        List.of()));
-            }
-
-            if (list.getFirst() != from) {
-                list.addFirst(from);
-            }
-            if (list.getLast() != to) {
-                list.addLast(to);
-            }
-            List<StyledText> ret = new ArrayList<>();
-            for (int i = 0; i < list.size() - 1; i++) {
-                int start = list.get(i);
-                int end   = list.get(i + 1);
-                ret.add(new StyledText(
-                        text.substring(start, end),
-                        width(advances, start, end),
-                        stylesOf(list.get(i))));
-            }
-            return ret;
-
-        }
-        private List<Style> stylesOf(int index) {
-            return spans.stream()
-                    .filter(span -> span.offset <= index && index < (span.offset + span.length))
-                    .map(span -> span.style)
-                    .toList();
-        }
     }
 
 }
