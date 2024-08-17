@@ -1,24 +1,28 @@
 package code.editor;
 
+import code.editor.javafx.FxFontMetrics;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.text.Font;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 public interface Draw {
 
-    void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles);
-    void fillSelection(double x1, double y1, double x2, double y2, double lineHeight, double l, double r);
+    void text(String text, double x, double y, double w, List<ScreenText.Style> styles);
+    void fillSelection(double x1, double y1, double x2, double y2, double l, double r);
     void clear();
     void caret(double x, double y, double height);
+    FontMetrics fontMetrics();
 
 
     class FxDraw implements Draw {
         private final GraphicsContext gc;
+        private final FontMetrics fontMetrics;
         private final Map<String, Color> webColors = new WeakHashMap<>();
         private final TextStyle textStyle = new TextStyle();
         private Color fgColor = Color.web("#C9D7E6");
@@ -30,10 +34,17 @@ public interface Draw {
             this.gc = gc;
             gc.setTextBaseline(VPos.TOP);
             gc.setLineCap(StrokeLineCap.BUTT);
+
+            String fontName = System.getProperty("os.name").toLowerCase().startsWith("windows")
+                    ? "MS Gothic" : "Consolas";
+            Font font = Font.font(fontName, 15);
+            fontMetrics = FxFontMetrics.of(font);
+            gc.setFont(font);
         }
 
         @Override
-        public void text(String text, double x, double y, double w, double h, List<ScreenText.Style> styles) {
+        public void text(String text, double x, double y, double w, List<ScreenText.Style> styles) {
+            double h = fontMetrics.getLineHeight();
             apply(styles);
             gc.setFill(textStyle.backColor == null ? bgColor : textStyle.backColor);
             gc.fillRect(x, y, w, h);
@@ -41,7 +52,6 @@ public interface Draw {
             gc.setFill(textStyle.textColor == null ? fgColor : textStyle.textColor);
             gc.fillText(text, x, y);
             if (textStyle.lineColor != null) {
-                System.out.println("" + textStyle.lineColor);
                 gc.setStroke(textStyle.lineColor);
                 gc.setLineWidth(1);
                 gc.setLineDashes(textStyle.lineDash);
@@ -50,7 +60,8 @@ public interface Draw {
         }
 
         @Override
-        public void fillSelection(double x1, double y1, double x2, double y2, double lineHeight, double l, double r) {
+        public void fillSelection(double x1, double y1, double x2, double y2, double l, double r) {
+            double lineHeight = fontMetrics().getLineHeight();
             gc.setFill(sbgColor);
             if (y1 == y2) {
                 gc.fillRect(x1, y1, x2 - x1, lineHeight);
@@ -80,6 +91,11 @@ public interface Draw {
             gc.setStroke(caretColor);
             gc.setLineWidth(1.5);
             gc.strokeLine(x - 1.5, y + 1, x - 1.5, y + height - 1);
+        }
+
+        @Override
+        public FontMetrics fontMetrics() {
+            return fontMetrics;
         }
 
         private void apply(List<ScreenText.Style> styles) {

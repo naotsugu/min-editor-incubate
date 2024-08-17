@@ -1,6 +1,6 @@
 package code.editor;
 
-import code.editor.javafx.FontMetrics;
+import code.editor.javafx.FxFontMetrics;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import javafx.geometry.Insets;
@@ -46,15 +46,9 @@ public class EditorPane extends StackPane {
         gc = canvas.getGraphicsContext2D();
         var doc = Document.of(Path.of("build.gradle.kts"));
 
-        String fontName = System.getProperty("os.name").toLowerCase().startsWith("windows")
-                ? "MS Gothic" : "Consolas";
-        var fm = FontMetrics.of(Font.font(fontName, 15));
-
-        gc.setFont(fm.getFont());
-
         draw = new Draw.FxDraw(gc);
 
-        var st = ScreenText.of(doc, fm, Syntax.of("java"));
+        var st = ScreenText.of(doc, draw.fontMetrics(), Syntax.of("java"));
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());

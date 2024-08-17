@@ -1,6 +1,5 @@
 package code.editor;
 
-import code.editor.javafx.FontMetrics;
 import code.editor.Lang.*;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
@@ -91,7 +90,7 @@ public interface ScreenText {
                 Loc loc2 = posToLoc(caret.row, caret.col);
                 draw.fillSelection(loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
                         loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
-                        fm.getLineHeight(), MARGIN_LEFT, width);
+                        MARGIN_LEFT, width);
             }
 
             double y = 0;
@@ -100,7 +99,7 @@ public interface ScreenText {
                 for (StyledText st : row.styledTexts()) {
                     draw.text(st.text,
                             x + MARGIN_LEFT, y + MARGIN_TOP,
-                            st.width, fm.getLineHeight(),
+                            st.width,
                             st.styles);
                     x += st.width;
                 }
@@ -445,7 +444,7 @@ public interface ScreenText {
                 draw.fillSelection(
                         loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
                         loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
-                        fm.getLineHeight(), MARGIN_LEFT, width);
+                        MARGIN_LEFT, width);
             }
 
             double y = 0;
@@ -454,7 +453,7 @@ public interface ScreenText {
                 for (StyledText st : line.styledTexts()) {
                     draw.text(st.text,
                             x + MARGIN_LEFT, y + MARGIN_TOP,
-                            st.width, fm.getLineHeight(),
+                            st.width,
                             st.styles);
                     x += st.width;
                 }
