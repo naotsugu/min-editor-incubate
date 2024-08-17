@@ -7,7 +7,9 @@ import com.mammb.code.piecetable.TextEdit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import code.editor.Style.*;
 
 public interface ScreenText {
@@ -68,7 +70,7 @@ public interface ScreenText {
             this.ed = ed;
             this.fm = fm;
             this.rowDecorator = RowDecorator.of(syntax);
-            carets.add(new Caret(0, 0));
+            this.carets.add(new Caret(0, 0));
         }
 
         @Override
@@ -196,6 +198,7 @@ public interface ScreenText {
             carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBuffer);
         }
         protected abstract void refreshBuffer(int row);
+        protected abstract void refreshBuffer(int row, int nRow);
 
         protected TextRow textRowAt(int row) {
             return createStyledRow(row);
@@ -245,10 +248,7 @@ public interface ScreenText {
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text(),
-                            x + MARGIN_LEFT, y + MARGIN_TOP,
-                            st.width(),
-                            st.styles());
+                    draw.text(st.text(), x + MARGIN_LEFT, y + MARGIN_TOP, st.width(), st.styles());
                     x += st.width();
                 }
                 y += row.lineHeight;
@@ -346,10 +346,10 @@ public interface ScreenText {
         @Override
         public void input(String text) {
             for (Caret caret : carets) {
-                caret.vPos = -1;
-                ed.insert(caret.row, caret.col, text);
-                refreshBuffer(caret.row);
-                caret.col += text.length();
+                // TODO multi line insert
+                var pos = ed.insert(caret.row, caret.col, text);
+                refreshBuffer(caret.row, pos.row() - caret.row + 1);
+                caret.at(pos.row(), pos.col());
             }
         }
 
@@ -357,10 +357,14 @@ public interface ScreenText {
         public void delete() {
             for (Caret caret : carets) {
                 caret.vPos = -1;
-                // TODO end of line delete
-                ed.delete(caret.row, caret.col,
-                        Character.isHighSurrogate(ed.getText(caret.row).charAt(caret.col)) ? 2 : 1);
-                refreshBuffer(caret.row);
+                char ch = ed.getText(caret.row).charAt(caret.col);
+                int len = (Character.isHighSurrogate(ch) || ch == '\r') ? 2 : 1;
+                ed.delete(caret.row, caret.col, len);
+                if (ch == '\r' || ch == '\n') {
+                    refreshBufferAll();
+                } else {
+                    refreshBuffer(caret.row);
+                }
             }
         }
 
@@ -381,13 +385,25 @@ public interface ScreenText {
             }
         }
 
+        private void refreshBufferAll() {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            buffer.clear();
+            for (int i = 0; i <= screenLineSize && i < ed.rows(); i++) {
+                buffer.add(createStyledRow(top + i));
+            }
+        }
         @Override
         protected void refreshBuffer(int row) {
-            int bufferIndex = bufferIndexOf(row);
-            if (bufferIndex >= 0) buffer.set(bufferIndex, createStyledRow(row));
-
+            refreshBuffer(row, 1);
         }
-
+        @Override
+        protected void refreshBuffer(int row, int nRow) {
+            assert row >= 0 && nRow > 0;
+            for (int i = row; i < row + nRow; i++) {
+                int bufferIndex = bufferIndexOf(i);
+                if (bufferIndex >= 0) buffer.set(bufferIndex, createStyledRow(row));
+            }
+        }
         private int bufferIndexOf(int row) {
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
             int index = row - top;
@@ -498,8 +514,7 @@ public interface ScreenText {
                         for (int j = textLine.map.fromIndex; j < textLine.map.toIndex && j < caret.col; j++) {
                             cx += textLine.parent.advances[j];
                         }
-                        draw.caret(cx + MARGIN_LEFT  + fm.getAdvance(imeFlash.composedText()),
-                                cy + MARGIN_TOP);
+                        draw.caret(cx + MARGIN_LEFT  + fm.getAdvance(imeFlash.composedText()), cy + MARGIN_TOP);
                         break;
                     }
                 }
@@ -634,7 +649,8 @@ public interface ScreenText {
 
         @Override
         protected void refreshBuffer(int row) { refreshBuffer(row, 1); }
-        private void refreshBuffer(int row, int nRow) {
+        @Override
+        protected void refreshBuffer(int row, int nRow) {
             assert row >= 0 && nRow > 0;
             List<TextLine> lines = new ArrayList<>();
             for (int i = row; i < row + nRow; i++) {
@@ -847,17 +863,21 @@ public interface ScreenText {
         return 1 + (int) text.codePoints().filter(c -> c == '\n').count();
     }
 
-    class Caret {
+    class Caret implements Comparable<Caret> {
         int row = 0, col = 0;
         double vPos = 0; // not contains margin
         int markedRow = -1, markedCol = -1;
         Caret(int row, int col) { this.row = row; this.col = col; this.vPos = -1; }
-        public void at(int row, int col) { this.row = row; this.col = col; }
+        public void at(int row, int col) { this.row = row; this.col = col; this.vPos = -1; }
         public void mark(int row, int col) { markedRow = row; markedCol = col; }
         public void mark() { markedRow = row; markedCol = col; }
         public void clearMark() { markedRow = -1; markedCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
         public boolean isMarked() { return markedRow >= 0 && markedCol >= 0; }
+        @Override public int compareTo(Caret that) {
+            int c = Integer.compare(this.row, that.row);
+            return c == 0 ? Integer.compare(this.col, that.col) : c;
+        }
     }
 
 }

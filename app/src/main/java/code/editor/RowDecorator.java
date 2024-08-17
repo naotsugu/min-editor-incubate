@@ -10,14 +10,18 @@ public class RowDecorator {
     private static final Decorator TERMINAL = textRow -> textRow;
 
     private final Map<Integer, Decorator> map = new HashMap<>();
-
     private Decorator defaultDecorator;
 
     public RowDecorator(Decorator defaultDecorator) {
         this.defaultDecorator = (defaultDecorator == null) ? TERMINAL : defaultDecorator;
     }
-    public static RowDecorator of(Syntax syntax) { return new RowDecorator(new SyntaxDecorator(syntax)); }
-    public TextRow apply(TextRow textRow) { return map.getOrDefault(textRow.row, defaultDecorator).textRow(textRow); }
+    public static RowDecorator of(Syntax syntax) {
+        return new RowDecorator(new SyntaxDecorator(syntax));
+    }
+
+    public TextRow apply(TextRow textRow) {
+        return map.getOrDefault(textRow.row, defaultDecorator).textRow(textRow);
+    }
     public void clear() { map.clear(); }
 
     public interface Decorator {
