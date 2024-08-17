@@ -1,7 +1,6 @@
 package code.editor;
 
 import code.editor.javafx.FxFontMetrics;
-import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -16,7 +15,7 @@ public interface Draw {
     void text(String text, double x, double y, double w, List<ScreenText.Style> styles);
     void fillSelection(double x1, double y1, double x2, double y2, double l, double r);
     void clear();
-    void caret(double x, double y, double height);
+    void caret(double x, double y);
     FontMetrics fontMetrics();
 
 
@@ -32,7 +31,7 @@ public interface Draw {
 
         public FxDraw(GraphicsContext gc) {
             this.gc = gc;
-            gc.setTextBaseline(VPos.TOP);
+            //gc.setTextBaseline(VPos.TOP);
             gc.setLineCap(StrokeLineCap.BUTT);
 
             String fontName = System.getProperty("os.name").toLowerCase().startsWith("windows")
@@ -45,6 +44,7 @@ public interface Draw {
         @Override
         public void text(String text, double x, double y, double w, List<ScreenText.Style> styles) {
             double h = fontMetrics.getLineHeight();
+            y += fontMetrics.getAscent();
             apply(styles);
             gc.setFill(textStyle.backColor == null ? bgColor : textStyle.backColor);
             gc.fillRect(x, y, w, h);
@@ -66,6 +66,14 @@ public interface Draw {
             if (y1 == y2) {
                 gc.fillRect(x1, y1, x2 - x1, lineHeight);
             } else {
+                //                    0:(x1, y1)
+                //                     _______________________  1:(r, y1)
+                // 6:(l, y1 + h) _____|                      |
+                //               |   7:(x1, y1 + h)          |
+                //               |                           |
+                //               |     3:(x2, y2)  __________| 2:(r, y2)
+                //               |________________|
+                // 5:(l, y2 + h)                4:(x2, y2 + h)
                 double[] x = new double[8];
                 double[] y = new double[8];
                 x[0] = x1; y[0]= y1;
@@ -86,11 +94,11 @@ public interface Draw {
             gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         }
         @Override
-        public void caret(double x, double y, double height) {
+        public void caret(double x, double y) {
             gc.setLineDashes(0);
             gc.setStroke(caretColor);
             gc.setLineWidth(1.5);
-            gc.strokeLine(x - 1.5, y + 1, x - 1.5, y + height - 1);
+            gc.strokeLine(x - 1, y, x - 1, y + fontMetrics.getLineHeight());
         }
 
         @Override

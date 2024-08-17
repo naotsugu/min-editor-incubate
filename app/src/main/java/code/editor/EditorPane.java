@@ -110,19 +110,23 @@ public class EditorPane extends StackPane {
     private Action execute(ScreenText st, Action action) {
         if (st.isImeOn()) return Action.EMPTY;
         switch (action.type()) {
-            case TYPED       -> { st.input(action.attr()); st.draw(draw); }
-            case DELETE      -> { st.delete(); st.draw(draw); }
-            case BACK_SPACE  -> { st.backspace(); st.draw(draw); }
-            case CARET_RIGHT -> { st.moveCaretRight(); st.draw(draw); }
-            case CARET_LEFT  -> { st.moveCaretLeft(); st.draw(draw); }
-            case CARET_DOWN  -> { st.moveCaretDown(); st.draw(draw); }
-            case CARET_UP    -> { st.moveCaretUp(); st.draw(draw); }
-            case UNDO        -> { st.undo(); st.draw(draw); }
-            case REDO        -> { st.redo(); st.draw(draw); }
+            case TYPED              -> { st.input(action.attr()); st.draw(draw); }
+            case DELETE             -> { st.delete(); st.draw(draw); }
+            case BACK_SPACE         -> { st.backspace(); st.draw(draw); }
+            case CARET_RIGHT        -> { st.moveCaretRight(); st.draw(draw); }
+            case CARET_LEFT         -> { st.moveCaretLeft(); st.draw(draw); }
+            case CARET_DOWN         -> { st.moveCaretDown(); st.draw(draw); }
+            case CARET_UP           -> { st.moveCaretUp(); st.draw(draw); }
+            case HOME               -> { st.moveCaretHome(); st.draw(draw); }
+            case END                -> { st.moveCaretEnd(); st.draw(draw); }
             case SELECT_CARET_RIGHT -> { st.moveCaretSelectRight(); st.draw(draw); }
             case SELECT_CARET_LEFT  -> { st.moveCaretSelectLeft(); st.draw(draw); }
             case SELECT_CARET_DOWN  -> { st.moveCaretSelectDown(); st.draw(draw); }
             case SELECT_CARET_UP    -> { st.moveCaretSelectUp(); st.draw(draw); }
+            case SELECT_HOME        -> { st.moveCaretSelectHome(); st.draw(draw); }
+            case SELECT_END         -> { st.moveCaretSelectEnd(); st.draw(draw); }
+            case UNDO               -> { st.undo(); st.draw(draw); }
+            case REDO               -> { st.redo(); st.draw(draw); }
         }
         return action;
     }

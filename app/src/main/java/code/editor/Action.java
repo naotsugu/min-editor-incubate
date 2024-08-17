@@ -1,6 +1,8 @@
 package code.editor;
 
 import javafx.scene.input.KeyCharacterCombination;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
@@ -54,6 +56,12 @@ public interface Action {
         else if (e.getCode() == DOWN) return e.isShiftDown()
                 ? Action.of(Action.Type.SELECT_CARET_DOWN)
                 : Action.of(Action.Type.CARET_DOWN);
+        else if (e.getCode() == HOME || SC_HOME.match(e)) return e.isShiftDown()
+                ? Action.of(Action.Type.SELECT_HOME)
+                : Action.of(Action.Type.HOME);
+        else if (e.getCode() == END  || SC_END.match(e)) return e.isShiftDown()
+                ? Action.of(Action.Type.SELECT_END)
+                : Action.of(Action.Type.END);
         else if (e.getCode() == DELETE) return Action.of(Action.Type.DELETE);
         else if (e.getCode() == BACK_SPACE) return Action.of(Action.Type.BACK_SPACE);
         else if (SC_C.match(e)) return Action.of(Action.Type.COPY);
@@ -84,8 +92,8 @@ public interface Action {
     /** The action event type.*/
     enum Type {
         TYPED, DELETE, BACK_SPACE,
-        CARET_RIGHT, CARET_LEFT, CARET_UP, CARET_DOWN,
-        SELECT_CARET_RIGHT, SELECT_CARET_LEFT, SELECT_CARET_UP, SELECT_CARET_DOWN,
+        CARET_RIGHT, CARET_LEFT, CARET_UP, CARET_DOWN, HOME,
+        SELECT_CARET_RIGHT, SELECT_CARET_LEFT, SELECT_CARET_UP, SELECT_CARET_DOWN, SELECT_HOME, END, SELECT_END,
         COPY, PASTE, CUT,
         UNDO, REDO,
         EMPTY,
@@ -98,6 +106,8 @@ public interface Action {
     KeyCombination SC_Z = new KeyCharacterCombination("z", KeyCombination.SHORTCUT_DOWN);
     KeyCombination SC_Y = new KeyCharacterCombination("y", KeyCombination.SHORTCUT_DOWN);
     KeyCombination SC_SZ= new KeyCharacterCombination("z", KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
+    KeyCombination SC_END  = new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHORTCUT_DOWN);
+    KeyCombination SC_HOME = new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHORTCUT_DOWN);
 
     Predicate<KeyEvent> controlKeysFilter = e ->
             System.getProperty("os.name").toLowerCase().startsWith("windows")
