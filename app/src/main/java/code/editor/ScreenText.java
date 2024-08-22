@@ -141,11 +141,71 @@ public interface ScreenText {
         private void moveCaretEnd(Caret caret) { caret.vPos = -1; caret.col = textRowAt(caret.row).textLength(); }
 
         @Override
-        public abstract void input(String text);
+        public void input(String text) {
+            if (carets.size() == 1) {
+                Caret caret = carets.getFirst();
+                var pos = ed.insert(caret.row, caret.col, text);
+                if (caret.row == pos.row()) {
+                    refreshBufferAt(caret.row);
+                } else {
+                    refreshBufferRange(caret.row);
+                }
+                caret.at(pos.row(), pos.col());
+            } else {
+                Collections.sort(carets);
+                var poss = ed.insert(carets.stream().map(c -> new Pos(c.row, c.col)).toList(), text);
+                refreshBufferRange(poss.getFirst().row());
+                for (int i = 0; i < poss.size(); i++) {
+                    var pos = poss.get(i);
+                    carets.get(i).at(pos.row(), pos.col());
+                }
+            }
+        }
+
         @Override
-        public abstract void delete();
+        public void delete() {
+            if (carets.size() == 1) {
+                Caret caret = carets.getFirst();
+                var del = ed.delete(caret.row, caret.col);
+                if (!del.contains("\n")) {
+                    refreshBufferAt(caret.row);
+                } else {
+                    refreshBufferRange(caret.row);
+                }
+            } else {
+                Collections.sort(carets);
+                var poss = ed.delete(carets.stream().map(c -> new Pos(c.row, c.col)).toList());
+                refreshBufferRange(poss.getFirst().row());
+                for (int i = 0; i < poss.size(); i++) {
+                    var pos = poss.get(i);
+                    carets.get(i).at(pos.row(), pos.col());
+                }
+            }
+        }
+
         @Override
-        public abstract void backspace();
+        public void backspace() {
+            if (carets.size() == 1) {
+                Caret caret = carets.getFirst();
+                if (caret.isZero()) return;
+                var pos = ed.backspace(caret.row, caret.col);
+                if (caret.row == pos.row()) {
+                    refreshBufferAt(caret.row);
+                } else {
+                    refreshBufferRange(caret.row);
+                }
+                caret.at(pos.row(), pos.col());
+            } else {
+                Collections.sort(carets);
+                var poss = ed.backspace(carets.stream().map(c -> new Pos(c.row, c.col)).toList());
+                refreshBufferRange(poss.getFirst().row());
+                for (int i = 0; i < poss.size(); i++) {
+                    var pos = poss.get(i);
+                    carets.get(i).at(pos.row(), pos.col());
+                }
+            }
+        }
+
         @Override
         public void undo() {
             carets.clear();
@@ -197,7 +257,8 @@ public interface ScreenText {
             carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBufferAt);
         }
         protected abstract void refreshBufferAt(int row);
-        protected abstract void refreshBufferAt(int row, int nRow);
+        protected abstract void refreshBufferRange(int fromRow);
+        protected abstract void refreshBufferRange(int row, int nRow);
 
         protected TextRow textRowAt(int row) {
             return createRow(row);
@@ -343,70 +404,6 @@ public interface ScreenText {
         }
 
         @Override
-        public void input(String text) {
-            if (carets.size() == 1) {
-                Caret caret = carets.getFirst();
-                var pos = ed.insert(caret.row, caret.col, text);
-                if (caret.row == pos.row()) {
-                    refreshBufferAt(caret.row);
-                } else {
-                    refreshBufferRange(caret.row);
-                }
-                caret.at(pos.row(), pos.col());
-            } else {
-                Collections.sort(carets);
-                var poss = ed.insert(carets.stream().map(c -> new Pos(c.row, c.col)).toList(), text);
-                refreshBufferRange(poss.getFirst().row());
-                for (int i = 0; i < poss.size(); i++) {
-                    var pos = poss.get(i);
-                    carets.get(i).at(pos.row(), pos.col());
-                }
-            }
-        }
-
-        @Override
-        public void delete() {
-            if (carets.size() == 1) {
-                Caret caret = carets.getFirst();
-                var del = ed.delete(caret.row, caret.col);
-                if (!del.contains("\n")) {
-                    refreshBufferAt(caret.row);
-                } else {
-                    refreshBufferRange(caret.row);
-                }
-            } else {
-                Collections.sort(carets);
-                var poss = ed.delete(carets.stream().map(c -> new Pos(c.row, c.col)).toList());
-                refreshBufferRange(poss.getFirst().row());
-                for (int i = 0; i < poss.size(); i++) {
-                    var pos = poss.get(i);
-                    carets.get(i).at(pos.row(), pos.col());
-                }
-            }
-        }
-
-        @Override
-        public void backspace() {
-            if (carets.size() == 1) {
-                Caret caret = carets.getFirst();
-                var pos = ed.backspace(caret.row, caret.col);
-                if (caret.row == pos.row()) {
-                    refreshBufferAt(caret.row);
-                } else {
-                    refreshBufferRange(caret.row);
-                }
-                caret.at(pos.row(), pos.col());
-            } else {
-                Collections.sort(carets);
-                var poss = ed.backspace(carets.stream().map(c -> new Pos(c.row, c.col)).toList());
-                refreshBufferRange(poss.getFirst().row());
-                for (int i = 0; i < poss.size(); i++) {
-                    var pos = poss.get(i);
-                    carets.get(i).at(pos.row(), pos.col());
-                }
-            }
-        }
-
         protected void refreshBufferRange(int fromRow) {
             int bufferIndex = bufferIndexOf(fromRow);
             for (int i = bufferIndex; i <= screenLineSize && i < ed.rows(); i++) {
@@ -415,10 +412,10 @@ public interface ScreenText {
         }
         @Override
         protected void refreshBufferAt(int row) {
-            refreshBufferAt(row, 1);
+            refreshBufferRange(row, 1);
         }
         @Override
-        protected void refreshBufferAt(int row, int nRow) {
+        protected void refreshBufferRange(int row, int nRow) {
             assert row >= 0 && nRow > 0;
             for (int i = row; i < row + nRow; i++) {
                 int bufferIndex = bufferIndexOf(i);
@@ -480,7 +477,6 @@ public interface ScreenText {
                 return createRow(row);
             }
         }
-
     }
 
     /**
@@ -633,43 +629,13 @@ public interface ScreenText {
         }
 
         @Override
-        public void input(String text) {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                ed.insert(caret.row, caret.col, text);
-                refreshBufferAt(caret.row, countLines(text));
-                caret.col += text.length();
-            }
+        protected void refreshBufferRange(int fromRow) {
+            refreshBufferRange(fromRow, buffer.getLast().row() - fromRow + 1);
         }
-
         @Override
-        public void delete() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                delete(caret.row, caret.col,
-                        Character.isHighSurrogate(ed.getText(caret.row).charAt(caret.col)) ? 2 : 1);
-            }
-        }
-
-        private void delete(int row, int col, int len) {
-            var delText = ed.delete(row, col, len);
-            refreshBufferAt(row, countLines(delText));
-        }
-
+        protected void refreshBufferAt(int row) { refreshBufferRange(row, 1); }
         @Override
-        public void backspace() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                if (caret.isZero()) continue;
-                moveCaretLeft();
-                delete();
-            }
-        }
-
-        @Override
-        protected void refreshBufferAt(int row) { refreshBufferAt(row, 1); }
-        @Override
-        protected void refreshBufferAt(int row, int nRow) {
+        protected void refreshBufferRange(int row, int nRow) {
             assert row >= 0 && nRow > 0;
             List<TextLine> lines = new ArrayList<>();
             for (int i = row; i < row + nRow; i++) {
