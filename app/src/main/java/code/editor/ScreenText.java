@@ -4,12 +4,11 @@ import code.editor.Lang.*;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import com.mammb.code.piecetable.TextEdit;
+import com.mammb.code.piecetable.TextEdit.Pos;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import code.editor.Style.*;
 
 public interface ScreenText {
@@ -79,7 +78,7 @@ public interface ScreenText {
         }
         @Override
         public void moveCaretSelectRight() {
-            carets.forEach(c -> { if (!c.isMarked()) c.mark(); moveCaretRight(c); });
+            carets.forEach(c -> { if (!c.hasMark()) c.mark(); moveCaretRight(c); });
         }
         private void moveCaretRight(Caret caret) {
             caret.vPos = -1;
@@ -97,7 +96,7 @@ public interface ScreenText {
         }
         @Override
         public void moveCaretSelectLeft() {
-            carets.forEach(c -> { if (!c.isMarked()) c.mark(); moveCaretLeft(c); });
+            carets.forEach(c -> { if (!c.hasMark()) c.mark(); moveCaretLeft(c); });
         }
         private void moveCaretLeft(Caret caret) {
             caret.vPos = -1;
@@ -118,7 +117,7 @@ public interface ScreenText {
         }
         @Override
         public void moveCaretSelectDown() {
-            carets.forEach(c -> { if (!c.isMarked()) c.mark();  moveCaretDown(c); });
+            carets.forEach(c -> { if (!c.hasMark()) c.mark();  moveCaretDown(c); });
         }
         protected abstract void moveCaretDown(Caret caret);
         @Override
@@ -127,18 +126,18 @@ public interface ScreenText {
         }
         @Override
         public void moveCaretSelectUp() {
-            carets.forEach(c -> {if (!c.isMarked()) c.mark();  moveCaretUp(c); });
+            carets.forEach(c -> {if (!c.hasMark()) c.mark();  moveCaretUp(c); });
         }
         protected abstract void moveCaretUp(Caret caret);
         @Override
         public void moveCaretHome() { carets.forEach(c -> { c.clearMark(); moveCaretHome(c); }); }
         @Override
-        public void moveCaretSelectHome() { carets.forEach(c -> { if (!c.isMarked()) c.mark(); moveCaretHome(c); }); }
+        public void moveCaretSelectHome() { carets.forEach(c -> { if (!c.hasMark()) c.mark(); moveCaretHome(c); }); }
         private void moveCaretHome(Caret caret) { caret.vPos = -1; caret.col = 0; }
         @Override
         public void moveCaretEnd() { carets.forEach(c -> { c.clearMark(); moveCaretEnd(c); }); }
         @Override
-        public void moveCaretSelectEnd() { carets.forEach(c -> { if (!c.isMarked()) c.mark(); moveCaretEnd(c); }); }
+        public void moveCaretSelectEnd() { carets.forEach(c -> { if (!c.hasMark()) c.mark(); moveCaretEnd(c); }); }
         private void moveCaretEnd(Caret caret) { caret.vPos = -1; caret.col = textRowAt(caret.row).textLength(); }
 
         @Override
@@ -151,13 +150,13 @@ public interface ScreenText {
         public void undo() {
             carets.clear();
             ed.undo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
-            refreshBuffer(carets);
+            refreshBufferAt(carets);
         }
         @Override
         public void redo() {
             carets.clear();
             ed.redo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
-            refreshBuffer(carets);
+            refreshBufferAt(carets);
         }
 
         @Override
@@ -179,7 +178,7 @@ public interface ScreenText {
         @Override
         public void imeOff() {
             imeFlash.clear();
-            carets.forEach(c -> refreshBuffer(c.row));
+            carets.forEach(c -> refreshBufferAt(c.row));
         }
         @Override
         public boolean isImeOn() {
@@ -191,17 +190,17 @@ public interface ScreenText {
                 carets.forEach(c -> imeFlash.on(c.row, c.col));
             }
             imeFlash.composed(text);
-            carets.forEach(c -> refreshBuffer(c.row));
+            carets.forEach(c -> refreshBufferAt(c.row));
         }
 
-        protected void refreshBuffer(List<Caret> carets) {
-            carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBuffer);
+        protected void refreshBufferAt(List<Caret> carets) {
+            carets.stream().mapToInt(c -> c.row).distinct().forEach(this::refreshBufferAt);
         }
-        protected abstract void refreshBuffer(int row);
-        protected abstract void refreshBuffer(int row, int nRow);
+        protected abstract void refreshBufferAt(int row);
+        protected abstract void refreshBufferAt(int row, int nRow);
 
         protected TextRow textRowAt(int row) {
-            return createStyledRow(row);
+            return createRow(row);
         }
         protected TextRow createStyledRow(int row) {
             return rowDecorator.apply(createRow(row));
@@ -236,7 +235,7 @@ public interface ScreenText {
             if (buffer.isEmpty()) return;
 
             for (Caret caret : carets) {
-                if (!caret.isMarked()) continue;
+                if (!caret.hasMark()) continue;
                 Loc loc1 = posToLoc(caret.markedRow, caret.markedCol);
                 Loc loc2 = posToLoc(caret.row, caret.col);
                 draw.fillSelection(loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
@@ -345,59 +344,81 @@ public interface ScreenText {
 
         @Override
         public void input(String text) {
-            for (Caret caret : carets) {
-                // TODO multi line insert
+            if (carets.size() == 1) {
+                Caret caret = carets.getFirst();
                 var pos = ed.insert(caret.row, caret.col, text);
-                refreshBuffer(caret.row, pos.row() - caret.row + 1);
+                if (caret.row == pos.row()) {
+                    refreshBufferAt(caret.row);
+                } else {
+                    refreshBufferRange(caret.row);
+                }
                 caret.at(pos.row(), pos.col());
+            } else {
+                Collections.sort(carets);
+                var poss = ed.insert(carets.stream().map(c -> new Pos(c.row, c.col)).toList(), text);
+                refreshBufferRange(poss.getFirst().row());
+                for (int i = 0; i < poss.size(); i++) {
+                    var pos = poss.get(i);
+                    carets.get(i).at(pos.row(), pos.col());
+                }
             }
         }
 
         @Override
         public void delete() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                char ch = ed.getText(caret.row).charAt(caret.col);
-                int len = (Character.isHighSurrogate(ch) || ch == '\r') ? 2 : 1;
-                ed.delete(caret.row, caret.col, len);
-                if (ch == '\r' || ch == '\n') {
-                    refreshBufferAll();
+            if (carets.size() == 1) {
+                Caret caret = carets.getFirst();
+                var del = ed.delete(caret.row, caret.col);
+                if (!del.contains("\n")) {
+                    refreshBufferAt(caret.row);
                 } else {
-                    refreshBuffer(caret.row);
+                    refreshBufferRange(caret.row);
+                }
+            } else {
+                Collections.sort(carets);
+                var poss = ed.delete(carets.stream().map(c -> new Pos(c.row, c.col)).toList());
+                refreshBufferRange(poss.getFirst().row());
+                for (int i = 0; i < poss.size(); i++) {
+                    var pos = poss.get(i);
+                    carets.get(i).at(pos.row(), pos.col());
                 }
             }
         }
 
         @Override
         public void backspace() {
-            for (Caret caret : carets) {
-                caret.vPos = -1;
-                if (caret.isZero()) continue;
-                if (caret.col == 0) {
-                    moveCaretLeft();
-                    delete();
+            if (carets.size() == 1) {
+                Caret caret = carets.getFirst();
+                var pos = ed.backspace(caret.row, caret.col);
+                if (caret.row == pos.row()) {
+                    refreshBufferAt(caret.row);
                 } else {
-                    int len = Character.isLowSurrogate(ed.getText(caret.row).charAt(caret.col - 1)) ? 2 : 1;
-                    caret.col -= len;
-                    ed.delete(caret.row, caret.col, len);
-                    refreshBuffer(caret.row);
+                    refreshBufferRange(caret.row);
+                }
+                caret.at(pos.row(), pos.col());
+            } else {
+                Collections.sort(carets);
+                var poss = ed.backspace(carets.stream().map(c -> new Pos(c.row, c.col)).toList());
+                refreshBufferRange(poss.getFirst().row());
+                for (int i = 0; i < poss.size(); i++) {
+                    var pos = poss.get(i);
+                    carets.get(i).at(pos.row(), pos.col());
                 }
             }
         }
 
-        private void refreshBufferAll() {
-            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            buffer.clear();
-            for (int i = 0; i <= screenLineSize && i < ed.rows(); i++) {
-                buffer.add(createStyledRow(top + i));
+        protected void refreshBufferRange(int fromRow) {
+            int bufferIndex = bufferIndexOf(fromRow);
+            for (int i = bufferIndex; i <= screenLineSize && i < ed.rows(); i++) {
+                buffer.set(i, createStyledRow(fromRow++));
             }
         }
         @Override
-        protected void refreshBuffer(int row) {
-            refreshBuffer(row, 1);
+        protected void refreshBufferAt(int row) {
+            refreshBufferAt(row, 1);
         }
         @Override
-        protected void refreshBuffer(int row, int nRow) {
+        protected void refreshBufferAt(int row, int nRow) {
             assert row >= 0 && nRow > 0;
             for (int i = row; i < row + nRow; i++) {
                 int bufferIndex = bufferIndexOf(i);
@@ -420,12 +441,10 @@ public interface ScreenText {
             int col = xToCol(row, x);
             return new Pos(row, col);
         }
-
         private double rowToY(int row) {
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
             return (row - top) * fm.getLineHeight();
         }
-
         private double colToX(int row, int col) {
             float[] advances = textRowAt(row).advances;
             double x = 0;
@@ -434,7 +453,6 @@ public interface ScreenText {
             }
             return x;
         }
-
         private int xToCol(int row, double x) {
             if (x <= 0) return 0;
             TextRow textRow = textRowAt(row);
@@ -451,17 +469,18 @@ public interface ScreenText {
 
         @Override
         protected TextRow textRowAt(int row) {
-            if (!buffer.isEmpty()) {
-                return createStyledRow(row);
+            if (buffer.isEmpty()) {
+                return createRow(row);
             }
             var top = buffer.getFirst();
             if (top.row == row) return top;
             if (top.row <= row && row < top.row + buffer.size()) {
                 return buffer.get(row - top.row);
             } else {
-                return createStyledRow(row);
+                return createRow(row);
             }
         }
+
     }
 
     /**
@@ -484,7 +503,7 @@ public interface ScreenText {
             draw.clear();
 
             for (Caret caret : carets) {
-                if (!caret.isMarked()) continue;
+                if (!caret.hasMark()) continue;
                 Loc loc1 = posToLoc(caret.markedRow, caret.markedCol);
                 Loc loc2 = posToLoc(caret.row, caret.col);
                 draw.fillSelection(
@@ -618,7 +637,7 @@ public interface ScreenText {
             for (Caret caret : carets) {
                 caret.vPos = -1;
                 ed.insert(caret.row, caret.col, text);
-                refreshBuffer(caret.row, countLines(text));
+                refreshBufferAt(caret.row, countLines(text));
                 caret.col += text.length();
             }
         }
@@ -634,7 +653,7 @@ public interface ScreenText {
 
         private void delete(int row, int col, int len) {
             var delText = ed.delete(row, col, len);
-            refreshBuffer(row, countLines(delText));
+            refreshBufferAt(row, countLines(delText));
         }
 
         @Override
@@ -648,9 +667,9 @@ public interface ScreenText {
         }
 
         @Override
-        protected void refreshBuffer(int row) { refreshBuffer(row, 1); }
+        protected void refreshBufferAt(int row) { refreshBufferAt(row, 1); }
         @Override
-        protected void refreshBuffer(int row, int nRow) {
+        protected void refreshBufferAt(int row, int nRow) {
             assert row >= 0 && nRow > 0;
             List<TextLine> lines = new ArrayList<>();
             for (int i = row; i < row + nRow; i++) {
@@ -873,7 +892,7 @@ public interface ScreenText {
         public void mark() { markedRow = row; markedCol = col; }
         public void clearMark() { markedRow = -1; markedCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
-        public boolean isMarked() { return markedRow >= 0 && markedCol >= 0; }
+        public boolean hasMark() { return markedRow >= 0 && markedCol >= 0; }
         @Override public int compareTo(Caret that) {
             int c = Integer.compare(this.row, that.row);
             return c == 0 ? Integer.compare(this.col, that.col) : c;
