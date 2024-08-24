@@ -6,6 +6,7 @@ import com.mammb.code.piecetable.Document;
 import com.mammb.code.piecetable.TextEdit;
 import com.mammb.code.piecetable.TextEdit.Pos;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -19,6 +20,9 @@ public interface ScreenText {
 
     void draw(Draw draw);
     void setSize(double width, double height);
+    int getScrollableMaxLine();
+    int getScrolledLineValue();
+    double getScrollableMaxX();
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int n);
@@ -45,7 +49,7 @@ public interface ScreenText {
     Loc imeOn();
     void imeOff();
     boolean isImeOn();
-    void imeComposedInput(String text);
+    void inputImeComposed(String text);
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
         return new PlainScreenText(doc, fm, syntax);
@@ -192,7 +196,7 @@ public interface ScreenText {
                 if (caret.row == pos.row()) {
                     refreshBufferAt(caret.row);
                 } else {
-                    refreshBufferRange(caret.row);
+                    refreshBufferRange(pos.row());
                 }
                 caret.at(pos.row(), pos.col());
             } else {
@@ -245,7 +249,7 @@ public interface ScreenText {
             return !imeFlash.isEmpty();
         }
         @Override
-        public void imeComposedInput(String text) {
+        public void inputImeComposed(String text) {
             if (imeFlash.isEmpty()) {
                 carets.forEach(c -> imeFlash.on(c.row, c.col));
             }
@@ -283,6 +287,8 @@ public interface ScreenText {
      */
     class PlainScreenText extends AbstractScreenText {
         private double width = 0, height = 0;
+        private double maxRowWidth = 0;
+        private double xShift = 0;
         private int screenLineSize = 0;
         private final List<TextRow> buffer = new ArrayList<>();
 
@@ -299,12 +305,14 @@ public interface ScreenText {
                 if (!caret.hasMark()) continue;
                 Loc loc1 = posToLoc(caret.markedRow, caret.markedCol);
                 Loc loc2 = posToLoc(caret.row, caret.col);
-                draw.fillSelection(loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
+                draw.fillSelection(
+                        loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
                         loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
                         MARGIN_LEFT, width);
             }
 
             double y = 0;
+            maxRowWidth = 0;
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
@@ -312,6 +320,7 @@ public interface ScreenText {
                     x += st.width();
                 }
                 y += row.lineHeight;
+                maxRowWidth = Math.max(maxRowWidth, row.width);
             }
             for (Caret caret : carets) {
                 if (buffer.getFirst().row <= caret.row && caret.row <= buffer.getLast().row) {
@@ -347,11 +356,26 @@ public interface ScreenText {
         }
 
         @Override
+        public int getScrollableMaxLine() {
+            return (int) (ed.rows() - screenLineSize * 0.6);
+        }
+
+        @Override
+        public int getScrolledLineValue() {
+            return buffer.isEmpty() ? 0 : buffer.getFirst().row;
+        }
+
+        @Override
+        public double getScrollableMaxX() {
+            return Math.max(0, maxRowWidth + MARGIN_LEFT - width);
+        }
+
+        @Override
         public void scrollNext(int delta) {
             assert delta > 0;
 
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
-            int maxTop = (int) (ed.rows() - screenLineSize * 0.6);
+            int maxTop = getScrollableMaxLine();
             if (top + delta >= maxTop) {
                 delta = maxTop - top;
             }
@@ -379,7 +403,7 @@ public interface ScreenText {
 
         @Override
         public void scrollAt(int row) {
-            row = Math.clamp(row, 0, ed.rows() - 1);
+            row = Math.clamp(row, 0, getScrollableMaxLine());
             buffer.clear();
             for (int i = row; i < ed.rows(); i++) {
                 buffer.add(createStyledRow(i));
@@ -443,7 +467,7 @@ public interface ScreenText {
             return (row - top) * fm.getLineHeight();
         }
         private double colToX(int row, int col) {
-            float[] advances = textRowAt(row).advances;
+            double[] advances = textRowAt(row).advances;
             double x = 0;
             for (int i = 0; i < advances.length && i < col; i++) {
                 x += advances[i];
@@ -453,7 +477,7 @@ public interface ScreenText {
         private int xToCol(int row, double x) {
             if (x <= 0) return 0;
             TextRow textRow = textRowAt(row);
-            float[] advances = textRow.advances;
+            double[] advances = textRow.advances;
             for (int i = 0; i < advances.length; i++) {
                 x -= advances[i];
                 if (x < 0) return i;
@@ -582,8 +606,23 @@ public interface ScreenText {
         }
 
         @Override
+        public int getScrollableMaxLine() {
+            return (int) (wrapLayout.size() - screenLineSize * 0.6);
+        }
+
+        @Override
+        public int getScrolledLineValue() {
+            return topLine;
+        }
+
+        @Override
+        public double getScrollableMaxX() {
+            return 0;
+        }
+
+        @Override
         public void scrollNext(int delta) {
-            int maxTop = (int) (wrapLayout.size() - screenLineSize * 0.6);
+            int maxTop = getScrollableMaxLine();
             if (topLine + delta >= maxTop) {
                 delta = maxTop - topLine;
             }
@@ -597,7 +636,7 @@ public interface ScreenText {
 
         @Override
         public void scrollAt(int line) {
-            topLine = Math.clamp(line, 0, wrapLayout.size());
+            topLine = Math.clamp(line, 0, getScrollableMaxLine());
             buffer.clear();
             RowMap map = wrapLayout.get(topLine);
             for (int i = map.row; i < ed.rows(); i++) {
@@ -746,15 +785,17 @@ public interface ScreenText {
     class TextRow {
         int row;
         String text;
-        float[] advances;
+        double[] advances;
         Styles styles;
         float lineHeight;
-        public TextRow(int row, String text, float[] advances, float lineHeight) {
+        double width;
+        public TextRow(int row, String text, double[] advances, float lineHeight) {
             this.row = row;
             this.text = text;
             this.advances = advances;
             this.styles = new Styles();
             this.lineHeight = lineHeight;
+            this.width = Arrays.stream(advances).sum();
         }
         private List<TextLine> wrap(double width) {
             if (width <= 0) {
@@ -765,7 +806,7 @@ public interface ScreenText {
             int fromIndex = 0;
             List<TextLine> wrapped = new ArrayList<>();
             for (int i = 0; i < text.length(); i++) {
-                float advance = advances[i];
+                double advance = advances[i];
                 if (advance <= 0) continue;
                 if (w + advance > width) {
                     wrapped.add(new TextLine(this,
@@ -826,8 +867,8 @@ public interface ScreenText {
         }
     }
 
-    private static float[] advances(String text, FontMetrics fm) {
-        float[] advances = new float[text.length()];
+    private static double[] advances(String text, FontMetrics fm) {
+        double[] advances = new double[text.length()];
         for (int i = 0; i < text.length(); i++) {
             char ch1 = text.charAt(i);
             if (Character.isHighSurrogate(ch1)) {

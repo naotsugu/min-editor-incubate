@@ -14,7 +14,7 @@ public interface Style {
     record UnderLine(String colorString, double dash) implements Style {}
 
     record StyleSpan(Style style, int offset, int length) { }
-    record StyledText(String text, float width, List<Style> styles) { }
+    record StyledText(String text, double width, List<Style> styles) { }
     class Styles {
         private final Set<Integer> bounds = new HashSet<>();
         private final List<StyleSpan> spans = new ArrayList<>();
@@ -26,10 +26,10 @@ public interface Style {
             bounds.add(span.offset + span.length);
             spans.add(span);
         }
-        List<StyledText> apply(String text, float[] advances) {
+        List<StyledText> apply(String text, double[] advances) {
             return apply(0, text.length(), text, advances);
         }
-        List<StyledText> apply(int from, int to, String text, float[] advances) {
+        List<StyledText> apply(int from, int to, String text, double[] advances) {
             assert text.length() == advances.length;
 
             List<Integer> list = bounds.stream()
@@ -70,8 +70,8 @@ public interface Style {
         }
     }
 
-    private static float width(float[] advances, int from, int to) {
-        float ret = 0;
+    private static double width(double[] advances, int from, int to) {
+        double ret = 0;
         for (int i = from; i < to; i++) ret += advances[i];
         return ret;
     }

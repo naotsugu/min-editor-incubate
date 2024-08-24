@@ -3,9 +3,13 @@ package code.editor;
 import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.input.InputMethodEvent;
 import javafx.scene.input.InputMethodRequests;
 import javafx.scene.input.InputMethodTextRun;
@@ -18,7 +22,10 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.stream.Collectors;
 
 public class EditorPane extends StackPane {
@@ -27,6 +34,10 @@ public class EditorPane extends StackPane {
     private final Canvas canvas;
     /** The draw. */
     private final Draw draw;
+
+    private ScreenText st;
+    private final ScrollBar vs = new ScrollBar();
+    private final ScrollBar hs = new ScrollBar();
 
     public EditorPane() {
         setCursor(Cursor.TEXT);
@@ -40,13 +51,31 @@ public class EditorPane extends StackPane {
         draw = new Draw.FxDraw(canvas.getGraphicsContext2D());
 
         var doc = Document.of(Path.of("build.gradle.kts"));
-        var st = ScreenText.of(doc, draw.fontMetrics(), Syntax.of("java"));
+        st = ScreenText.of(doc, draw.fontMetrics(), Syntax.of("java"));
+
+        // scroll bar
+        applyCss(scrollBarCss, vs, hs);
+        vs.setOrientation(Orientation.VERTICAL);
+        StackPane.setAlignment(vs, Pos.TOP_RIGHT);
+        vs.valueProperty().addListener((ob, o, n) -> {
+            if (st.getScrolledLineValue() != n.intValue()) {
+                st.scrollAt(n.intValue());
+                st.draw(draw);
+            }
+        });
+        hs.setOrientation(Orientation.HORIZONTAL);
+        StackPane.setAlignment(hs, Pos.BOTTOM_LEFT);
+        hs.valueProperty().addListener((ob, o, n) -> {
+            // TODO
+        });
+        getChildren().addAll(vs, hs);
+
 
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
             canvas.setHeight(n.getHeight());
             st.setSize(n.getWidth(), n.getHeight());
-            st.draw(draw);
+            draw();
         });
 
         setOnScroll((ScrollEvent e) -> {
@@ -56,7 +85,7 @@ public class EditorPane extends StackPane {
                 } else {
                     st.scrollPrev(1);
                 }
-                st.draw(draw);
+                draw();
             }
         });
         setOnMouseClicked((MouseEvent e) -> {
@@ -66,13 +95,14 @@ public class EditorPane extends StackPane {
                     case 2 -> st.clickDouble(e.getX(), e.getY());
                     case 3 -> st.clickTriple(e.getX(), e.getY());
                 }
-                st.draw(draw);
+                draw();
             }
         });
 
         setOnKeyPressed((KeyEvent e) -> execute(st, Action.of(e)));
         setOnKeyTyped((KeyEvent e) -> execute(st, Action.of(e)));
 
+        // IME
         canvas.setInputMethodRequests(new InputMethodRequests() {
             @Override public Point2D getTextLocation(int offset) {
                 Lang.Loc loc = st.imeOn();
@@ -88,13 +118,13 @@ public class EditorPane extends StackPane {
                 execute(st, Action.of(Action.Type.TYPED, e.getCommitted()));
             } else if (!e.getComposed().isEmpty()) {
                 if (!st.isImeOn()) st.imeOn();
-                st.imeComposedInput(e.getComposed().stream()
+                st.inputImeComposed(e.getComposed().stream()
                         .map(InputMethodTextRun::getText)
                         .collect(Collectors.joining()));
             } else {
                 st.imeOff();
             }
-            st.draw(draw);
+            draw();
         });
 
     }
@@ -102,24 +132,87 @@ public class EditorPane extends StackPane {
     private Action execute(ScreenText st, Action action) {
         if (st.isImeOn()) return Action.EMPTY;
         switch (action.type()) {
-            case TYPED              -> { st.input(action.attr()); st.draw(draw); }
-            case DELETE             -> { st.delete(); st.draw(draw); }
-            case BACK_SPACE         -> { st.backspace(); st.draw(draw); }
-            case CARET_RIGHT        -> { st.moveCaretRight(); st.draw(draw); }
-            case CARET_LEFT         -> { st.moveCaretLeft(); st.draw(draw); }
-            case CARET_DOWN         -> { st.moveCaretDown(); st.draw(draw); }
-            case CARET_UP           -> { st.moveCaretUp(); st.draw(draw); }
-            case HOME               -> { st.moveCaretHome(); st.draw(draw); }
-            case END                -> { st.moveCaretEnd(); st.draw(draw); }
-            case SELECT_CARET_RIGHT -> { st.moveCaretSelectRight(); st.draw(draw); }
-            case SELECT_CARET_LEFT  -> { st.moveCaretSelectLeft(); st.draw(draw); }
-            case SELECT_CARET_DOWN  -> { st.moveCaretSelectDown(); st.draw(draw); }
-            case SELECT_CARET_UP    -> { st.moveCaretSelectUp(); st.draw(draw); }
-            case SELECT_HOME        -> { st.moveCaretSelectHome(); st.draw(draw); }
-            case SELECT_END         -> { st.moveCaretSelectEnd(); st.draw(draw); }
-            case UNDO               -> { st.undo(); st.draw(draw); }
-            case REDO               -> { st.redo(); st.draw(draw); }
+            case TYPED              -> { st.input(action.attr()); draw(); }
+            case DELETE             -> { st.delete(); draw(); }
+            case BACK_SPACE         -> { st.backspace(); draw(); }
+            case CARET_RIGHT        -> { st.moveCaretRight(); draw(); }
+            case CARET_LEFT         -> { st.moveCaretLeft(); draw(); }
+            case CARET_DOWN         -> { st.moveCaretDown(); draw(); }
+            case CARET_UP           -> { st.moveCaretUp(); draw(); }
+            case HOME               -> { st.moveCaretHome(); draw(); }
+            case END                -> { st.moveCaretEnd(); draw(); }
+            case SELECT_CARET_RIGHT -> { st.moveCaretSelectRight(); draw(); }
+            case SELECT_CARET_LEFT  -> { st.moveCaretSelectLeft(); draw(); }
+            case SELECT_CARET_DOWN  -> { st.moveCaretSelectDown(); draw(); }
+            case SELECT_CARET_UP    -> { st.moveCaretSelectUp(); draw(); }
+            case SELECT_HOME        -> { st.moveCaretSelectHome(); draw(); }
+            case SELECT_END         -> { st.moveCaretSelectEnd(); draw(); }
+            case UNDO               -> { st.undo(); draw(); }
+            case REDO               -> { st.redo(); draw(); }
         }
         return action;
     }
+
+    private void draw() {
+        st.draw(draw);
+        vs.setMax(st.getScrollableMaxLine());
+        vs.setValue(st.getScrolledLineValue());
+        if (st.getScrollableMaxX() > 0) {
+            hs.setMax(st.getScrollableMaxX());
+            hs.setPrefWidth(getWidth() - vs.getWidth());
+            hs.setVisible(true);
+        } else {
+            hs.setVisible(false);
+        }
+    }
+
+    private static void applyCss(String css, Parent... parents) {
+        String s = Base64.getEncoder().encodeToString(css.getBytes(StandardCharsets.UTF_8));
+        Arrays.stream(parents).forEach(p -> p.getStylesheets().add(
+                String.join(",", "data:text/css;base64", s)));
+    }
+
+    private static String scrollBarCss = """
+            .scroll-bar:horizontal .track,
+            .scroll-bar:vertical .track {
+                -fx-background-color :rgba(64,64,64,10);
+                -fx-border-color :transparent;
+                -fx-background-radius : 0.0em;
+                -fx-border-radius :2.0em;
+            }
+            .scroll-bar:horizontal .increment-button ,
+            .scroll-bar:horizontal .decrement-button {
+                -fx-background-color :transparent;
+                -fx-background-radius : 0.0em;
+                -fx-padding :0.0 0.0 10.0 0.0;
+            }
+            .scroll-bar:vertical .increment-button ,
+            .scroll-bar:vertical .decrement-button {
+                -fx-background-color :transparent;
+                -fx-background-radius : 0.0em;
+                -fx-padding :0.0 10.0 0.0 0.0;
+            }
+            .scroll-bar .increment-arrow,
+            .scroll-bar .decrement-arrow {
+                -fx-shape : " ";
+                -fx-padding :0.15em 0.0;
+            }
+            .scroll-bar:vertical .increment-arrow,
+            .scroll-bar:vertical .decrement-arrow {
+                -fx-shape : " ";
+                -fx-padding :0.0 0.15em;
+            }
+            .scroll-bar:horizontal .thumb,
+            .scroll-bar:vertical .thumb {
+                -fx-background-color :derive(black,90.0%);
+                -fx-background-insets : 2.0, 0.0, 0.0;
+                -fx-background-radius : 2.0em;
+            }
+            .scroll-bar:horizontal .thumb:hover,
+            .scroll-bar:vertical .thumb:hover {
+                -fx-background-color :derive(#4D4C4F,10.0%);
+                -fx-background-insets : 2.0, 0.0, 0.0;
+                -fx-background-radius : 2.0em;
+            }
+            """;
 }
