@@ -77,7 +77,6 @@ public class EditorPane extends StackPane {
         });
         getChildren().addAll(vs, hs);
 
-
         layoutBoundsProperty().addListener((ob, o, n) -> {
             canvas.setWidth(n.getWidth());
             canvas.setHeight(n.getHeight());
@@ -88,9 +87,9 @@ public class EditorPane extends StackPane {
         setOnScroll((ScrollEvent e) -> {
             if (e.getEventType() == ScrollEvent.SCROLL && e.getDeltaY() != 0) {
                 if (e.getDeltaY() < 0) {
-                    st.scrollNext(1);
+                    st.scrollNext((int) Math.min(5, Math.abs(e.getDeltaY())));
                 } else {
-                    st.scrollPrev(1);
+                    st.scrollPrev((int) Math.min(5, e.getDeltaY()));
                 }
                 draw();
             }
