@@ -55,7 +55,9 @@ public class EditorPane extends StackPane {
 
         // scroll bar
         applyCss(scrollBarCss, vs, hs);
+        vs.setCursor(Cursor.DEFAULT);
         vs.setOrientation(Orientation.VERTICAL);
+        vs.setMin(0);
         StackPane.setAlignment(vs, Pos.TOP_RIGHT);
         vs.valueProperty().addListener((ob, o, n) -> {
             if (st.getScrolledLineValue() != n.intValue()) {
@@ -63,10 +65,15 @@ public class EditorPane extends StackPane {
                 st.draw(draw);
             }
         });
+        hs.setCursor(Cursor.DEFAULT);
         hs.setOrientation(Orientation.HORIZONTAL);
         StackPane.setAlignment(hs, Pos.BOTTOM_LEFT);
+        hs.setMin(0);
         hs.valueProperty().addListener((ob, o, n) -> {
-            // TODO
+            if (st.getScrolledXValue() != n.doubleValue()) {
+                st.scrollX(n.doubleValue());
+                st.draw(draw);
+            }
         });
         getChildren().addAll(vs, hs);
 
@@ -157,9 +164,12 @@ public class EditorPane extends StackPane {
         st.draw(draw);
         vs.setMax(st.getScrollableMaxLine());
         vs.setValue(st.getScrolledLineValue());
+        vs.setVisibleAmount(st.screenLineSize());
         if (st.getScrollableMaxX() > 0) {
             hs.setMax(st.getScrollableMaxX());
             hs.setPrefWidth(getWidth() - vs.getWidth());
+            hs.setVisibleAmount((canvas.getWidth() - vs.getWidth()) *
+                    (canvas.getWidth() / (st.getScrollableMaxX() + canvas.getWidth())));
             hs.setVisible(true);
         } else {
             hs.setVisible(false);

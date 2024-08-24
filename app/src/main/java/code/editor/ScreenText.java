@@ -23,6 +23,8 @@ public interface ScreenText {
     int getScrollableMaxLine();
     int getScrolledLineValue();
     double getScrollableMaxX();
+    double getScrolledXValue();
+    void scrollX(double x);
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int n);
@@ -50,6 +52,7 @@ public interface ScreenText {
     void imeOff();
     boolean isImeOn();
     void inputImeComposed(String text);
+    int screenLineSize();
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
         return new PlainScreenText(doc, fm, syntax);
@@ -63,6 +66,8 @@ public interface ScreenText {
      * AbstractScreenText.
      */
     abstract class AbstractScreenText implements ScreenText {
+        protected double width = 0, height = 0;
+        protected int screenLineSize = 0;
         protected final TextEdit ed;
         protected final FontMetrics fm;
         protected final RowDecorator rowDecorator;
@@ -280,16 +285,15 @@ public interface ScreenText {
         protected int screenLineSize(double h) {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
         }
+        public int screenLineSize() { return screenLineSize; }
     }
 
     /**
      * PlainScreenText.
      */
     class PlainScreenText extends AbstractScreenText {
-        private double width = 0, height = 0;
         private double maxRowWidth = 0;
         private double xShift = 0;
-        private int screenLineSize = 0;
         private final List<TextRow> buffer = new ArrayList<>();
 
         public PlainScreenText(Document doc, FontMetrics fm, Syntax syntax) {
@@ -306,8 +310,8 @@ public interface ScreenText {
                 Loc loc1 = posToLoc(caret.markedRow, caret.markedCol);
                 Loc loc2 = posToLoc(caret.row, caret.col);
                 draw.fillSelection(
-                        loc1.x() + MARGIN_LEFT, loc1.y() + MARGIN_TOP,
-                        loc2.x() + MARGIN_LEFT, loc2.y() + MARGIN_TOP,
+                        loc1.x() + MARGIN_LEFT - xShift, loc1.y() + MARGIN_TOP,
+                        loc2.x() + MARGIN_LEFT - xShift, loc2.y() + MARGIN_TOP,
                         MARGIN_LEFT, width);
             }
 
@@ -316,7 +320,7 @@ public interface ScreenText {
             for (TextRow row : buffer) {
                 double x = 0;
                 for (StyledText st : row.styledTexts()) {
-                    draw.text(st.text(), x + MARGIN_LEFT, y + MARGIN_TOP, st.width(), st.styles());
+                    draw.text(st.text(), x + MARGIN_LEFT - xShift, y + MARGIN_TOP, st.width(), st.styles());
                     x += st.width();
                 }
                 y += row.lineHeight;
@@ -327,7 +331,7 @@ public interface ScreenText {
                     double x = colToX(caret.row, caret.col + imeFlash.composedText().length());
                     caret.vPos = (caret.vPos < 0) ? x : caret.vPos;
                     draw.caret(
-                            (imeFlash.composedText().isEmpty() ? Math.min(x, caret.vPos) : x) + MARGIN_LEFT,
+                            (imeFlash.composedText().isEmpty() ? Math.min(x, caret.vPos) : x) + MARGIN_LEFT - xShift,
                             rowToY(caret.row) + MARGIN_TOP);
                 }
             }
@@ -367,7 +371,17 @@ public interface ScreenText {
 
         @Override
         public double getScrollableMaxX() {
-            return Math.max(0, maxRowWidth + MARGIN_LEFT - width);
+            return  (maxRowWidth > width) ? Math.max(0, maxRowWidth + MARGIN_LEFT - width * 0.6) : 0;
+        }
+
+        @Override
+        public double getScrolledXValue() {
+            return xShift;
+        }
+
+        @Override
+        public void scrollX(double x) {
+            xShift = x;
         }
 
         @Override
@@ -425,6 +439,11 @@ public interface ScreenText {
             caret.vPos = (caret.vPos < 0) ? colToX(caret.row, caret.col) : caret.vPos;
             caret.row--;
             caret.col = xToCol(caret.row, caret.vPos);
+        }
+
+        @Override
+        public void click(double x, double y) {
+            super.click(x + xShift, y);
         }
 
         @Override
@@ -507,10 +526,8 @@ public interface ScreenText {
      * WrapScreenText
      */
     class WrapScreenText extends AbstractScreenText {
-        private double width = 0, height = 0;
         private double wrap = 0;
         private int topLine = 0;
-        private int screenLineSize = 0;
         private final List<TextLine> buffer = new ArrayList<>();
         private final List<RowMap> wrapLayout = new ArrayList<>();
 
@@ -616,8 +633,14 @@ public interface ScreenText {
         }
 
         @Override
-        public double getScrollableMaxX() {
-            return 0;
+        public double getScrollableMaxX() { return 0; }
+
+        @Override
+        public double getScrolledXValue() { return 0; }
+
+        @Override
+        public void scrollX(double x) {
+            // nothing to do
         }
 
         @Override
