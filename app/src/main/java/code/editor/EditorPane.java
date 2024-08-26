@@ -147,12 +147,16 @@ public class EditorPane extends StackPane {
             case CARET_UP           -> { st.moveCaretUp(); draw(); }
             case HOME               -> { st.moveCaretHome(); draw(); }
             case END                -> { st.moveCaretEnd(); draw(); }
+            case PAGE_UP            -> { st.moveCaretPageUp(); draw(); }
+            case PAGE_DOWN          -> { st.moveCaretPageDown(); draw(); }
             case SELECT_CARET_RIGHT -> { st.moveCaretSelectRight(); draw(); }
             case SELECT_CARET_LEFT  -> { st.moveCaretSelectLeft(); draw(); }
             case SELECT_CARET_DOWN  -> { st.moveCaretSelectDown(); draw(); }
             case SELECT_CARET_UP    -> { st.moveCaretSelectUp(); draw(); }
             case SELECT_HOME        -> { st.moveCaretSelectHome(); draw(); }
             case SELECT_END         -> { st.moveCaretSelectEnd(); draw(); }
+            case SELECT_PAGE_UP     -> { st.moveCaretSelectPageUp(); draw(); }
+            case SELECT_PAGE_DOWN   -> { st.moveCaretSelectPageDown(); draw(); }
             case UNDO               -> { st.undo(); draw(); }
             case REDO               -> { st.redo(); draw(); }
         }

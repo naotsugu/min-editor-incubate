@@ -58,9 +58,15 @@ public interface Action {
         else if (e.getCode() == HOME || SC_HOME.match(e)) return e.isShiftDown()
                 ? Action.of(Action.Type.SELECT_HOME)
                 : Action.of(Action.Type.HOME);
-        else if (e.getCode() == END  || SC_END.match(e)) return e.isShiftDown()
+        else if (e.getCode() == END || SC_END.match(e)) return e.isShiftDown()
                 ? Action.of(Action.Type.SELECT_END)
                 : Action.of(Action.Type.END);
+        else if (e.getCode() == PAGE_UP) return e.isShiftDown()
+                ? Action.of(Action.Type.SELECT_PAGE_UP)
+                : Action.of(Action.Type.PAGE_UP);
+        else if (e.getCode() == PAGE_DOWN) return e.isShiftDown()
+                ? Action.of(Action.Type.SELECT_PAGE_DOWN)
+                : Action.of(Action.Type.PAGE_DOWN);
         else if (e.getCode() == DELETE) return Action.of(Action.Type.DELETE);
         else if (e.getCode() == BACK_SPACE) return Action.of(Action.Type.BACK_SPACE);
         else if (SC_C.match(e)) return Action.of(Action.Type.COPY);
@@ -91,8 +97,11 @@ public interface Action {
     /** The action event type.*/
     enum Type {
         TYPED, DELETE, BACK_SPACE,
-        CARET_RIGHT, CARET_LEFT, CARET_UP, CARET_DOWN, HOME,
-        SELECT_CARET_RIGHT, SELECT_CARET_LEFT, SELECT_CARET_UP, SELECT_CARET_DOWN, SELECT_HOME, END, SELECT_END,
+        CARET_RIGHT, CARET_LEFT, CARET_UP, CARET_DOWN,
+        SELECT_CARET_RIGHT, SELECT_CARET_LEFT, SELECT_CARET_UP, SELECT_CARET_DOWN,
+        HOME, SELECT_HOME, END, SELECT_END,
+        PAGE_UP, SELECT_PAGE_UP,
+        PAGE_DOWN, SELECT_PAGE_DOWN,
         COPY, PASTE, CUT,
         UNDO, REDO,
         EMPTY,
@@ -112,9 +121,11 @@ public interface Action {
             System.getProperty("os.name").toLowerCase().startsWith("windows")
                     ? !e.isControlDown() && !e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1 && e.getCharacter().getBytes()[0] != 0
                     : !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
+
     Predicate<KeyEvent> keyInput = e -> e.getEventType() == KeyEvent.KEY_TYPED &&
         !(e.getCode().isFunctionKey() || e.getCode().isNavigationKey() ||
           e.getCode().isArrowKey()    || e.getCode().isModifierKey() ||
           e.getCode().isMediaKey()    || !controlKeysFilter.test(e) ||
           e.getCharacter().isEmpty());
+
 }

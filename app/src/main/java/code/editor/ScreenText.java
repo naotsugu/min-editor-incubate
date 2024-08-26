@@ -40,6 +40,10 @@ public interface ScreenText {
     void moveCaretEnd();
     void moveCaretSelectHome();
     void moveCaretSelectEnd();
+    void moveCaretPageUp();
+    void moveCaretPageDown();
+    void moveCaretSelectPageUp();
+    void moveCaretSelectPageDown();
     void input(String text);
     void delete();
     void backspace();
@@ -93,8 +97,8 @@ public interface ScreenText {
         }
         private void moveCaretRight(Caret caret) {
             caret.vPos = -1;
-            // TODO skip if eof
             TextRow row = textRowAt(caret.row);
+            if (row.text.isEmpty()) return;
             caret.col += row.isHighSurrogate(caret.col) ? 2 : 1;
             if (caret.col > row.textLength()) {
                 caret.col = 0;
@@ -156,6 +160,33 @@ public interface ScreenText {
         @Override
         public void moveCaretSelectEnd() { carets.forEach(c -> { if (!c.hasMark()) c.mark(); moveCaretEnd(c); }); }
         private void moveCaretEnd(Caret caret) { caret.vPos = -1; caret.col = textRowAt(caret.row).textLength(); }
+
+        @Override
+        public void moveCaretPageUp() { carets.forEach(Caret::clearMark); moveCaretPageUp(carets.getFirst()); }
+        @Override
+        public void moveCaretPageDown() { carets.forEach(Caret::clearMark); moveCaretPageDown(carets.getFirst()); }
+        @Override
+        public void moveCaretSelectPageUp() {
+            carets.stream().skip(1).forEach(Caret::clearMark);
+            Caret c = carets.getFirst();
+            if (!c.hasMark()) c.mark();
+            moveCaretPageUp(c);
+        }
+        @Override
+        public void moveCaretSelectPageDown() {
+            carets.stream().skip(1).forEach(Caret::clearMark);
+            Caret c = carets.getFirst();
+            if (!c.hasMark()) c.mark();
+            moveCaretPageDown(c);
+        }
+        private void moveCaretPageUp(Caret caret) {
+            scrollToCaret();
+            scrollPrev(screenLineSize - 1);
+        }
+        private void moveCaretPageDown(Caret caret) {
+            scrollToCaret();
+            scrollNext(screenLineSize - 1);
+        }
 
         public void scrollToCaret() {
             Caret caret = carets.getFirst();
@@ -251,12 +282,6 @@ public interface ScreenText {
             scrollToCaret();
         }
 
-        @Override
-        public void click(double x, double y) {
-            Pos pos = locToPos(x, y);
-            carets.clear();
-            carets.add(new Caret(pos.row(), pos.col()));
-        }
         @Override
         public void clickDouble(double x, double y) { /* Not yet implemented. */ }
         @Override
@@ -405,6 +430,12 @@ public interface ScreenText {
                 delta = maxTop - top;
             }
 
+            if (delta == 0) return;
+            if (delta >= screenLineSize) {
+                scrollAt(top + delta);
+                return;
+            }
+
             int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
             buffer.subList(0, Math.min(delta, buffer.size())).clear();
             for (int i = next; i < (next + delta) && i < ed.rows(); i++) {
@@ -417,9 +448,15 @@ public interface ScreenText {
             assert delta > 0;
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
             delta = Math.clamp(delta, 0, top);
+
             if (delta == 0) return;
+            if (delta >= screenLineSize) {
+                scrollAt(top - delta);
+                return;
+            }
+
             if (buffer.size() >= screenLineSize) {
-                buffer.subList(buffer.size() - delta, buffer.size()).clear();
+                buffer.subList(Math.max(0, buffer.size() - delta), buffer.size()).clear();
             }
             for (int i = 1; i <= delta; i++) {
                 buffer.addFirst(createStyledRow(top - i));
@@ -454,7 +491,10 @@ public interface ScreenText {
 
         @Override
         public void click(double x, double y) {
-            super.click(x + xShift, y);
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            Pos pos = locToPos(x + xShift, y + top * fm.getLineHeight());
+            carets.clear();
+            carets.add(new Caret(pos.row(), pos.col()));
         }
 
         @Override
@@ -681,6 +721,13 @@ public interface ScreenText {
                     if (buffer.size() >= screenLineSize) break;
                 }
             }
+        }
+
+        @Override
+        public void click(double x, double y) {
+            Pos pos = locToPos(x, y + topLine * fm.getLineHeight());
+            carets.clear();
+            carets.add(new Caret(pos.row(), pos.col()));
         }
 
         @Override
