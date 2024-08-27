@@ -181,11 +181,15 @@ public interface ScreenText {
         }
         private void moveCaretPageUp(Caret caret) {
             scrollToCaret();
+            Loc loc = posToLocInParent(caret.row, caret.col);
             scrollPrev(screenLineSize - 1);
+            click(loc.x(), loc.y());
         }
         private void moveCaretPageDown(Caret caret) {
             scrollToCaret();
+            Loc loc = posToLocInParent(caret.row, caret.col);
             scrollNext(screenLineSize - 1);
+            click(loc.x(), loc.y());
         }
 
         public void scrollToCaret() {
@@ -329,6 +333,7 @@ public interface ScreenText {
         }
 
         protected abstract Loc posToLoc(int row, int col);
+        protected abstract Loc posToLocInParent(int row, int col);
         protected abstract Pos locToPos(double x, double y);
         protected int screenLineSize(double h) {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
@@ -525,6 +530,12 @@ public interface ScreenText {
         @Override
         protected Loc posToLoc(int row, int col) {
             return new Loc(colToX(row, col), rowToY(row));
+        }
+        @Override
+        protected Loc posToLocInParent(int row, int col) {
+            int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
+            double y = (row - top) * fm.getLineHeight() + MARGIN_TOP;
+            return new Loc(colToX(row, col) - xShift + MARGIN_LEFT, y);
         }
         @Override
         protected Pos locToPos(double x, double y) {
@@ -822,6 +833,12 @@ public interface ScreenText {
                 x += textLine.parent.advances[j];
             }
             return new Loc(x, y);
+        }
+
+        @Override
+        protected Loc posToLocInParent(int row, int col) {
+            Loc loc = posToLoc(row, col);
+            return new Loc(loc.x() + MARGIN_LEFT, loc.y() - topLine * fm.getLineHeight() + MARGIN_TOP);
         }
 
         private Indexed<TextLine> posToLine(int row, int col) {
