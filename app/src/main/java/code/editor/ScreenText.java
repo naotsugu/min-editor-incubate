@@ -10,7 +10,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import code.editor.Style.*;
+import javafx.scene.input.DataFormat;
 
 public interface ScreenText {
 
@@ -56,6 +58,9 @@ public interface ScreenText {
     void imeOff();
     boolean isImeOn();
     void inputImeComposed(String text);
+    void pasteFromClipboard();
+    void copyToClipboard();
+    void cutToClipboard();
     int screenLineSize();
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
@@ -337,6 +342,25 @@ public interface ScreenText {
         protected abstract Pos locToPos(double x, double y);
         protected int screenLineSize(double h) {
             return (int) Math.ceil(Math.max(0, h - MARGIN_TOP) / fm.getLineHeight());
+        }
+        @Override
+        public void pasteFromClipboard() {
+            var clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+            var text = clipboard.hasString() ? clipboard.getString() : "";
+            if (text == null || text.isEmpty()) {
+                return;
+            }
+            input(text);
+        }
+        @Override
+        public void copyToClipboard() {
+            javafx.scene.input.Clipboard.getSystemClipboard()
+                    .setContent(Map.of(DataFormat.PLAIN_TEXT, "TODO"));
+        }
+        @Override
+        public void cutToClipboard() {
+            javafx.scene.input.Clipboard.getSystemClipboard()
+                    .setContent(Map.of(DataFormat.PLAIN_TEXT, "TODO"));
         }
         public int screenLineSize() { return screenLineSize; }
     }

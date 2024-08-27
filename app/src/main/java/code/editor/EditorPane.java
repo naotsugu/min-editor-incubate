@@ -159,6 +159,9 @@ public class EditorPane extends StackPane {
             case SELECT_PAGE_DOWN   -> { st.moveCaretSelectPageDown(); draw(); }
             case UNDO               -> { st.undo(); draw(); }
             case REDO               -> { st.redo(); draw(); }
+            case COPY               -> { st.copyToClipboard(); }
+            case PASTE              -> { st.pasteFromClipboard(); draw(); }
+            case CUT                -> { st.cutToClipboard(); draw(); }
         }
         return action;
     }

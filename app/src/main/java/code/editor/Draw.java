@@ -47,8 +47,10 @@ public interface Draw {
             double h = fontMetrics.getLineHeight();
             y += fontMetrics.getAscent();
             apply(styles);
-            gc.setFill(textStyle.backColor == null ? bgColor : textStyle.backColor);
-            gc.fillRect(x, y, w, h);
+            if (textStyle.backColor != null) {
+                gc.setFill(textStyle.backColor);
+                gc.fillRect(x, y - fontMetrics.getAscent(), w, h);
+            }
             gc.setStroke(textStyle.textColor == null ? fgColor : textStyle.textColor);
             gc.setFill(textStyle.textColor == null ? fgColor : textStyle.textColor);
             gc.fillText(text, x, y);
