@@ -465,7 +465,7 @@ public interface ScreenText {
         }
 
         @Override
-        public int getScrollableMaxLine() { return (int) (ed.rows() - screenLineSize * 0.6); }
+        public int getScrollableMaxLine() { return (int) Math.max(0, ed.rows() - screenLineSize * 0.6); }
         @Override
         public int getScrolledLineValue() { return buffer.isEmpty() ? 0 : buffer.getFirst().row; }
         @Override
@@ -480,7 +480,6 @@ public interface ScreenText {
         @Override
         public void scrollNext(int delta) {
             assert delta > 0;
-
             int top = buffer.isEmpty() ? 0 : buffer.getFirst().row;
             int maxTop = getScrollableMaxLine();
             if (top + delta >= maxTop) {
@@ -493,7 +492,7 @@ public interface ScreenText {
                 return;
             }
 
-            int next = buffer.isEmpty() ? 0 : buffer.getLast().row + 1;
+            int next = top + 1;
             buffer.subList(0, Math.min(delta, buffer.size())).clear();
             for (int i = next; i < (next + delta) && i < ed.rows(); i++) {
                 buffer.add(createStyledRow(i));
@@ -558,7 +557,11 @@ public interface ScreenText {
         protected void refreshBufferRange(int fromRow) {
             int bufferIndex = bufferIndexOf(fromRow);
             for (int i = bufferIndex; i <= screenLineSize && i < ed.rows(); i++) {
-                buffer.set(i, createStyledRow(fromRow++));
+                if (i >= buffer.size()) {
+                    buffer.add(createStyledRow(fromRow++));
+                } else {
+                    buffer.set(i, createStyledRow(fromRow++));
+                }
             }
         }
         @Override
@@ -618,7 +621,7 @@ public interface ScreenText {
             return textRow.textLength();
         }
         private int yToRow(double y) {
-            return (int) (Math.max(0, y - MARGIN_TOP) / fm.getLineHeight());
+            return Math.clamp((int) (Math.max(0, y - MARGIN_TOP) / fm.getLineHeight()), 0, ed.rows() - 1);
         }
 
         @Override
@@ -738,7 +741,7 @@ public interface ScreenText {
 
         @Override
         public int getScrollableMaxLine() {
-            return (int) (wrapLayout.size() - screenLineSize * 0.6);
+            return (int) Math.max(0, wrapLayout.size() - screenLineSize * 0.6);
         }
 
         @Override
@@ -913,7 +916,8 @@ public interface ScreenText {
 
         @Override
         protected Pos locToPos(double x, double y) {
-            RowMap map = wrapLayout.get(topLine + (int) (y / fm.getLineHeight()));
+            int layoutIndex = Math.clamp(topLine + (int) (y / fm.getLineHeight()), 0, wrapLayout.size() - 1);
+            RowMap map = wrapLayout.get(layoutIndex);
             TextLine textLine = posToLine(map.row, map.fromIndex).value();
             int col = textLine.map.fromIndex;
             for (int i = 0; i < textLine.textLength(); i++) {
