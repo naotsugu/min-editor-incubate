@@ -5,6 +5,7 @@ import code.editor.syntax.Syntax;
 import com.mammb.code.piecetable.Document;
 import com.mammb.code.piecetable.TextEdit;
 import com.mammb.code.piecetable.TextEdit.Pos;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,6 +64,8 @@ public interface ScreenText {
     void pasteFromClipboard();
     void copyToClipboard();
     void cutToClipboard();
+    Path path();
+    void save(Path path);
     int screenLineSize();
 
     static ScreenText of(Document doc, FontMetrics fm, Syntax syntax) {
@@ -383,6 +386,10 @@ public interface ScreenText {
             javafx.scene.input.Clipboard.getSystemClipboard()
                     .setContent(Map.of(DataFormat.PLAIN_TEXT, String.join("", texts)));
         }
+        @Override
+        public Path path() { return ed.path(); }
+        @Override
+        public void save(Path path) { ed.save(path); }
         public int screenLineSize() { return screenLineSize; }
     }
 
