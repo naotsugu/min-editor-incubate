@@ -53,7 +53,7 @@ public class EditorPane extends StackPane {
         getChildren().add(canvas);
         draw = new Draw.FxDraw(canvas.getGraphicsContext2D());
 
-        st = ScreenText.of(Document.of(), draw.fontMetrics(), Syntax.of("java"));
+        st = ScreenText.of(Document.of(Path.of("build.gradle.kts")), draw.fontMetrics(), Syntax.of("java"));
 
         // scroll bar
         applyCss(scrollBarCss, vs, hs);
