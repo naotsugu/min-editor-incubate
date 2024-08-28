@@ -8,9 +8,11 @@ import com.mammb.code.piecetable.TextEdit.Pos;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import code.editor.Style.*;
 import javafx.scene.input.DataFormat;
 
@@ -278,17 +280,23 @@ public interface ScreenText {
 
         @Override
         public void undo() {
-            carets.clear();
-            ed.undo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
-            refreshBufferAt(carets);
-            scrollToCaret();
+            var newCarets = ed.undo().stream().map(p-> new Caret(p.row(), p.col())).toList();
+            if (!newCarets.isEmpty()) {
+                carets.clear();
+                carets.addAll(newCarets);
+                scrollToCaret();
+                refreshBufferRange(carets.getFirst().row);
+            }
         }
         @Override
         public void redo() {
-            carets.clear();
-            ed.redo().forEach(p -> carets.add(new Caret(p.row(), p.col())));
-            refreshBufferAt(carets);
-            scrollToCaret();
+            var newCarets = ed.redo().stream().map(p-> new Caret(p.row(), p.col())).toList();
+            if (!newCarets.isEmpty()) {
+                carets.clear();
+                carets.addAll(newCarets);
+                scrollToCaret();
+                refreshBufferRange(carets.getFirst().row);
+            }
         }
 
         @Override
@@ -354,13 +362,26 @@ public interface ScreenText {
         }
         @Override
         public void copyToClipboard() {
+            String copy = carets.stream().sorted().filter(Caret::hasMark)
+                    .map(c -> ed.getText(c.markedMin(), c.markedMax()))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.joining());
             javafx.scene.input.Clipboard.getSystemClipboard()
-                    .setContent(Map.of(DataFormat.PLAIN_TEXT, "TODO"));
+                    .setContent(Map.of(DataFormat.PLAIN_TEXT, copy));
         }
         @Override
         public void cutToClipboard() {
+            List<Caret> select = carets.stream().sorted().filter(Caret::hasMark).toList();
+            List<String> texts = select.stream()
+                    .map(c -> String.join("", ed.getText(c.markedMin(), c.markedMax())))
+                    .toList();
+            for (int i = 0; i < select.size(); i++) {
+                Caret c = select.get(i);
+                ed.delete(c.markedMin().row(), c.markedMin().col(), texts.get(i).length());
+                // TODO transaction delete
+            }
             javafx.scene.input.Clipboard.getSystemClipboard()
-                    .setContent(Map.of(DataFormat.PLAIN_TEXT, "TODO"));
+                    .setContent(Map.of(DataFormat.PLAIN_TEXT, String.join("", texts)));
         }
         public int screenLineSize() { return screenLineSize; }
     }
@@ -1021,7 +1042,11 @@ public interface ScreenText {
         public void mark() { markedRow = row; markedCol = col; }
         public void clearMark() { markedRow = -1; markedCol = -1; }
         public boolean isZero() { return row == 0 && col == 0; }
-        public boolean hasMark() { return markedRow >= 0 && markedCol >= 0; }
+        public boolean hasMark() { return markedRow >= 0 && markedCol >= 0 && !(row == markedRow && col == markedCol); }
+        public boolean isMarkForward() { return hasMark() && ((row == markedRow && col > markedCol) || (row > markedRow)); }
+        public boolean isMarkBackward() { return hasMark() && !isMarkForward(); }
+        public Pos markedMin() { return isMarkForward() ? new Pos(markedRow, markedCol) : new Pos(row, col); }
+        public Pos markedMax() { return isMarkBackward() ? new Pos(markedRow, markedCol) : new Pos(row, col);}
         @Override public int compareTo(Caret that) {
             int c = Integer.compare(this.row, that.row);
             return c == 0 ? Integer.compare(this.col, that.col) : c;
