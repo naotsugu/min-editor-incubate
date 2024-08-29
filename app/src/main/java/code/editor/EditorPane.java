@@ -10,6 +10,8 @@ import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.InputMethodEvent;
 import javafx.scene.input.InputMethodRequests;
 import javafx.scene.input.InputMethodTextRun;
@@ -17,6 +19,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -25,6 +28,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Base64;
@@ -53,7 +57,7 @@ public class EditorPane extends StackPane {
         getChildren().add(canvas);
         draw = new Draw.FxDraw(canvas.getGraphicsContext2D());
 
-        st = ScreenText.of(Document.of(Path.of("build.gradle.kts")), draw.fontMetrics(), Syntax.of("java"));
+        st = ScreenText.of(Document.of(), draw.fontMetrics(), Syntax.of("java"));
 
         // scroll bar
         applyCss(scrollBarCss, vs, hs);
@@ -109,6 +113,25 @@ public class EditorPane extends StackPane {
 
         setOnKeyPressed((KeyEvent e) -> execute(st, Action.of(e)));
         setOnKeyTyped((KeyEvent e) -> execute(st, Action.of(e)));
+
+        setOnDragOver((DragEvent e) -> {
+            if (e.getDragboard().hasFiles()) {
+                e.acceptTransferModes(TransferMode.MOVE);
+            }
+        });
+        setOnDragDropped((DragEvent e) -> {
+            Dragboard board = e.getDragboard();
+            if (board.hasFiles()) {
+                var path = board.getFiles().stream().map(File::toPath)
+                        .filter(Files::isReadable).filter(Files::isRegularFile).findFirst();
+                if (path.isPresent()) {
+                    open(path.get());
+                    e.setDropCompleted(true);
+                    return;
+                }
+            }
+            e.setDropCompleted(false);
+        });
 
         // IME
         canvas.setInputMethodRequests(new InputMethodRequests() {
@@ -178,7 +201,9 @@ public class EditorPane extends StackPane {
         fc.setInitialDirectory(Path.of(System.getProperty("user.home")).toFile());
         File file = fc.showOpenDialog(getScene().getWindow());
         if (file == null) return;
-        Path path = file.toPath();
+        open(file.toPath());
+    }
+    private void open(Path path) {
         String ext = Optional.of(path.getFileName().toString())
                 .filter(f -> f.contains("."))
                 .map(f -> f.substring(f.lastIndexOf(".") + 1))
