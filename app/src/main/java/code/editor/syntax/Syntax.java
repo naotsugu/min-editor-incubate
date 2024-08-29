@@ -1,6 +1,7 @@
 package code.editor.syntax;
 
 import code.editor.Style.*;
+import com.mammb.code.piecetable.TextEdit;
 import java.util.List;
 
 public interface Syntax {
@@ -22,9 +23,13 @@ public interface Syntax {
         };
     }
 
-    /**
-     *
-     */
+    record Anchor(int row, int col) implements Comparable<Anchor> {
+        @Override
+        public int compareTo(Anchor that) {
+            int c = Integer.compare(this.row, that.row);
+            return c == 0 ? Integer.compare(this.col, that.col) : c;
+        }
+    }
     enum Palette {
         DEEP_GREEN("#6A8759"),
         ORANGE("#CC7832"),
@@ -55,14 +60,15 @@ public interface Syntax {
     }
 
     static int read(char to, char esc, String colorString, String text, int offset, List<StyleSpan> spans) {
+        char prev = 0;
         for (int i = offset + 1; i < text.length(); i++) {
             char ch = text.charAt(i);
-            if (ch == esc) continue;
-            if (ch == to) {
+            if (ch == to && prev != esc) {
                 spans.add(new StyleSpan(
                         new TextColor(colorString), offset, i - offset + 1));
                 return i;
             }
+            prev = ch;
         }
         return offset;
     }

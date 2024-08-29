@@ -110,14 +110,16 @@ public class EditorPane extends StackPane {
                 draw();
             }
         });
-
+        setOnMouseDragged((MouseEvent e) -> {
+            if (e.getButton() == MouseButton.PRIMARY) {
+                st.moveDragged(e.getX(), e.getY());
+            }
+        });
         setOnKeyPressed((KeyEvent e) -> execute(st, Action.of(e)));
         setOnKeyTyped((KeyEvent e) -> execute(st, Action.of(e)));
 
         setOnDragOver((DragEvent e) -> {
-            if (e.getDragboard().hasFiles()) {
-                e.acceptTransferModes(TransferMode.MOVE);
-            }
+            if (e.getDragboard().hasFiles()) e.acceptTransferModes(TransferMode.MOVE);
         });
         setOnDragDropped((DragEvent e) -> {
             Dragboard board = e.getDragboard();

@@ -57,6 +57,7 @@ public interface ScreenText {
     void click(double x, double y);
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);
+    void moveDragged(double x, double y);
     Loc imeOn();
     void imeOff();
     boolean isImeOn();
@@ -306,7 +307,8 @@ public interface ScreenText {
         public void clickDouble(double x, double y) { /* Not yet implemented. */ }
         @Override
         public void clickTriple(double x, double y) { /* Not yet implemented. */ }
-
+        @Override
+        public void moveDragged(double x, double y) {}
         @Override
         public Loc imeOn() {
             Loc top = posToLoc(carets.getFirst().row, carets.getFirst().col);
