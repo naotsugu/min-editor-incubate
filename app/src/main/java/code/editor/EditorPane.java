@@ -17,6 +17,7 @@ import javafx.scene.input.InputMethodRequests;
 import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.TransferMode;
@@ -113,6 +114,7 @@ public class EditorPane extends StackPane {
         setOnMouseDragged((MouseEvent e) -> {
             if (e.getButton() == MouseButton.PRIMARY) {
                 st.moveDragged(e.getX(), e.getY());
+                st.draw(draw);
             }
         });
         setOnKeyPressed((KeyEvent e) -> execute(st, Action.of(e)));
