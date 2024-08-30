@@ -33,6 +33,7 @@ public interface Syntax {
     enum Palette {
         DEEP_GREEN("#6A8759"),
         ORANGE("#CC7832"),
+        GRAY("#808080"),
         ;
 
         Palette(String colorString) {
