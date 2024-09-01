@@ -1,4 +1,4 @@
-package com.mammb.code.editor;
+package com.mammb.code.editor.core;
 
 public interface TextLine extends ScreenLine {
 

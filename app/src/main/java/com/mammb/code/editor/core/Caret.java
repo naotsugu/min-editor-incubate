@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor;
+package com.mammb.code.editor.core;
 
 import java.util.Objects;
 
@@ -28,6 +28,7 @@ public interface Caret extends Comparable<Caret>{
     void clearMark();
     boolean isMarked();
     boolean isFloating();
+    Range markedRange();
 
     static Caret of() {
         return new CaretImpl();
@@ -58,6 +59,11 @@ public interface Caret extends Comparable<Caret>{
         @Override
         public boolean isFloating() {
             return floating;
+        }
+
+        @Override
+        public Range markedRange() {
+            return isMarked() ? new Range(new PointRec(point), mark) : null;
         }
 
         @Override
@@ -98,7 +104,9 @@ public interface Caret extends Comparable<Caret>{
         }
     }
 
-    record PointRec(int row, int col) implements Point { }
+    record PointRec(int row, int col) implements Point {
+        PointRec(Point p) { this(p.row(), p.col()); }
+    }
 
     class PointMut implements Point {
 

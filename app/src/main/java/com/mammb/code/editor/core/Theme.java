@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor;
+package com.mammb.code.editor.core;
 
-import com.mammb.code.editor.core.Draw;
-import java.nio.file.Path;
-import java.util.Optional;
+public interface Theme {
 
-/**
- * The Facade of editor.
- */
-public interface EditorModel {
-    void draw(Draw draw);
-    void setSize(double width, double height);
-    Optional<Path> path();
-    void save(Path path);
+    Theme dark = new ThemeRecord("#292929", "#214283");
+
+    String baseColor();
+    String paleHighlightColor();
+
+    record ThemeRecord(
+            String baseColor,
+            String paleHighlightColor
+    ) implements Theme { }
+
 }

@@ -1,4 +1,4 @@
-package com.mammb.code.editor;
+package com.mammb.code.editor.core;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,11 @@ import java.util.List;
 public interface ScreenBuffer<E extends ScreenLine> {
 
     int firstRow();
-    int screenLines();
+    boolean isEmpty();
+
+    static <E extends ScreenLine> ScreenBuffer<E> of() {
+        return new ScreenBufferImpl<>();
+    }
 
     class ScreenBufferImpl<E extends ScreenLine> implements ScreenBuffer<E> {
         private final List<E> buffer = new ArrayList<>();
@@ -17,9 +21,10 @@ public interface ScreenBuffer<E extends ScreenLine> {
         }
 
         @Override
-        public int screenLines() {
-            return 0;
+        public boolean isEmpty() {
+            return buffer.isEmpty();
         }
+
     }
 
 }

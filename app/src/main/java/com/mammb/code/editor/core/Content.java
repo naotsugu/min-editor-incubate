@@ -1,14 +1,17 @@
-package com.mammb.code.editor;
+package com.mammb.code.editor.core;
 
 import com.mammb.code.piecetable.TextEdit;
-import com.mammb.code.editor.Caret.Point;
-import com.mammb.code.editor.Caret.PointRec;
+import com.mammb.code.editor.core.Caret.Point;
+import com.mammb.code.editor.core.Caret.PointRec;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public interface Content {
 
     Point insert(Point point, String text);
     String getText(Point start, Point end);
+    Optional<Path> path();
+    void save(Path path);
 
     static Content of() {
         return new ContentImpl();
@@ -35,6 +38,16 @@ public interface Content {
         @Override
         public String getText(Point start, Point end) {
             return textEdit.getText(start.row(), start.col(), end.row(), end.col());
+        }
+
+        @Override
+        public Optional<Path> path() {
+            return Optional.ofNullable(textEdit.path());
+        }
+
+        @Override
+        public void save(Path path) {
+            textEdit.save(path);
         }
     }
 }
