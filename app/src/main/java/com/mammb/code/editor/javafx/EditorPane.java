@@ -15,9 +15,9 @@
  */
 package com.mammb.code.editor.javafx;
 
-import com.mammb.code.editor.EditorModel;
+import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
-import com.mammb.code.editor.core.PlainEditorModel;
+import com.mammb.code.editor.model.PlainEditorModel;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.StackPane;

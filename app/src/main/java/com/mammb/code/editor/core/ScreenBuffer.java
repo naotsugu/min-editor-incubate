@@ -5,24 +5,32 @@ import java.util.List;
 
 public interface ScreenBuffer<E extends ScreenLine> {
 
-    int firstRow();
+    int topLine();
     boolean isEmpty();
+    void setCapacity(int capacity);
 
-    static <E extends ScreenLine> ScreenBuffer<E> of() {
-        return new ScreenBufferImpl<>();
+    static ScreenBuffer<TextRow> of() {
+        return new ScreenBufferImpl();
     }
 
-    class ScreenBufferImpl<E extends ScreenLine> implements ScreenBuffer<E> {
-        private final List<E> buffer = new ArrayList<>();
+    class ScreenBufferImpl implements ScreenBuffer<TextRow> {
+        private final List<TextRow> buffer = new ArrayList<>();
+        private int capacity;
 
         @Override
-        public int firstRow() {
+        public int topLine() {
             return buffer.isEmpty() ? 0 : buffer.getFirst().row();
         }
 
         @Override
         public boolean isEmpty() {
             return buffer.isEmpty();
+        }
+
+        @Override
+        public void setCapacity(int capacity) {
+            this.capacity = capacity;
+
         }
 
     }

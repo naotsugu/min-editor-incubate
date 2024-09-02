@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor;
+package com.mammb.code.editor.core;
 
-import com.mammb.code.editor.core.Draw;
 import java.nio.file.Path;
 import java.util.Optional;
 

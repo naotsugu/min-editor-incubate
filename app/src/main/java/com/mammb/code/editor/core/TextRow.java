@@ -2,35 +2,23 @@ package com.mammb.code.editor.core;
 
 public interface TextRow extends ScreenLine {
 
-    TextRow parent();
+    static TextRow of(int row, String text) {
+        return new TextRowImpl(row, text);
+    }
 
     class TextRowImpl implements TextRow {
-        private final TextRow parent;
-        private final RowMap map;
+        private final int row;
+        private final String text;
 
-        public TextRowImpl(TextRow parent, RowMap map) {
-            this.parent = parent;
-            this.map = map;
-        }
-
-        @Override
-        public TextRow parent() {
-            return parent;
+        public TextRowImpl(int row, String text) {
+            this.row = row;
+            this.text = text;
         }
 
         @Override
         public int row() {
-            return parent.row();
+            return row;
         }
     }
 
-    record RowMap(int subLine, int fromIndex, int toIndex) {
-        static RowMap empty = new RowMap(0, 0, 0);
-        int length() {
-            return toIndex - fromIndex;
-        }
-        boolean contains(int col) {
-            return this.fromIndex <= col && col < this.toIndex;
-        }
-    }
 }

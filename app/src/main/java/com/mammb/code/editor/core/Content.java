@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface Content {
 
     Point insert(Point point, String text);
+    String getText(int row);
     String getText(Point start, Point end);
     Optional<Path> path();
     void save(Path path);
@@ -33,6 +34,11 @@ public interface Content {
         public Point insert(Point point, String text) {
             var p = textEdit.insert(point.row(), point.col(), text);
             return new PointRec(p.row(), p.col());
+        }
+
+        @Override
+        public String getText(int row) {
+            return textEdit.getText(row);
         }
 
         @Override

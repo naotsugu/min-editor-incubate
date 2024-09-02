@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor.core;
+package com.mammb.code.editor.model;
 
-import com.mammb.code.editor.EditorModel;
+import com.mammb.code.editor.core.EditorModel;
+import com.mammb.code.editor.core.CaretGroup;
+import com.mammb.code.editor.core.Content;
+import com.mammb.code.editor.core.Draw;
+import com.mammb.code.editor.core.FontMetrics;
+import com.mammb.code.editor.core.Layout;
+import com.mammb.code.editor.core.ScreenBuffer;
+import com.mammb.code.editor.core.TextRow;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
 public class PlainEditorModel implements EditorModel {
-    protected double width = 0, height = 0;
     private final Content content;
+    private final Layout layout;
     private final ScreenBuffer<TextRow> buffer = ScreenBuffer.of();
     private final CaretGroup carets = CaretGroup.of();
 
@@ -32,6 +39,7 @@ public class PlainEditorModel implements EditorModel {
 
     public PlainEditorModel(Path path, FontMetrics fm) {
         this.content = Objects.isNull(path) ? Content.of() : Content.of(path);
+        this.layout = Layout.of(fm);
     }
 
     @Override
@@ -44,9 +52,9 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void setSize(double width, double height) {
-        if (width < 0 || height < 0) return;
-        this.width = width;
-        this.height = height;
+        layout.setSize(width, height);
+        int line = buffer.topLine();
+        buffer.setCapacity(layout.lineSize());
     }
 
     @Override
