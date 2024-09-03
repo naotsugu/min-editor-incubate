@@ -1,46 +1,112 @@
+/*
+ * Copyright 2023-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mammb.code.editor.core.text;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public record SubText(RowText parent,
-        int subLine, int fromIndex, int toIndex, double width)
-        implements Text {
+public interface SubText extends Text {
 
-    public static List<SubText> of(RowText rowText, double width) {
+    int subLine();
+    SubText prev();
+    SubText next();
+
+    static List<SubText> of(RowText rowText, double width) {
         if (width <= 0) {
-            return List.of(new SubText(rowText, 0, 0, rowText.length(), rowText.width()));
+            return List.of(new SubTextRecord(rowText, 0, 0, rowText.length(), rowText.width(), null));
         }
         double w = 0;
         int fromIndex = 0;
+        SubText prev = null;
         List<SubText> subs = new ArrayList<>();
         double[] advances = rowText.advances();
         for (int i = 0; i < rowText.length(); i++) {
             double advance = advances[i];
             if (advance <= 0) continue;
             if (w + advance > width) {
-                subs.add(new SubText(rowText, subs.size(), fromIndex, i, w));
+                var sub = new SubTextRecord(rowText, subs.size(), fromIndex, i, w, prev);
+                if (subs.getLast() != null) {
+                    ((SubTextRecord) subs.getLast()).next = sub;
+                }
+                subs.add(sub);
+                prev = sub;
                 w = 0;
                 fromIndex = i;
             }
             w += advance;
         }
-        subs.add(new SubText(rowText, subs.size(), fromIndex, rowText.length(), w));
+        var sub = new SubTextRecord(rowText, subs.size(), fromIndex, rowText.length(), w, prev);
+        if (subs.getLast() != null) {
+            ((SubTextRecord) subs.getLast()).next = sub;
+        }
+        subs.add(sub);
         return subs;
     }
 
-    @Override
-    public int row() {
-        return parent().row();
-    }
+    class SubTextRecord implements SubText {
+        private final RowText parent;
+        private final int subLine;
+        private final int fromIndex;
+        private final int toIndex;
+        private final double width;
+        private final SubText prev;
+        private SubText next;
 
-    @Override
-    public String text() {
-        return parent().text().substring(fromIndex, toIndex);
-    }
+        public SubTextRecord(RowText parent, int subLine, int fromIndex, int toIndex, double width, SubText prev) {
+            this.parent = parent;
+            this.subLine = subLine;
+            this.fromIndex = fromIndex;
+            this.toIndex = toIndex;
+            this.width = width;
+            this.prev = prev;
+        }
 
-    @Override
-    public double height() {
-        return parent().height();
+        @Override
+        public int row() {
+            return parent.row();
+        }
+
+        @Override
+        public String text() {
+            return parent.text().substring(fromIndex, toIndex);
+        }
+
+        @Override
+        public double width() {
+            return width;
+        }
+
+        @Override
+        public double height() {
+            return parent.height();
+        }
+
+        @Override
+        public int subLine() {
+            return subLine;
+        }
+
+        @Override
+        public SubText prev() {
+            return prev;
+        }
+
+        @Override
+        public SubText next() {
+            return next;
+        }
     }
 }
