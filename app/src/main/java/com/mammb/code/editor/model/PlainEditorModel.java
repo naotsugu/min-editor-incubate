@@ -22,7 +22,7 @@ import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.Layout;
 import com.mammb.code.editor.core.ScreenBuffer;
-import com.mammb.code.editor.core.TextRow;
+import com.mammb.code.editor.core.text.RowText;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +30,7 @@ import java.util.Optional;
 public class PlainEditorModel implements EditorModel {
     private final Content content;
     private final Layout layout;
-    private final ScreenBuffer<TextRow> buffer = ScreenBuffer.of();
+    private final ScreenBuffer<RowText> buffer = ScreenBuffer.of();
     private final CaretGroup carets = CaretGroup.of();
 
     public PlainEditorModel(FontMetrics fm) {

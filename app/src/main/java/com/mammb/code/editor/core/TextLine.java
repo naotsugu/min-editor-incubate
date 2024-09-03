@@ -1,27 +1,25 @@
 package com.mammb.code.editor.core;
 
-public interface TextLine extends ScreenLine {
+import com.mammb.code.editor.core.text.RowText;
 
-    TextRow parent();
+public interface TextLine {
+
+    RowText parent();
 
     class TextLineImpl implements TextLine {
-        private final TextRow parent;
+        private final RowText parent;
         private final RowMap map;
 
-        public TextLineImpl(TextRow parent, RowMap map) {
+        public TextLineImpl(RowText parent, RowMap map) {
             this.parent = parent;
             this.map = map;
         }
 
         @Override
-        public TextRow parent() {
+        public RowText parent() {
             return parent;
         }
 
-        @Override
-        public int row() {
-            return parent.row();
-        }
     }
 
     record RowMap(int row, int subLine, int fromIndex, int toIndex) {

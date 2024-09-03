@@ -1,5 +1,6 @@
 package com.mammb.code.editor.core;
 
+import com.mammb.code.editor.core.text.RowText;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,12 +10,12 @@ public interface ScreenBuffer<E extends ScreenLine> {
     boolean isEmpty();
     void setCapacity(int capacity);
 
-    static ScreenBuffer<TextRow> of() {
+    static ScreenBuffer<RowText> of() {
         return new ScreenBufferImpl();
     }
 
-    class ScreenBufferImpl implements ScreenBuffer<TextRow> {
-        private final List<TextRow> buffer = new ArrayList<>();
+    class ScreenBufferImpl implements ScreenBuffer<RowText> {
+        private final List<RowText> buffer = new ArrayList<>();
         private int capacity;
 
         @Override
