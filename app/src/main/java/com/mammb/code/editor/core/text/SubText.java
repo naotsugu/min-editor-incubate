@@ -16,10 +16,12 @@
 package com.mammb.code.editor.core.text;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public interface SubText extends Text {
-
+    int fromIndex();
+    int toIndex();
     SubText prev();
     SubText next();
     default boolean hasPrev() {
@@ -94,6 +96,11 @@ public interface SubText extends Text {
         }
 
         @Override
+        public double[] advances() {
+            return Arrays.copyOfRange(parent.advances(), fromIndex, toIndex);
+        }
+
+        @Override
         public double width() {
             return width;
         }
@@ -101,6 +108,16 @@ public interface SubText extends Text {
         @Override
         public double height() {
             return parent.height();
+        }
+
+        @Override
+        public int fromIndex() {
+            return fromIndex;
+        }
+
+        @Override
+        public int toIndex() {
+            return toIndex;
         }
 
         @Override

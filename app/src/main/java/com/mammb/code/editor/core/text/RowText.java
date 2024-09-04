@@ -23,8 +23,6 @@ import com.mammb.code.editor.core.FontMetrics;
  */
 public interface RowText extends LinedText {
 
-    double[] advances();
-
     default int line() {
         return row();
     }

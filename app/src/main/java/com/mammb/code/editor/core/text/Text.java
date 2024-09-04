@@ -21,6 +21,8 @@ public interface Text {
 
     String value();
 
+    double[] advances();
+
     double width();
 
     double height();

@@ -16,6 +16,7 @@
 package com.mammb.code.editor.core.text;
 
 public interface LinedText extends Text {
+
     int line();
 
     static LinedText of(int line, Text text) {
@@ -28,6 +29,12 @@ public interface LinedText extends Text {
             public String value() {
                 return peer.value();
             }
+
+            @Override
+            public double[] advances() {
+                return peer.advances();
+            }
+
             @Override
             public double width() {
                 return peer.width();
