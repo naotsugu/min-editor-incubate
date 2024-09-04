@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core.text;
 
+import com.mammb.code.editor.core.text.Style.StyleSpan;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -33,7 +34,7 @@ public interface StyledText extends Text {
     class Builder {
         private final Text text;
         private final Set<Integer> bounds = new HashSet<>();
-        private final List<StyleSpan> spans = new ArrayList<>();
+        private final List<Style.StyleSpan> spans = new ArrayList<>();
 
         private Builder(Text text) {
             this.text = text;
@@ -44,8 +45,8 @@ public interface StyledText extends Text {
         }
 
         public void put(StyleSpan span) {
-            bounds.add(span.offset);
-            bounds.add(span.offset + span.length);
+            bounds.add(span.offset());
+            bounds.add(span.offset() + span.length());
             spans.add(span);
         }
 
@@ -91,7 +92,7 @@ public interface StyledText extends Text {
         }
     }
 
-    record StyleSpan(Style style, int offset, int length) { }
+
 
     class StyledTextWhole implements StyledText {
         private final Text peer;

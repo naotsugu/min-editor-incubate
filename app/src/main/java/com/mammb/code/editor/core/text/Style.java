@@ -17,4 +17,6 @@ package com.mammb.code.editor.core.text;
 
 public interface Style {
     record TextColor(String colorString) implements Style {}
+
+    record StyleSpan(Style style, int offset, int length) { }
 }

@@ -17,7 +17,6 @@ package com.mammb.code.editor.javafx;
 
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
-import com.mammb.code.editor.model.PlainEditorModel;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.StackPane;
@@ -40,7 +39,7 @@ public class EditorPane extends StackPane {
     public EditorPane() {
         canvas = new Canvas(640, 480);
         draw = new FxDraw(canvas.getGraphicsContext2D());
-        model = new PlainEditorModel(draw.fontMetrics());
+        model = EditorModel.of(draw.fontMetrics());
         getChildren().add(canvas);
     }
 

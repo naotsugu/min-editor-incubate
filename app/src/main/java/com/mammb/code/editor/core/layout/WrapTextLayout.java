@@ -13,26 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor.core;
+package com.mammb.code.editor.core.layout;
 
-import com.mammb.code.editor.core.model.PlainEditorModel;
-import java.nio.file.Path;
-import java.util.Optional;
+public class WrapTextLayout implements TextLayout {
+    @Override
+    public void setSize(double width, double height) {
 
-/**
- * The Facade of editor.
- */
-public interface EditorModel {
-
-    static EditorModel of(FontMetrics fm) {
-        return new PlainEditorModel(Content.of(), fm);
     }
-    static EditorModel of(Path path, FontMetrics fm) {
-        return new PlainEditorModel(Content.of(path), fm);
-    }
-
-    void draw(Draw draw);
-    void setSize(double width, double height);
-    Optional<Path> path();
-    void save(Path path);
 }
