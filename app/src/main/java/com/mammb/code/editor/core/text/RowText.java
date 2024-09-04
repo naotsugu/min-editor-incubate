@@ -21,8 +21,13 @@ import com.mammb.code.editor.core.FontMetrics;
  * The RowText.
  * @author Naotsugu Kobayashi
  */
-public interface RowText extends Text {
+public interface RowText extends LinedText {
+
     double[] advances();
+
+    default int line() {
+        return row();
+    }
 
     static RowText of(int row, String text, FontMetrics fm) {
         double width = 0;
@@ -44,7 +49,7 @@ public interface RowText extends Text {
         return new RowTextRecord(row, text, advances, width, fm.getLineHeight());
     }
 
-    record RowTextRecord(int row, String text, double[] advances, double width, double height)
+    record RowTextRecord(int row, String value, double[] advances, double width, double height)
             implements RowText {
     }
 

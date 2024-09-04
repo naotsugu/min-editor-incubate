@@ -20,13 +20,24 @@ import java.util.List;
 
 public interface SubText extends Text {
 
-    int subLine();
     SubText prev();
     SubText next();
+    default boolean hasPrev() {
+        return prev() != null;
+    }
+    default boolean hasNext() {
+        return next() != null;
+    }
+    default boolean isHead() {
+        return prev() == null;
+    }
+    default boolean isTail() {
+        return next() == null;
+    }
 
     static List<SubText> of(RowText rowText, double width) {
         if (width <= 0) {
-            return List.of(new SubTextRecord(rowText, 0, 0, rowText.length(), rowText.width(), null));
+            return List.of(new SubTextRecord(rowText, 0, rowText.length(), rowText.width(), null));
         }
         double w = 0;
         int fromIndex = 0;
@@ -37,7 +48,7 @@ public interface SubText extends Text {
             double advance = advances[i];
             if (advance <= 0) continue;
             if (w + advance > width) {
-                var sub = new SubTextRecord(rowText, subs.size(), fromIndex, i, w, prev);
+                var sub = new SubTextRecord(rowText, fromIndex, i, w, prev);
                 if (subs.getLast() != null) {
                     ((SubTextRecord) subs.getLast()).next = sub;
                 }
@@ -48,7 +59,7 @@ public interface SubText extends Text {
             }
             w += advance;
         }
-        var sub = new SubTextRecord(rowText, subs.size(), fromIndex, rowText.length(), w, prev);
+        var sub = new SubTextRecord(rowText, fromIndex, rowText.length(), w, prev);
         if (subs.getLast() != null) {
             ((SubTextRecord) subs.getLast()).next = sub;
         }
@@ -58,16 +69,14 @@ public interface SubText extends Text {
 
     class SubTextRecord implements SubText {
         private final RowText parent;
-        private final int subLine;
         private final int fromIndex;
         private final int toIndex;
         private final double width;
         private final SubText prev;
         private SubText next;
 
-        public SubTextRecord(RowText parent, int subLine, int fromIndex, int toIndex, double width, SubText prev) {
+        public SubTextRecord(RowText parent, int fromIndex, int toIndex, double width, SubText prev) {
             this.parent = parent;
-            this.subLine = subLine;
             this.fromIndex = fromIndex;
             this.toIndex = toIndex;
             this.width = width;
@@ -80,8 +89,8 @@ public interface SubText extends Text {
         }
 
         @Override
-        public String text() {
-            return parent.text().substring(fromIndex, toIndex);
+        public String value() {
+            return parent.value().substring(fromIndex, toIndex);
         }
 
         @Override
@@ -92,11 +101,6 @@ public interface SubText extends Text {
         @Override
         public double height() {
             return parent.height();
-        }
-
-        @Override
-        public int subLine() {
-            return subLine;
         }
 
         @Override
