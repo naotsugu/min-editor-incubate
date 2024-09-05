@@ -69,6 +69,7 @@ public class PlainTextLayout implements TextLayout {
         return (int) Math.ceil(Math.max(0, height) / lineHeight);
     }
 
+
     private double y(int line) {
         return line * lineHeight;
     }
@@ -77,8 +78,8 @@ public class PlainTextLayout implements TextLayout {
         return (line - lineTop()) * lineHeight;
     }
 
-    private double x(int row, int col) {
-        double[] ad = rowText(row).advances();
+    private double x(int line, int col) {
+        double[] ad = rowText(line).advances();
         return Arrays.stream(ad, 0, Math.min(col, ad.length)).sum();
     }
 

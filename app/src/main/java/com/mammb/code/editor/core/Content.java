@@ -11,6 +11,7 @@ public interface Content {
     Point insert(Point point, String text);
     String getText(int row);
     String getText(Point start, Point end);
+    int rows();
     Optional<Path> path();
     void save(Path path);
 
@@ -44,6 +45,11 @@ public interface Content {
         @Override
         public String getText(Point start, Point end) {
             return textEdit.getText(start.row(), start.col(), end.row(), end.col());
+        }
+
+        @Override
+        public int rows() {
+            return textEdit.rows();
         }
 
         @Override

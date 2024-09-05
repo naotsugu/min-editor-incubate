@@ -47,6 +47,7 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void save(Path path) {
-
+        content.save(path);
     }
+
 }
