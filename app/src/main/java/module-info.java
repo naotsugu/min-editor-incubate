@@ -4,4 +4,7 @@ module code.editor {
     requires com.mammb.code.piecetable;
     exports code.editor;
     exports code.editor.syntax;
+
+    exports com.mammb.code.editor;
+    exports com.mammb.code.editor.javafx;
 }

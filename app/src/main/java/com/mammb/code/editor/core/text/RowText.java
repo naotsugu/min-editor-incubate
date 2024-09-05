@@ -33,16 +33,15 @@ public interface RowText extends LinedText {
         for (int i = 0; i < text.length(); i++) {
             char ch1 = text.charAt(i);
             if (Character.isHighSurrogate(ch1)) {
-                advances[i] = fm.getAdvance(ch1, text.charAt(i + 1));
+                width += advances[i] = fm.getAdvance(ch1, text.charAt(i + 1));
                 i++;
             } else if (Character.isISOControl(ch1)) {
                 i++;
             } else if (ch1 == '\t') {
-                advances[i] = fm.getAdvance(" ".repeat(4));
+                width += advances[i] = fm.getAdvance(" ".repeat(4));
             } else {
-                advances[i] = fm.getAdvance(ch1);
+                width += advances[i] = fm.getAdvance(ch1);
             }
-            width += advances[i];
         }
         return new RowTextRecord(row, text, advances, width, fm.getLineHeight());
     }

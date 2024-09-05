@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.javafx;
 
+import code.editor.Style;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.Theme;
@@ -23,6 +24,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FxDraw implements Draw {
@@ -41,6 +43,14 @@ public class FxDraw implements Draw {
     public void clear() {
         Canvas canvas = gc.getCanvas();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+
+    @Override
+    public void text(String text, double x, double y, double w, List<Style> styles) {
+        Color color = colors.computeIfAbsent(Theme.dark.fgColor(), Color::web);
+        gc.setStroke(color);
+        gc.setFill(color);
+        gc.fillText(text, x, y);
     }
 
     @Override

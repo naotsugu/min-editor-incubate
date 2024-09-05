@@ -15,9 +15,17 @@
  */
 package com.mammb.code.editor.core.layout;
 
+import com.mammb.code.editor.core.text.Text;
+import java.util.List;
+
 public class WrapTextLayout implements TextLayout {
     @Override
     public void setSize(double width, double height) {
 
+    }
+
+    @Override
+    public List<? extends Text> viewBuffer() {
+        return List.of();
     }
 }

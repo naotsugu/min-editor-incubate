@@ -17,9 +17,12 @@ package com.mammb.code.editor.javafx;
 
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Bounds;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.StackPane;
+import java.nio.file.Path;
 
 /**
  * The EditorPane.
@@ -39,8 +42,22 @@ public class EditorPane extends StackPane {
     public EditorPane() {
         canvas = new Canvas(640, 480);
         draw = new FxDraw(canvas.getGraphicsContext2D());
-        model = EditorModel.of(draw.fontMetrics());
+        model = EditorModel.of(Path.of("app/build.gradle.kts"), draw.fontMetrics());
         getChildren().add(canvas);
+
+        layoutBoundsProperty().addListener(this::handleLayoutBoundsChanged);
+    }
+
+    private void handleLayoutBoundsChanged(
+            ObservableValue<? extends Bounds> ob, Bounds o, Bounds n) {
+        canvas.setWidth(n.getWidth());
+        canvas.setHeight(n.getHeight());
+        model.setSize(n.getWidth(), n.getHeight());
+        draw();
+    }
+
+    private void draw() {
+        model.draw(draw);
     }
 
 }

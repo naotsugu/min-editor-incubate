@@ -18,6 +18,7 @@ package com.mammb.code.editor.core.layout;
 import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.text.RowText;
+import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +42,11 @@ public class PlainTextLayout implements TextLayout {
         this.width = width;
         this.height = height;
         fillBuffer();
+    }
+
+    @Override
+    public List<? extends Text> viewBuffer() {
+        return viewBuffer;
     }
 
     private void fillBuffer() {

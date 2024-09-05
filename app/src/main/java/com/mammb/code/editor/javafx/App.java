@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.javafx;
 
+import com.mammb.code.editor.core.Theme;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -56,9 +57,9 @@ public class App extends Application {
               -fx-background-color:derive(-fx-control-inner-background,20%);
             }
             """
-//            .replaceAll("app-base", Draw.base)
-//            .replaceAll("app-text", Draw.text)
-//            .replaceAll("app-back", Draw.back)
-//            .replaceAll("app-accent", Draw.accent)
+            .replaceAll("app-base", Theme.dark.baseColor())
+            .replaceAll("app-text", Theme.dark.fgColor())
+            .replaceAll("app-back", Theme.dark.baseColor())
+            .replaceAll("app-accent", Theme.dark.paleHighlightColor())
             .getBytes(StandardCharsets.UTF_8));
 }

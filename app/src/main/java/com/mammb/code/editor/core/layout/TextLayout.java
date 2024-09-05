@@ -15,7 +15,11 @@
  */
 package com.mammb.code.editor.core.layout;
 
+import com.mammb.code.editor.core.text.Text;
+import java.util.List;
+
 public interface TextLayout {
     void setSize(double width, double height);
+    List<? extends Text> viewBuffer();
     record Loc(double x, double y) { }
 }
