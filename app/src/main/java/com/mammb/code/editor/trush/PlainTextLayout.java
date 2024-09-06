@@ -13,61 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor.core.layout;
+package com.mammb.code.editor.trush;
 
 import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.FontMetrics;
-import com.mammb.code.editor.core.text.RowRange;
 import com.mammb.code.editor.core.text.RowText;
-import com.mammb.code.editor.core.text.SubText;
 import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class WrapTextLayout implements TextLayout {
+public class PlainTextLayout implements TextLayout {
 
-    private double wrapWidth = 0;
-    private double height = 0;
-    private int lineTop = 0;
+    private double width = 0, height = 0;
+    private double xShift = 0;
     private final double lineHeight;
+    private final List<RowText> viewBuffer = new ArrayList<>();
     private final Content content;
     private final FontMetrics fm;
-    private final List<SubText> viewBuffer = new ArrayList<>();
-    private final List<RowRange> lineIndexes = new ArrayList<>();
 
-    public WrapTextLayout(Content content, FontMetrics fm) {
+    public PlainTextLayout(Content content, FontMetrics fm) {
         this.content = content;
         this.fm = fm;
         this.lineHeight = fm.getLineHeight();
     }
 
-    @Override
     public void setSize(double width, double height) {
+        this.width = width;
+        this.height = height;
+        fillBuffer();
+    }
+
+    @Override
+    public List<? extends Text> viewBuffer() {
+        return viewBuffer;
+    }
+
+    private void fillBuffer() {
+        int top = lineTop();
         viewBuffer.clear();
-        lineIndexes.clear();
-        for (int i = 0; i < content.rows(); i++) {
-            var row = RowText.of(i, content.getText(i), fm);
-
-            var subs = SubText.of(row, width);
-            for (int j = 0; j < subs.size(); j ++) {
-                var sub = subs.get(j);
-                if (lineTop <= lineIndexes.size() && lineIndexes.size() < lineTop + viewLineSize()) {
-                    viewBuffer.add(sub);
-                }
-                lineIndexes.add(new RowRange(sub.row(), j, sub.fromIndex(), sub.toIndex()));
-            }
+        for (int i = top; i < top + viewLineSize(); i++) {
+            viewBuffer.add(rowText(i));
         }
+    }
 
-        this.wrapWidth = width;
+    private int lineTop() {
+        return viewBuffer.isEmpty() ? 0 : viewBuffer.getFirst().row();
+    }
+
+    private RowText rowText(int row) {
+        return RowText.of(row, content.getText(row), fm);
     }
 
     public int viewLineSize() {
         return (int) Math.ceil(Math.max(0, height) / lineHeight);
     }
 
-    @Override
-    public List<? extends Text> viewBuffer() {
-        return List.of();
+
+    private double y(int line) {
+        return line * lineHeight;
     }
 
+    private double yInView(int line) {
+        return (line - lineTop()) * lineHeight;
+    }
+
+    private double x(int line, int col) {
+        double[] ad = rowText(line).advances();
+        return Arrays.stream(ad, 0, Math.min(col, ad.length)).sum();
+    }
+
+    private double xInView(int row, int col) {
+        return x(row, col) - xShift;
+    }
 }

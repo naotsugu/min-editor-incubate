@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor.core.text;
+package com.mammb.code.editor.core.layout;
 
-public record RowRange(int row, int subLine, int fromIndex, int toIndex) {
+public record RowRange(int row, int subLine, int subLines, int fromIndex, int toIndex) {
 
-    static RowRange empty = new RowRange(0, 0, 0, 0);
+    static RowRange empty = new RowRange(0, 0, 0, 0, 0);
 
     public int length() {
         return toIndex - fromIndex;
