@@ -18,6 +18,7 @@ package com.mammb.code.editor.core.layout;
 import com.mammb.code.editor.core.text.RowText;
 import com.mammb.code.editor.core.text.Text;
 import java.util.Arrays;
+import java.util.Optional;
 
 interface Layout {
     void setWidth(double width);
@@ -27,6 +28,16 @@ interface Layout {
     RowText rowText(int line);
     double lineHeight();
     int lineSize();
+
+    /**
+     *
+     * @param row
+     * @param col
+     * @param startLine the limit
+     * @param endLine the limit
+     * @return
+     */
+    Optional<Loc> loc(int row, int col, int startLine, int endLine);
 
     default double x(int line, int col) {
         double[] ad = text(line).advances();

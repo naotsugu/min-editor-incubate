@@ -20,11 +20,13 @@ import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public interface ScreenBuffer {
 
     void setSize(double width, double height);
     List<Text> texts();
+    Optional<Loc> locationOn(int row, int col);
 
     static ScreenBuffer of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
@@ -62,6 +64,12 @@ public interface ScreenBuffer {
             return buffer;
         }
 
+        @Override
+        public Optional<Loc> locationOn(int row, int col) {
+            return layout.loc(row, col, topLine, topLine + lineSize())
+                    .map(loc -> new Loc(loc.x(), loc.y() - topY()));
+        }
+
         private void fillBuffer() {
             buffer.clear();
             for (int i = topLine; i < topLine + lineSize(); i++) {
@@ -71,6 +79,10 @@ public interface ScreenBuffer {
 
         public int lineSize() {
             return (int) Math.ceil(Math.max(0, height) / layout.lineHeight());
+        }
+
+        private double topY() {
+            return topLine * layout.lineHeight();
         }
 
     }

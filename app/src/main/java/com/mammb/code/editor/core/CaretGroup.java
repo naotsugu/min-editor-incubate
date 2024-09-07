@@ -16,6 +16,7 @@
 package com.mammb.code.editor.core;
 
 import com.mammb.code.editor.core.Caret.Range;
+import com.mammb.code.editor.core.Caret.Point;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,9 @@ import java.util.List;
  */
 public interface CaretGroup {
 
+    List<Point> points();
     List<Range> marked();
+
 
     static CaretGroup of() {
         return new CaretGroupImpl();
@@ -36,6 +39,11 @@ public interface CaretGroup {
 
         public CaretGroupImpl() {
             carets.add(Caret.of());
+        }
+
+        @Override
+        public List<Point> points() {
+            return carets.stream().map(Caret::point).toList();
         }
 
         @Override

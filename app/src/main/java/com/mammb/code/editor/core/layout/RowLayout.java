@@ -19,6 +19,7 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.text.RowText;
 import com.mammb.code.editor.core.text.Text;
+import java.util.Optional;
 
 public class RowLayout implements Layout {
     private final double lineHeight;
@@ -60,6 +61,15 @@ public class RowLayout implements Layout {
     @Override
     public int lineSize() {
         return content.rows();
+    }
+
+    @Override
+    public Optional<Loc> loc(int row, int col, int startLine, int endLine) {
+        if (startLine <= row && row < endLine) {
+            return Optional.of(new Loc(x(row, col),y(row)));
+        } else {
+            return Optional.empty();
+        }
     }
 
 }

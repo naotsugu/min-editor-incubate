@@ -21,6 +21,7 @@ import java.util.List;
 public interface Draw {
     void clear();
     void text(String text, double x, double y, double w, List<Style> styles);
+    void caret(double x, double y);
     void fillRange(double x1, double y1, double x2, double y2, double l, double r);
     FontMetrics fontMetrics();
 }

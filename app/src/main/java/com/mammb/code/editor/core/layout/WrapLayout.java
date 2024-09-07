@@ -23,6 +23,7 @@ import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class WrapLayout implements Layout {
@@ -30,7 +31,7 @@ public class WrapLayout implements Layout {
     private final double lineHeight;
     private final Content content;
     private final FontMetrics fm;
-    private final List<RowRange> lines = new ArrayList<>();
+    private final List<SubRange> lines = new ArrayList<>();
 
     public WrapLayout(Content content, FontMetrics fm) {
         this.lineHeight = fm.getLineHeight();
@@ -60,7 +61,7 @@ public class WrapLayout implements Layout {
             var subs = SubText.of(row, width);
             for (int j = 0; j < subs.size(); j++) {
                 var sub = subs.get(j);
-                lines.add(new RowRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
+                lines.add(new SubRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
             }
         }
     }
@@ -75,13 +76,13 @@ public class WrapLayout implements Layout {
                 if (index == -1) index = i;
             }
         }
-        List<RowRange> newLines = IntStream.range(start, end).mapToObj(i -> {
+        List<SubRange> newLines = IntStream.range(start, end).mapToObj(i -> {
             var row = RowText.of(i, content.getText(i), fm);
             var subs = SubText.of(row, width);
-            List<RowRange> ret = new ArrayList<>();
+            List<SubRange> ret = new ArrayList<>();
             for (int j = 0; j < subs.size(); j++) {
                 var sub = subs.get(j);
-                ret.add(new RowRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
+                ret.add(new SubRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
             }
             return ret;
         }).flatMap(Collection::stream).toList();
@@ -112,8 +113,19 @@ public class WrapLayout implements Layout {
         return lines.size();
     }
 
-    public record RowRange(int row, int subLine, int subLines, int fromIndex, int toIndex) {
-        static RowRange empty = new RowRange(0, 0, 0, 0, 0);
+    @Override
+    public Optional<Loc> loc(int row, int col, int startLine, int endLine) {
+        for (int i = startLine; i < endLine; i++) {
+            SubRange sub = lines.get(i);
+            if (sub.contains(row, col)) {
+                return Optional.of(new Loc(x(i, col), y(i)));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public record SubRange(int row, int subLine, int subLines, int fromIndex, int toIndex) {
+        static SubRange empty = new SubRange(0, 0, 0, 0, 0);
         public int length() {
             return toIndex - fromIndex;
         }

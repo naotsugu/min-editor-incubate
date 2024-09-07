@@ -54,6 +54,14 @@ public class FxDraw implements Draw {
     }
 
     @Override
+    public void caret(double x, double y) {
+        gc.setLineDashes(0);
+        gc.setStroke(Color.ORANGE);
+        gc.setLineWidth(1.5);
+        gc.strokeLine(x - 1, y, x - 1, y + fontMetrics.getLineHeight());
+    }
+
+    @Override
     public void fillRange(double x1, double y1, double x2, double y2, double l, double r) {
         double lineHeight = fontMetrics().getLineHeight();
         gc.setFill(color(Theme.dark.paleHighlightColor()));
