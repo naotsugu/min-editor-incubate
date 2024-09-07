@@ -39,6 +39,11 @@ public class RowLayout implements Layout {
         // nothing to do
     }
 
+    @Override
+    public void refreshRow(int start, int end) {
+        // nothing to do
+    }
+
     public Text text(int line) {
         return rowText(line);
     }

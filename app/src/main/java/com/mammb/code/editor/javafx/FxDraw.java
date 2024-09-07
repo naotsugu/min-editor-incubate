@@ -50,7 +50,7 @@ public class FxDraw implements Draw {
         Color color = colors.computeIfAbsent(Theme.dark.fgColor(), Color::web);
         gc.setStroke(color);
         gc.setFill(color);
-        gc.fillText(text, x, y);
+        gc.fillText(text, x, y + fontMetrics.getAscent());
     }
 
     @Override
