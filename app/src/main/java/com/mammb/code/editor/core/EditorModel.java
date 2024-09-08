@@ -42,6 +42,12 @@ public interface EditorModel {
     void clickTriple(double x, double y);
     void moveDragged(double x, double y);
 
+    void input(String text);
+    void delete();
+    void backspace();
+    void undo();
+    void redo();
+
     Optional<Path> path();
     void save(Path path);
 }

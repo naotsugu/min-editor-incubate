@@ -56,17 +56,14 @@ public class PlainEditorModel implements EditorModel {
         }
 
     }
-
     @Override
     public void setSize(double width, double height) {
         screen.setSize(width, height);
     }
-
     @Override
     public void scrollNext(int delta) {
         screen.scrollNext(delta);
     }
-
     @Override
     public void scrollPrev(int delta) {
         screen.scrollPrev(delta);
@@ -76,32 +73,46 @@ public class PlainEditorModel implements EditorModel {
     public void scrollAt(int line) {
         screen.scrollAt(line);
     }
-
     @Override
     public void click(double x, double y) {
         // TODO
     }
-
     @Override
     public void clickDouble(double x, double y) {
         // TODO
     }
-
     @Override
     public void clickTriple(double x, double y) {
         // TODO
     }
-
     @Override
     public void moveDragged(double x, double y) {
         // TODO
     }
-
+    @Override
+    public void input(String text) {
+        // TODO
+    }
+    @Override
+    public void delete() {
+        // TODO
+    }
+    @Override
+    public void backspace() {
+        // TODO
+    }
+    @Override
+    public void undo() {
+        // TODO
+    }
+    @Override
+    public void redo() {
+        // TODO
+    }
     @Override
     public Optional<Path> path() {
         return content.path();
     }
-
     @Override
     public void save(Path path) {
         content.save(path);

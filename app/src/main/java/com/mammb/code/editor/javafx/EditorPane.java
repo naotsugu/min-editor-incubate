@@ -132,7 +132,9 @@ public class EditorPane extends StackPane {
     }
 
     private Action execute(Action action) {
-        return null;
+        switch (action.type()) {
+        }
+        return action;
     }
 
     private void draw() {
