@@ -98,6 +98,28 @@ public class WrapLayout implements Layout {
         return subs.get(range.subLine());
     }
 
+    @Override
+    public List<Text> texts(int startLine, int endLine) {
+        if (startLine > endLine) {
+            int tmp = startLine;
+            startLine = endLine;
+            endLine = tmp;
+        }
+        var startRange = lines.get(startLine);
+        var endRange   = lines.get(endLine - 1);
+        return IntStream.rangeClosed(startRange.row(), endRange.row()).mapToObj(i -> {
+            var row = RowText.of(i, content.getText(i), fm);
+            var subs = SubText.of(row, width);
+            if (i == endRange.row() && subs.size() >= endRange.subLine + 1) {
+                subs.subList(endRange.subLine + 1, subs.size()).clear();
+            }
+            if (i == startRange.row()) {
+                subs.subList(0, startRange.subLine).clear();
+            }
+            return subs;
+        }).flatMap(Collection::stream).map(Text.class::cast).toList();
+    }
+
     public RowText rowText(int line) {
         var range = lines.get(line);
         return RowText.of(range.row(), content.getText(range.row()), fm);

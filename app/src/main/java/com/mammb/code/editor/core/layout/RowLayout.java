@@ -19,7 +19,9 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.text.RowText;
 import com.mammb.code.editor.core.text.Text;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 public class RowLayout implements Layout {
     private final double lineHeight;
@@ -47,6 +49,12 @@ public class RowLayout implements Layout {
 
     public Text text(int line) {
         return rowText(line);
+    }
+
+    @Override
+    public List<Text> texts(int startLine, int endLine) {
+        return IntStream.range(startLine, endLine)
+                .mapToObj(this::rowText).map(Text.class::cast).toList();
     }
 
     public RowText rowText(int line) {

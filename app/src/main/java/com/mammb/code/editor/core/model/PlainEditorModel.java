@@ -20,7 +20,6 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
-import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.layout.ScreenBuffer;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
@@ -61,6 +60,21 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void setSize(double width, double height) {
         screen.setSize(width, height);
+    }
+
+    @Override
+    public void scrollNext(int delta) {
+
+    }
+
+    @Override
+    public void scrollPrev(int delta) {
+
+    }
+
+    @Override
+    public void scrollAt(int line) {
+
     }
 
     @Override

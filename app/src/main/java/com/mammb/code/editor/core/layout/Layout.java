@@ -18,6 +18,7 @@ package com.mammb.code.editor.core.layout;
 import com.mammb.code.editor.core.text.RowText;
 import com.mammb.code.editor.core.text.Text;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 interface Layout {
@@ -25,6 +26,7 @@ interface Layout {
     void refresh(int line);
     void refreshRow(int start, int end);
     Text text(int line);
+    List<Text> texts(int startLine, int endLine);
     RowText rowText(int line);
     double lineHeight();
     int lineSize();

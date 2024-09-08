@@ -25,6 +25,7 @@ import java.util.Optional;
 public interface ScreenBuffer {
 
     void setSize(double width, double height);
+    void scrollAt(int line);
     List<Text> texts();
     Optional<Loc> locationOn(int row, int col);
 
@@ -57,6 +58,17 @@ public interface ScreenBuffer {
             this.width = width;
             this.height = height;
             fillBuffer();
+        }
+
+        @Override
+        public void scrollAt(int line) {
+            int delta = line - topLine;
+            if (Math.abs(delta) < lineSize()) {
+
+            } else {
+                this.topLine = line;
+                fillBuffer();
+            }
         }
 
         @Override
