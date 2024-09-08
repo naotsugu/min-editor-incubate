@@ -100,6 +100,7 @@ public class WrapLayout implements Layout {
 
     @Override
     public List<Text> texts(int startLine, int endLine) {
+        if (startLine == endLine)  return List.of();
         if (startLine > endLine) {
             int tmp = startLine;
             startLine = endLine;

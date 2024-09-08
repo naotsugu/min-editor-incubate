@@ -64,17 +64,17 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void scrollNext(int delta) {
-
+        screen.scrollNext(delta);
     }
 
     @Override
     public void scrollPrev(int delta) {
-
+        screen.scrollPrev(delta);
     }
 
     @Override
     public void scrollAt(int line) {
-
+        screen.scrollAt(line);
     }
 
     @Override

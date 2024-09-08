@@ -25,6 +25,8 @@ import java.util.Optional;
 public interface ScreenBuffer {
 
     void setSize(double width, double height);
+    void scrollNext(int delta);
+    void scrollPrev(int delta);
     void scrollAt(int line);
     List<Text> texts();
     Optional<Loc> locationOn(int row, int col);
@@ -61,10 +63,31 @@ public interface ScreenBuffer {
         }
 
         @Override
-        public void scrollAt(int line) {
-            int delta = line - topLine;
-            if (Math.abs(delta) < lineSize()) {
+        public void scrollNext(int delta) {
+            scrollAt(topLine + delta);
+        }
 
+        @Override
+        public void scrollPrev(int delta) {
+            scrollAt(topLine - delta);
+        }
+
+        @Override
+        public void scrollAt(int line) {
+            line = Math.clamp(line, 0, layout.lineSize() - 1);
+            int delta = line - topLine;
+            if (delta == 0) return;
+            if (Math.abs(delta) < lineSize() * 2 / 3) {
+                topLine = line;
+                if (delta > 0) {
+                    // scroll next
+                    buffer.subList(0, delta).clear();
+                    buffer.addAll(layout.texts(line + buffer.size(), line + buffer.size() + delta));
+                } else {
+                    // scroll prev
+                    buffer.subList(buffer.size() + delta, buffer.size()).clear();
+                    buffer.addAll(0, layout.texts(line, line - delta));
+                }
             } else {
                 this.topLine = line;
                 fillBuffer();
@@ -84,9 +107,7 @@ public interface ScreenBuffer {
 
         private void fillBuffer() {
             buffer.clear();
-            for (int i = topLine; i < topLine + lineSize(); i++) {
-                buffer.add(layout.text(i));
-            }
+            buffer.addAll(layout.texts(topLine, topLine + lineSize()));
         }
 
         public int lineSize() {
