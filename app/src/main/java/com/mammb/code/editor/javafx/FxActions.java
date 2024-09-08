@@ -15,7 +15,7 @@
  */
 package com.mammb.code.editor.javafx;
 
-import code.editor.Action;
+import com.mammb.code.editor.core.Action;
 import javafx.scene.input.*;
 import java.util.function.Predicate;
 import static javafx.scene.input.KeyCode.*;

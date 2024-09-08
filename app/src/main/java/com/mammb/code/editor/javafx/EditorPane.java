@@ -15,13 +15,23 @@
  */
 package com.mammb.code.editor.javafx;
 
+import com.mammb.code.editor.core.Action;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
+import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -36,9 +46,14 @@ public class EditorPane extends StackPane {
     private final Draw draw;
     /** The editor model. */
     private final EditorModel model;
+    /** The vertical scroll bar. */
     private final ScrollBar vScroll = new ScrollBar();
+    /** The horizon scroll bar. */
     private final ScrollBar hScroll = new ScrollBar();
 
+    /**
+     * Constructor.
+     */
     public EditorPane() {
         canvas = new Canvas(640, 480);
         draw = new FxDraw(canvas.getGraphicsContext2D());
@@ -46,6 +61,13 @@ public class EditorPane extends StackPane {
         getChildren().add(canvas);
 
         layoutBoundsProperty().addListener(this::handleLayoutBoundsChanged);
+        setOnScroll(this::handleScroll);
+        setOnMouseClicked(this::handleMouseClicked);
+        setOnMouseDragged(this::handleMouseDragged);
+        setOnKeyPressed(this::handleKeyAction);
+        setOnKeyTyped(this::handleKeyAction);
+        setOnDragOver(this::handleDragOver);
+        setOnDragDropped(this::handleDragDropped);
     }
 
     private void handleLayoutBoundsChanged(
@@ -54,6 +76,63 @@ public class EditorPane extends StackPane {
         canvas.setHeight(n.getHeight());
         model.setSize(n.getWidth(), n.getHeight());
         draw();
+    }
+
+    private void handleScroll(ScrollEvent e) {
+        if (e.getEventType() == ScrollEvent.SCROLL && e.getDeltaY() != 0) {
+            if (e.getDeltaY() < 0) {
+                model.scrollNext((int) Math.min(5, Math.abs(e.getDeltaY())));
+            } else {
+                model.scrollPrev((int) Math.min(5, e.getDeltaY()));
+            }
+            draw();
+        }
+    }
+
+    private void handleMouseClicked(MouseEvent e) {
+        if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == canvas) {
+            switch (e.getClickCount()) {
+                case 1 -> model.click(e.getX(), e.getY());
+                case 2 -> model.clickDouble(e.getX(), e.getY());
+                case 3 -> model.clickTriple(e.getX(), e.getY());
+            }
+            draw();
+        }
+    }
+
+    private void handleMouseDragged(MouseEvent e) {
+        if (e.getButton() == MouseButton.PRIMARY) {
+            model.moveDragged(e.getX(), e.getY());
+            model.draw(draw);
+        }
+    }
+
+    private void handleKeyAction(KeyEvent e) {
+        execute(FxActions.of(e));
+    }
+
+    private void handleDragOver(DragEvent e) {
+        if (e.getDragboard().hasFiles()) {
+            e.acceptTransferModes(TransferMode.MOVE);
+        }
+    }
+
+    private void handleDragDropped(DragEvent e) {
+        Dragboard board = e.getDragboard();
+        if (board.hasFiles()) {
+            var path = board.getFiles().stream().map(File::toPath)
+                    .filter(Files::isReadable).filter(Files::isRegularFile).findFirst();
+            if (path.isPresent()) {
+                //open(path.get());
+                e.setDropCompleted(true);
+                return;
+            }
+        }
+        e.setDropCompleted(false);
+    }
+
+    private Action execute(Action action) {
+        return null;
     }
 
     private void draw() {

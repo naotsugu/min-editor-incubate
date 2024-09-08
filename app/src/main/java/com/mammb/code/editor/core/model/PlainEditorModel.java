@@ -78,6 +78,26 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
+    public void click(double x, double y) {
+        // TODO
+    }
+
+    @Override
+    public void clickDouble(double x, double y) {
+        // TODO
+    }
+
+    @Override
+    public void clickTriple(double x, double y) {
+        // TODO
+    }
+
+    @Override
+    public void moveDragged(double x, double y) {
+        // TODO
+    }
+
+    @Override
     public Optional<Path> path() {
         return content.path();
     }

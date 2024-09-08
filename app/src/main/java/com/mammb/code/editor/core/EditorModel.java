@@ -37,6 +37,10 @@ public interface EditorModel {
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int line);
+    void click(double x, double y);
+    void clickDouble(double x, double y);
+    void clickTriple(double x, double y);
+    void moveDragged(double x, double y);
 
     Optional<Path> path();
     void save(Path path);
