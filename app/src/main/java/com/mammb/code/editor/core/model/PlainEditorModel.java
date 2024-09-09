@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core.model;
 
+import com.mammb.code.editor.core.Caret;
 import com.mammb.code.editor.core.CaretGroup;
 import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Draw;
@@ -91,11 +92,26 @@ public class PlainEditorModel implements EditorModel {
     }
     @Override
     public void input(String text) {
-        // TODO
+        if (carets.size() == 1) {
+            Caret caret = carets.getFirst();
+            var pos = content.insert(caret.point(), text);
+            // TODO change row
+            screen.refreshBuffer(caret.point().row(), pos.row());
+            caret.at(pos);
+        } else {
+
+        }
     }
     @Override
     public void delete() {
-        // TODO
+        if (carets.size() == 1) {
+            Caret caret = carets.getFirst();
+            var del = content.delete(caret.point());
+            // TODO change row
+            screen.refreshBuffer(caret.point().row(), caret.point().row() + 1);
+        } else {
+
+        }
     }
     @Override
     public void backspace() {

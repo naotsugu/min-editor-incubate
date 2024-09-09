@@ -21,7 +21,7 @@ java {
 }
 
 application {
-    mainClass = "code.editor.App"
+    mainClass = "com.mammb.code.editor.Main"
     mainModule = "code.editor"
     if (providers.systemProperty("debug").isPresent) {
         applicationDefaultJvmArgs = applicationDefaultJvmArgs.plus(listOf("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"))

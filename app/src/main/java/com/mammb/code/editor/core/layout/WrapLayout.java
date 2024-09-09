@@ -66,17 +66,17 @@ public class WrapLayout implements Layout {
         }
     }
 
-    public void refreshRow(int start, int end) {
+    public void refreshRow(int startRow, int endRow) {
         int index = -1;
         var iterator = lines.iterator();
         for (int i = 0; i < lines.size(); i++) {
             var range = iterator.next();
-            if (start <= range.row() && range.row() < end) {
+            if (startRow <= range.row() && range.row() < endRow) {
                 iterator.remove();
                 if (index == -1) index = i;
             }
         }
-        List<SubRange> newLines = IntStream.range(start, end).mapToObj(i -> {
+        List<SubRange> newLines = IntStream.range(startRow, endRow).mapToObj(i -> {
             var row = RowText.of(i, content.getText(i), fm);
             var subs = SubText.of(row, width);
             List<SubRange> ret = new ArrayList<>();

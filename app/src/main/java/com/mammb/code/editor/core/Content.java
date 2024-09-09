@@ -1,7 +1,6 @@
 package com.mammb.code.editor.core;
 
 import com.mammb.code.piecetable.TextEdit;
-import com.mammb.code.piecetable.TextEdit.Pos;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.PointRec;
 import java.nio.file.Path;
@@ -11,6 +10,7 @@ import java.util.Optional;
 public interface Content {
 
     Point insert(Point point, String text);
+    String delete(Point point);
 
     /**
      * Undo.
@@ -51,6 +51,11 @@ public interface Content {
         public Point insert(Point point, String text) {
             var p = textEdit.insert(point.row(), point.col(), text);
             return new PointRec(p.row(), p.col());
+        }
+
+        @Override
+        public String delete(Point point) {
+            return textEdit.delete(point.row(), point.col());
         }
 
         @Override

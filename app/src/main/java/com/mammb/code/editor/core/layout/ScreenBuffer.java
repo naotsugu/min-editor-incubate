@@ -28,6 +28,7 @@ public interface ScreenBuffer {
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int line);
+    void refreshBuffer(int startRow, int endRow);
     List<Text> texts();
     Optional<Loc> locationOn(int row, int col);
 
@@ -92,6 +93,12 @@ public interface ScreenBuffer {
                 this.topLine = line;
                 fillBuffer();
             }
+        }
+
+        @Override
+        public void refreshBuffer(int startRow, int endRow) {
+            layout.refreshRow(startRow, endRow);
+            fillBuffer();// TODO optimize
         }
 
         @Override

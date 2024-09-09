@@ -56,8 +56,9 @@ public class EditorPane extends StackPane {
      */
     public EditorPane() {
         canvas = new Canvas(640, 480);
+        canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
-        model = EditorModel.of(Path.of("app/build.gradle.kts"), draw.fontMetrics());
+        model = EditorModel.of(Path.of("build.gradle.kts"), draw.fontMetrics());
         getChildren().add(canvas);
 
         layoutBoundsProperty().addListener(this::handleLayoutBoundsChanged);
@@ -133,7 +134,13 @@ public class EditorPane extends StackPane {
 
     private Action execute(Action action) {
         switch (action.type()) {
+            case TYPED -> model.input(action.attr());
+            case DELETE -> model.delete();
+            case BACK_SPACE -> model.backspace();
+            case UNDO -> model.undo();
+            case REDO -> model.redo();
         }
+        draw();
         return action;
     }
 

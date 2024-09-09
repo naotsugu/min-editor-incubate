@@ -26,9 +26,11 @@ import java.util.List;
  */
 public interface CaretGroup {
 
+    Caret getFirst();
     List<Point> points();
     List<Range> marked();
     void at(List<Point> points);
+    int size();
 
 
     static CaretGroup of() {
@@ -40,6 +42,11 @@ public interface CaretGroup {
 
         public CaretGroupImpl() {
             carets.add(Caret.of());
+        }
+
+        @Override
+        public Caret getFirst() {
+            return carets.getFirst();
         }
 
         @Override
@@ -56,6 +63,11 @@ public interface CaretGroup {
         public void at(List<Point> points) {
             carets.clear();
             points.forEach(p -> Caret.of(p.row(), p.col()));
+        }
+
+        @Override
+        public int size() {
+            return carets.size();
         }
     }
 }

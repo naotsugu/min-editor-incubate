@@ -76,6 +76,7 @@ public abstract class FxActions {
                 String ch = (ascii == 13) // 13:CR
                         ? "\n"
                         : e.getCharacter();
+
                 return ch.isEmpty()
                         ? Action.of(Action.Type.EMPTY)
                         : Action.of(Action.Type.TYPED, ch);

@@ -24,6 +24,7 @@ import java.util.Objects;
 public interface Caret extends Comparable<Caret>{
 
     Point point();
+    void at(Point point);
     void mark();
     void clearMark();
     boolean isMarked();
@@ -99,6 +100,11 @@ public interface Caret extends Comparable<Caret>{
         @Override
         public Point point() {
             return point;
+        }
+
+        @Override
+        public void at(Point point) {
+            this.point.at(point.row(), point.col());
         }
     }
 
