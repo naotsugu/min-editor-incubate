@@ -34,12 +34,24 @@ public interface Caret extends Comparable<Caret>{
         return new CaretImpl();
     }
 
+    static Caret of(int row, int col) {
+        return new CaretImpl(row, col);
+    }
+
     class CaretImpl implements Caret {
 
-        private final PointMut point = new PointMut(0, 0);
+        private final PointMut point;
         private Point mark;
         private double vPos;
         private boolean floating;
+
+        public CaretImpl(int row, int col) {
+            this.point = new PointMut(row, col);
+        }
+
+        public CaretImpl() {
+            this.point = new PointMut(0, 0);
+        }
 
         @Override
         public void mark() {
@@ -93,6 +105,7 @@ public interface Caret extends Comparable<Caret>{
     interface Point extends Comparable<Point> {
         int row();
         int col();
+        static Point of(int row, int col) { return new PointRec(row, col); }
         @Override
         default int compareTo(Point that) {
             int c = Integer.compare(this.row(), that.row());

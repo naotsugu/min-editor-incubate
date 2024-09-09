@@ -28,6 +28,7 @@ public interface CaretGroup {
 
     List<Point> points();
     List<Range> marked();
+    void at(List<Point> points);
 
 
     static CaretGroup of() {
@@ -49,6 +50,12 @@ public interface CaretGroup {
         @Override
         public List<Range> marked() {
             return carets.stream().filter(Caret::isMarked).map(Caret::markedRange).toList();
+        }
+
+        @Override
+        public void at(List<Point> points) {
+            carets.clear();
+            points.forEach(p -> Caret.of(p.row(), p.col()));
         }
     }
 }

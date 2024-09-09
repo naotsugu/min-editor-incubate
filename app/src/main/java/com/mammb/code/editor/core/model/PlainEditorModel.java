@@ -103,11 +103,11 @@ public class PlainEditorModel implements EditorModel {
     }
     @Override
     public void undo() {
-        // TODO
+        carets.at(content.undo());
     }
     @Override
     public void redo() {
-        // TODO
+        carets.at(content.redo());
     }
     @Override
     public Optional<Path> path() {
