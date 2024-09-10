@@ -30,6 +30,8 @@ interface Layout {
     RowText rowText(int line);
     double lineHeight();
     int lineSize();
+    int rowToLine(int row);
+    int lineToRow(int line);
 
     /**
      *

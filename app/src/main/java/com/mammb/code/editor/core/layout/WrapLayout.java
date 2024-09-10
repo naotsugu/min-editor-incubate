@@ -22,7 +22,10 @@ import com.mammb.code.editor.core.text.SubText;
 import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -57,38 +60,38 @@ public class WrapLayout implements Layout {
             }
         }
         for (; i < content.rows(); i++) {
-            var row = RowText.of(i, content.getText(i), fm);
-            var subs = SubText.of(row, width);
-            for (int j = 0; j < subs.size(); j++) {
-                var sub = subs.get(j);
-                lines.add(new SubRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
-            }
+            lines.addAll(subRanges(i));
         }
     }
-
     public void refreshRow(int startRow, int endRow) {
-        int index = -1;
-        var iterator = lines.iterator();
-        for (int i = 0; i < lines.size(); i++) {
-            var range = iterator.next();
-            if (startRow <= range.row() && range.row() < endRow) {
-                iterator.remove();
-                if (index == -1) index = i;
+        int start = rowToLine(startRow);
+        int end   = rowToLine(endRow);
+        lines.subList(start, end).clear();
+        List<SubRange> newLines = IntStream.range(startRow, endRow)
+                .mapToObj(this::subRanges)
+                .flatMap(Collection::stream)
+                .toList();
+        var next = lines.get(start);
+        int n = (next == null || newLines.isEmpty())
+                ? 0
+                : (newLines.getLast().row() + 1) - next.row();
+        if (n != 0) {
+            for (int i = start; i < lines.size(); i++) {
+                lines.get(i).plusRow(n);
             }
         }
-        List<SubRange> newLines = IntStream.range(startRow, endRow).mapToObj(i -> {
-            var row = RowText.of(i, content.getText(i), fm);
-            var subs = SubText.of(row, width);
-            List<SubRange> ret = new ArrayList<>();
-            for (int j = 0; j < subs.size(); j++) {
-                var sub = subs.get(j);
-                ret.add(new SubRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
-            }
-            return ret;
-        }).flatMap(Collection::stream).toList();
+        lines.addAll(start, newLines);
+    }
 
-        lines.addAll(index, newLines);
-
+    private List<SubRange> subRanges(int row) {
+        var rowText = RowText.of(row, content.getText(row), fm);
+        var subs = SubText.of(rowText, width);
+        List<SubRange> ret = new ArrayList<>();
+        for (int j = 0; j < subs.size(); j++) {
+            var sub = subs.get(j);
+            ret.add(new SubRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
+        }
+        return ret;
     }
 
     public Text text(int line) {
@@ -137,6 +140,20 @@ public class WrapLayout implements Layout {
     }
 
     @Override
+    public int rowToLine(int row) {
+        if (row <= 0) return 0;
+        int line = Collections.binarySearch(lines, new SubRange(row, 0, 0, 0, 0));
+        return (line < 0) ? lines.size() : line;
+    }
+
+    @Override
+    public int lineToRow(int line) {
+        if (line <= 0) return 0;
+        var sub = lines.get(line);
+        return (sub == null) ? content.rows() : sub.row();
+    }
+
+    @Override
     public Optional<Loc> loc(int row, int col, int startLine, int endLine) {
         for (int i = startLine; i < endLine; i++) {
             SubRange sub = lines.get(i);
@@ -147,13 +164,41 @@ public class WrapLayout implements Layout {
         return Optional.empty();
     }
 
-    public record SubRange(int row, int subLine, int subLines, int fromIndex, int toIndex) {
-        static SubRange empty = new SubRange(0, 0, 0, 0, 0);
-        public int length() {
-            return toIndex - fromIndex;
+    static class SubRange implements Comparable<SubRange> {
+        private int row, subLine, subLines, fromIndex, toIndex;
+        public SubRange(int row, int subLine, int subLines, int fromIndex, int toIndex) {
+            this.row = row;
+            this.subLine = subLine;
+            this.subLines = subLines;
+            this.fromIndex = fromIndex;
+            this.toIndex = toIndex;
         }
+        public void plusRow(int n) { row += n; }
+        public int row() { return row; }
+        public int subLine() { return  subLine; }
+        public int subLines() { return subLines; }
+        public int fromIndex() { return fromIndex; }
+        public int toIndex() { return toIndex; }
+        public int length() { return toIndex - fromIndex; }
         boolean contains(int row, int col) {
             return this.row == row && this.fromIndex <= col && col < this.toIndex;
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SubRange subRange = (SubRange) o;
+            return row == subRange.row && subLine == subRange.subLine && subLines == subRange.subLines && fromIndex == subRange.fromIndex && toIndex == subRange.toIndex;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(row, subLine, subLines, fromIndex, toIndex);
+        }
+        @Override
+        public int compareTo(SubRange that) {
+            return Comparator.comparing(SubRange::row)
+                    .thenComparing(SubRange::subLine)
+                    .compare(this, that);
         }
     }
 

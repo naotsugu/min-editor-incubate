@@ -72,6 +72,16 @@ public class RowLayout implements Layout {
     }
 
     @Override
+    public int rowToLine(int row) {
+        return row;
+    }
+
+    @Override
+    public int lineToRow(int line) {
+        return line;
+    }
+
+    @Override
     public Optional<Loc> loc(int row, int col, int startLine, int endLine) {
         if (startLine <= row && row < endLine) {
             return Optional.of(new Loc(x(row, col),y(row)));
