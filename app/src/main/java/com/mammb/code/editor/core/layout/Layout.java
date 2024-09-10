@@ -28,6 +28,7 @@ interface Layout {
     Text text(int line);
     List<Text> texts(int startLine, int endLine);
     RowText rowText(int line);
+    RowText rowTextAt(int row);
     double lineHeight();
     int lineSize();
     int rowToLine(int row);

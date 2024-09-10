@@ -114,19 +114,24 @@ public class WrapLayout implements Layout {
         return IntStream.rangeClosed(startRange.row(), endRange.row()).mapToObj(i -> {
             var row = RowText.of(i, content.getText(i), fm);
             var subs = SubText.of(row, width);
-            if (i == endRange.row() && subs.size() >= endRange.subLine + 1) {
-                subs.subList(endRange.subLine + 1, subs.size()).clear();
+            if (i == endRange.row() && subs.size() >= endRange.subLine() + 1) {
+                subs.subList(endRange.subLine() + 1, subs.size()).clear();
             }
             if (i == startRange.row()) {
-                subs.subList(0, startRange.subLine).clear();
+                subs.subList(0, startRange.subLine()).clear();
             }
             return subs;
         }).flatMap(Collection::stream).map(Text.class::cast).toList();
     }
 
+    @Override
     public RowText rowText(int line) {
-        var range = lines.get(line);
-        return RowText.of(range.row(), content.getText(range.row()), fm);
+        return rowTextAt(lines.get(line).row());
+    }
+
+    @Override
+    public RowText rowTextAt(int row) {
+        return RowText.of(row, content.getText(row), fm);
     }
 
     @Override
@@ -188,7 +193,11 @@ public class WrapLayout implements Layout {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             SubRange subRange = (SubRange) o;
-            return row == subRange.row && subLine == subRange.subLine && subLines == subRange.subLines && fromIndex == subRange.fromIndex && toIndex == subRange.toIndex;
+            return row == subRange.row &&
+                    subLine == subRange.subLine &&
+                    subLines == subRange.subLines &&
+                    fromIndex == subRange.fromIndex &&
+                    toIndex == subRange.toIndex;
         }
         @Override
         public int hashCode() {

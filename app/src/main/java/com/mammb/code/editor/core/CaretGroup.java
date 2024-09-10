@@ -28,6 +28,7 @@ public interface CaretGroup {
 
     Caret getFirst();
     List<Point> points();
+    List<Caret> carets();
     List<Range> marked();
     void at(List<Point> points);
     int size();
@@ -52,6 +53,11 @@ public interface CaretGroup {
         @Override
         public List<Point> points() {
             return carets.stream().map(Caret::point).toList();
+        }
+
+        @Override
+        public List<Caret> carets() {
+            return carets;
         }
 
         @Override

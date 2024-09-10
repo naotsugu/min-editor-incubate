@@ -30,6 +30,7 @@ public interface ScreenBuffer {
     void scrollAt(int line);
     void refreshBuffer(int startRow, int endRow);
     List<Text> texts();
+    Text text(int row);
     Optional<Loc> locationOn(int row, int col);
 
     static ScreenBuffer of(Content content, FontMetrics fm) {
@@ -104,6 +105,11 @@ public interface ScreenBuffer {
         @Override
         public List<Text> texts() {
             return buffer;
+        }
+
+        @Override
+        public Text text(int row) {
+            return layout.rowTextAt(row);
         }
 
         @Override

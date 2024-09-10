@@ -47,6 +47,7 @@ public class RowLayout implements Layout {
         // nothing to do
     }
 
+    @Override
     public Text text(int line) {
         return rowText(line);
     }
@@ -57,8 +58,14 @@ public class RowLayout implements Layout {
                 .mapToObj(this::rowText).map(Text.class::cast).toList();
     }
 
+    @Override
     public RowText rowText(int line) {
-        return RowText.of(line, content.getText(line), fm);
+        return rowTextAt(line);
+    }
+
+    @Override
+    public RowText rowTextAt(int row) {
+        return RowText.of(row, content.getText(row), fm);
     }
 
     @Override

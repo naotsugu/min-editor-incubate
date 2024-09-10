@@ -30,20 +30,17 @@ import java.util.Optional;
 
 public class PlainEditorModel implements EditorModel {
     private final Content content;
-    private final FontMetrics fm;
     private final ScreenBuffer screen;
     private final CaretGroup carets = CaretGroup.of();
 
     public PlainEditorModel(Content content, FontMetrics fm) {
         this.content = content;
-        this.fm = fm;
         this.screen = ScreenBuffer.of(content, fm);
     }
 
     @Override
     public void draw(Draw draw) {
         draw.clear();
-
         double y = 0;
         for (Text text : screen.texts()) {
             double x = 0;
@@ -55,7 +52,6 @@ public class PlainEditorModel implements EditorModel {
             screen.locationOn(p.row(), p.col())
                   .ifPresent(loc -> draw.caret(loc.x(), loc.y()));
         }
-
     }
     @Override
     public void setSize(double width, double height) {
@@ -74,6 +70,20 @@ public class PlainEditorModel implements EditorModel {
     public void scrollAt(int line) {
         screen.scrollAt(line);
     }
+
+    @Override
+    public void moveCaretRight() {
+        for (Caret caret : carets.carets()) {
+            var text = screen.text(caret.point().row());
+        }
+    }
+
+    @Override
+    public void moveCaretLeft() {
+        for (Caret caret : carets.carets()) {
+        }
+    }
+
     @Override
     public void click(double x, double y) {
         // TODO
@@ -95,8 +105,7 @@ public class PlainEditorModel implements EditorModel {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
             var pos = content.insert(caret.point(), text);
-            // TODO change row
-            screen.refreshBuffer(caret.point().row(), pos.row());
+            screen.refreshBuffer(caret.point().row(), pos.row() + 1);
             caret.at(pos);
         } else {
 
@@ -107,7 +116,6 @@ public class PlainEditorModel implements EditorModel {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
             var del = content.delete(caret.point());
-            // TODO change row
             screen.refreshBuffer(caret.point().row(), caret.point().row() + 1);
         } else {
 
@@ -115,7 +123,13 @@ public class PlainEditorModel implements EditorModel {
     }
     @Override
     public void backspace() {
-        // TODO
+        if (carets.size() == 1) {
+            Caret caret = carets.getFirst();
+            var pos = content.backspace(caret.point());
+            screen.refreshBuffer(pos.row(), caret.point().row() + 1);
+        } else {
+
+        }
     }
     @Override
     public void undo() {

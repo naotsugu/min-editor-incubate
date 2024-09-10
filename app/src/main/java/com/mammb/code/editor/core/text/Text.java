@@ -50,4 +50,21 @@ public interface Text {
     default boolean isLowSurrogate(int index) {
         return Character.isLowSurrogate(value().charAt(index));
     }
+
+    default int right(int index) {
+        if (isEmpty()) return index;
+        index += isHighSurrogate(index) ? 2 : 1;
+        return  (index > textLength()) ? 0 : index;
+    }
+
+    default int left(int index) {
+        if (index <= 0) return 0;
+        index -= isLowSurrogate(index - 1) ? 2 : 1;
+        return index;
+    }
+
+    default boolean isEmpty() {
+        return value().isEmpty();
+    }
+
 }
