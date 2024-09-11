@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public interface ScreenBuffer {
+public interface ScreenLayout {
 
     void setSize(double width, double height);
     void scrollNext(int delta);
@@ -32,18 +32,20 @@ public interface ScreenBuffer {
     List<Text> texts();
     Text text(int row);
     Optional<Loc> locationOn(int row, int col);
+    int lineSize();
+    double xOnLayout(int row, int col);
 
-    static ScreenBuffer of(Content content, FontMetrics fm) {
+    static ScreenLayout of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
-        return new BasicScreenBuffer(layout, content);
+        return new BasicScreenLayout(layout, content);
     }
 
-    static ScreenBuffer wrapOf(Content content, FontMetrics fm) {
+    static ScreenLayout wrapOf(Content content, FontMetrics fm) {
         Layout layout = new WrapLayout(content, fm);
-        return new BasicScreenBuffer(layout, content);
+        return new BasicScreenLayout(layout, content);
     }
 
-    class BasicScreenBuffer implements ScreenBuffer {
+    class BasicScreenLayout implements ScreenLayout {
         private double width = 0, height = 0;
         private double xShift = 0;
         private int topLine = 0;
@@ -51,7 +53,7 @@ public interface ScreenBuffer {
         private final Layout layout;
         private final Content content;
 
-        public BasicScreenBuffer(Layout layout, Content content) {
+        public BasicScreenLayout(Layout layout, Content content) {
             this.layout = layout;
             this.content = content;
         }
@@ -79,7 +81,7 @@ public interface ScreenBuffer {
             line = Math.clamp(line, 0, layout.lineSize() - 1);
             int delta = line - topLine;
             if (delta == 0) return;
-            if (Math.abs(delta) < lineSize() * 2 / 3) {
+            if (Math.abs(delta) < screenLineSize() * 2 / 3) {
                 topLine = line;
                 if (delta > 0) {
                     // scroll next
@@ -98,7 +100,7 @@ public interface ScreenBuffer {
 
         @Override
         public void refreshBuffer(int startRow, int endRow) {
-            layout.refreshRow(startRow, endRow);
+            layout.refreshAt(startRow, endRow);
             fillBuffer();// TODO optimize
         }
 
@@ -114,16 +116,26 @@ public interface ScreenBuffer {
 
         @Override
         public Optional<Loc> locationOn(int row, int col) {
-            return layout.loc(row, col, topLine, topLine + lineSize())
+            return layout.loc(row, col, topLine, topLine + screenLineSize())
                     .map(loc -> new Loc(loc.x(), loc.y() - topY()));
+        }
+
+        @Override
+        public int lineSize() {
+            return layout.lineSize();
+        }
+
+        @Override
+        public double xOnLayout(int row, int col) {
+            return 0; // TODOS
         }
 
         private void fillBuffer() {
             buffer.clear();
-            buffer.addAll(layout.texts(topLine, topLine + lineSize()));
+            buffer.addAll(layout.texts(topLine, topLine + screenLineSize()));
         }
 
-        public int lineSize() {
+        public int screenLineSize() {
             return (int) Math.ceil(Math.max(0, height) / layout.lineHeight());
         }
 

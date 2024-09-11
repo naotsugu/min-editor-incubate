@@ -43,7 +43,7 @@ public class RowLayout implements Layout {
     }
 
     @Override
-    public void refreshRow(int start, int end) {
+    public void refreshAt(int startRow, int endRow) {
         // nothing to do
     }
 
@@ -86,6 +86,11 @@ public class RowLayout implements Layout {
     @Override
     public int lineToRow(int line) {
         return line;
+    }
+
+    @Override
+    public int pointToLine(int row, int col) {
+        return row;
     }
 
     @Override

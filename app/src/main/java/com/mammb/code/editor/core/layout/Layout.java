@@ -24,7 +24,7 @@ import java.util.Optional;
 interface Layout {
     void setWidth(double width);
     void refresh(int line);
-    void refreshRow(int start, int end);
+    void refreshAt(int startRow, int endRow);
     Text text(int line);
     List<Text> texts(int startLine, int endLine);
     RowText rowText(int line);
@@ -33,6 +33,7 @@ interface Layout {
     int lineSize();
     int rowToLine(int row);
     int lineToRow(int line);
+    int pointToLine(int row, int col);
 
     /**
      *

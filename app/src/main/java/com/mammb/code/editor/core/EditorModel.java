@@ -39,6 +39,8 @@ public interface EditorModel {
     void scrollAt(int line);
     void moveCaretRight();
     void moveCaretLeft();
+    void moveCaretDown();
+    void moveCaretUp();
     void click(double x, double y);
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);

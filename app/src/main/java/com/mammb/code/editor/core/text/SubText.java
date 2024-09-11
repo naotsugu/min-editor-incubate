@@ -36,6 +36,9 @@ public interface SubText extends Text {
     default boolean isTail() {
         return next() == null;
     }
+    default boolean contains(int col) {
+        return fromIndex() <= col && col < toIndex();
+    }
 
     static List<SubText> of(RowText rowText, double width) {
         if (width <= 0) {

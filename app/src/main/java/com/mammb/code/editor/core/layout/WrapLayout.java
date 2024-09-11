@@ -63,7 +63,7 @@ public class WrapLayout implements Layout {
             lines.addAll(subRanges(i));
         }
     }
-    public void refreshRow(int startRow, int endRow) {
+    public void refreshAt(int startRow, int endRow) {
         int start = rowToLine(startRow);
         int end   = rowToLine(endRow);
         lines.subList(start, end).clear();
@@ -84,20 +84,13 @@ public class WrapLayout implements Layout {
     }
 
     private List<SubRange> subRanges(int row) {
-        var rowText = RowText.of(row, content.getText(row), fm);
-        var subs = SubText.of(rowText, width);
-        List<SubRange> ret = new ArrayList<>();
-        for (int j = 0; j < subs.size(); j++) {
-            var sub = subs.get(j);
-            ret.add(new SubRange(sub.row(), j, subs.size(), sub.fromIndex(), sub.toIndex()));
-        }
-        return ret;
+        int line = rowToLine(row);
+        return lines.subList(line, line + lines.get(line).subLines());
     }
 
     public Text text(int line) {
         var range = lines.get(line);
-        var row = RowText.of(range.row(), content.getText(range.row()), fm);
-        var subs = SubText.of(row, width);
+        var subs = subTextsAt(range.row());
         return subs.get(range.subLine());
     }
 
@@ -112,8 +105,7 @@ public class WrapLayout implements Layout {
         var startRange = lines.get(startLine);
         var endRange   = lines.get(endLine - 1);
         return IntStream.rangeClosed(startRange.row(), endRange.row()).mapToObj(i -> {
-            var row = RowText.of(i, content.getText(i), fm);
-            var subs = SubText.of(row, width);
+            var subs = subTextsAt(i);
             if (i == endRange.row() && subs.size() >= endRange.subLine() + 1) {
                 subs.subList(endRange.subLine() + 1, subs.size()).clear();
             }
@@ -132,6 +124,10 @@ public class WrapLayout implements Layout {
     @Override
     public RowText rowTextAt(int row) {
         return RowText.of(row, content.getText(row), fm);
+    }
+
+    private List<SubText> subTextsAt(int row) {
+        return SubText.of(rowTextAt(row), width);
     }
 
     @Override
@@ -156,6 +152,17 @@ public class WrapLayout implements Layout {
         if (line <= 0) return 0;
         var sub = lines.get(line);
         return (sub == null) ? content.rows() : sub.row();
+    }
+
+    @Override
+    public int pointToLine(int row, int col) {
+        int line = rowToLine(row);
+        for (int i = 0; i < lines.get(line).subLines; i++) {
+            if (lines.get(line + i).contains(row, col)) {
+                return line + i;
+            }
+        }
+        return lines.size();
     }
 
     @Override

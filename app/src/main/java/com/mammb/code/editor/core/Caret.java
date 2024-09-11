@@ -30,7 +30,7 @@ public interface Caret extends Comparable<Caret>{
     boolean isMarked();
     boolean isFloating();
     Range markedRange();
-
+    double vPos();
     default void at(Point point) {
         at(point.row(), point.col());
     }
@@ -47,7 +47,7 @@ public interface Caret extends Comparable<Caret>{
 
         private final PointMut point;
         private Point mark;
-        private double vPos;
+        private double vPos = -1;
         private boolean floating;
 
         public CaretImpl(int row, int col) {
@@ -84,6 +84,11 @@ public interface Caret extends Comparable<Caret>{
         }
 
         @Override
+        public double vPos() {
+            return vPos;
+        }
+
+        @Override
         public int compareTo(Caret that) {
             return this.point().compareTo(that.point());
         }
@@ -108,7 +113,8 @@ public interface Caret extends Comparable<Caret>{
 
         @Override
         public void at(int row, int col) {
-            this.point.at(row, col);
+            point.at(row, col);
+            vPos = -1;
         }
     }
 

@@ -21,7 +21,7 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
-import com.mammb.code.editor.core.layout.ScreenBuffer;
+import com.mammb.code.editor.core.layout.ScreenLayout;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import java.nio.file.Path;
@@ -31,12 +31,12 @@ import java.util.Optional;
 public class PlainEditorModel implements EditorModel {
     double marginTop = 5, marginLeft = 5;
     private final Content content;
-    private final ScreenBuffer screen;
+    private final ScreenLayout screen;
     private final CaretGroup carets = CaretGroup.of();
 
     public PlainEditorModel(Content content, FontMetrics fm) {
         this.content = content;
-        this.screen = ScreenBuffer.of(content, fm);
+        this.screen = ScreenLayout.of(content, fm);
     }
 
     @Override
@@ -99,6 +99,20 @@ public class PlainEditorModel implements EditorModel {
                 int next = text.left(caret.point().col());
                 caret.at(caret.point().row(), next);
             }
+        }
+    }
+
+    @Override
+    public void moveCaretDown() {
+        for (Caret caret : carets.carets()) {
+            screen.xOnLayout(caret.point().row(), caret.point().col());
+        }
+    }
+
+    @Override
+    public void moveCaretUp() {
+        for (Caret caret : carets.carets()) {
+
         }
     }
 
