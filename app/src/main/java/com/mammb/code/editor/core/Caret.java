@@ -24,12 +24,16 @@ import java.util.Objects;
 public interface Caret extends Comparable<Caret>{
 
     Point point();
-    void at(Point point);
+    void at(int row, int col);
     void mark();
     void clearMark();
     boolean isMarked();
     boolean isFloating();
     Range markedRange();
+
+    default void at(Point point) {
+        at(point.row(), point.col());
+    }
 
     static Caret of() {
         return new CaretImpl();
@@ -103,8 +107,8 @@ public interface Caret extends Comparable<Caret>{
         }
 
         @Override
-        public void at(Point point) {
-            this.point.at(point.row(), point.col());
+        public void at(int row, int col) {
+            this.point.at(row, col);
         }
     }
 

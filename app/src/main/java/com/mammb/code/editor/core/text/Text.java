@@ -54,7 +54,7 @@ public interface Text {
     default int right(int index) {
         if (isEmpty()) return index;
         index += isHighSurrogate(index) ? 2 : 1;
-        return  (index > textLength()) ? 0 : index;
+        return  (index > textLength()) ? -1 : index;
     }
 
     default int left(int index) {

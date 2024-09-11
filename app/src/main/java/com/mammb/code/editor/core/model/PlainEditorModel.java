@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class PlainEditorModel implements EditorModel {
+    double marginTop = 5, marginLeft = 5;
     private final Content content;
     private final ScreenBuffer screen;
     private final CaretGroup carets = CaretGroup.of();
@@ -44,13 +45,13 @@ public class PlainEditorModel implements EditorModel {
         double y = 0;
         for (Text text : screen.texts()) {
             double x = 0;
-            draw.text(text.value(), x, y, text.width(), List.of());
+            draw.text(text.value(), x + marginLeft, y + marginTop, text.width(), List.of());
             x += text.width();
             y += text.height();
         }
         for (Point p : carets.points()) {
             screen.locationOn(p.row(), p.col())
-                  .ifPresent(loc -> draw.caret(loc.x(), loc.y()));
+                  .ifPresent(loc -> draw.caret(loc.x() + marginLeft, loc.y() + marginTop));
         }
     }
     @Override
@@ -75,12 +76,29 @@ public class PlainEditorModel implements EditorModel {
     public void moveCaretRight() {
         for (Caret caret : carets.carets()) {
             var text = screen.text(caret.point().row());
+            if (text == null) continue;
+            int next = text.right(caret.point().col());
+            if (next <= 0) {
+                caret.at(caret.point().row() + 1, 0);
+            } else {
+                caret.at(caret.point().row(), next);
+            }
         }
     }
 
     @Override
     public void moveCaretLeft() {
         for (Caret caret : carets.carets()) {
+            if (caret.point().row() == 0 && caret.point().col() == 0) {
+                return;
+            } else if (caret.point().col() == 0) {
+                var text = screen.text(caret.point().row() - 1);
+                caret.at(caret.point().row() - 1, text.textLength());
+            } else {
+                var text = screen.text(caret.point().row());
+                int next = text.left(caret.point().col());
+                caret.at(caret.point().row(), next);
+            }
         }
     }
 

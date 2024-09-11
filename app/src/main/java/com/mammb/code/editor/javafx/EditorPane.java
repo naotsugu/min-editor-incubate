@@ -139,6 +139,8 @@ public class EditorPane extends StackPane {
             case BACK_SPACE -> model.backspace();
             case UNDO -> model.undo();
             case REDO -> model.redo();
+            case CARET_RIGHT -> model.moveCaretRight();
+            case CARET_LEFT -> model.moveCaretLeft();
         }
         draw();
         return action;
