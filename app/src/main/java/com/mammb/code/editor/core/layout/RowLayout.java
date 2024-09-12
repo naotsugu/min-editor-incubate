@@ -74,12 +74,27 @@ public class RowLayout implements Layout {
     }
 
     @Override
+    public int xToCol(int line, double x) {
+        return text(line).indexTo(x);
+    }
+
+    @Override
     public int lineSize() {
+        return rowSize();
+    }
+
+    @Override
+    public int rowSize() {
         return content.rows();
     }
 
     @Override
-    public int rowToLine(int row) {
+    public int rowToFirstLine(int row) {
+        return row;
+    }
+
+    @Override
+    public int rowToLastLine(int row) {
         return row;
     }
 
@@ -89,7 +104,7 @@ public class RowLayout implements Layout {
     }
 
     @Override
-    public int pointToLine(int row, int col) {
+    public int rowToLine(int row, int col) {
         return row;
     }
 

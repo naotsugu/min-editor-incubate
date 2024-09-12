@@ -17,11 +17,10 @@ package com.mammb.code.editor.core.layout;
 
 import com.mammb.code.editor.core.text.RowText;
 import com.mammb.code.editor.core.text.Text;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-interface Layout {
+interface Layout extends RowLineIc {
     void setWidth(double width);
     void refresh(int line);
     void refreshAt(int startRow, int endRow);
@@ -30,10 +29,7 @@ interface Layout {
     RowText rowText(int line);
     RowText rowTextAt(int row);
     double lineHeight();
-    int lineSize();
-    int rowToLine(int row);
-    int lineToRow(int line);
-    int pointToLine(int row, int col);
+    int xToCol(int line, double x);
 
     /**
      *
@@ -46,8 +42,7 @@ interface Layout {
     Optional<Loc> loc(int row, int col, int startLine, int endLine);
 
     default double x(int line, int col) {
-        double[] ad = text(line).advances();
-        return Arrays.stream(ad, 0, Math.min(col, ad.length)).sum();
+        return text(line).widthTo(col);
     }
 
     default double y(int line) {

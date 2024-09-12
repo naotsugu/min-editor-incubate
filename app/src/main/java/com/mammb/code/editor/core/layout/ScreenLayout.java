@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public interface ScreenLayout {
+public interface ScreenLayout extends RowLineIc {
 
     void setSize(double width, double height);
     void scrollNext(int delta);
@@ -32,8 +32,8 @@ public interface ScreenLayout {
     List<Text> texts();
     Text text(int row);
     Optional<Loc> locationOn(int row, int col);
-    int lineSize();
-    double xOnLayout(int row, int col);
+    double xOnLayout(int line, int col);
+    int xToCol(int line, double x);
 
     static ScreenLayout of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
@@ -126,8 +126,38 @@ public interface ScreenLayout {
         }
 
         @Override
-        public double xOnLayout(int row, int col) {
-            return 0; // TODOS
+        public int rowSize() {
+            return layout.rowSize();
+        }
+
+        @Override
+        public double xOnLayout(int line, int col) {
+            return layout.x(rowToLine(line, col), col);
+        }
+
+        @Override
+        public int rowToFirstLine(int row) {
+            return layout.rowToFirstLine(row);
+        }
+
+        @Override
+        public int rowToLastLine(int row) {
+            return layout.rowToLastLine(row);
+        }
+
+        @Override
+        public int rowToLine(int row, int col) {
+            return layout.rowToLine(row, col);
+        }
+
+        @Override
+        public int lineToRow(int line) {
+            return layout.lineToRow(line);
+        }
+
+        @Override
+        public int xToCol(int line, double x) {
+            return layout.xToCol(line, x);
         }
 
         private void fillBuffer() {

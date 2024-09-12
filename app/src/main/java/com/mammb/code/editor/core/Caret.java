@@ -25,6 +25,7 @@ public interface Caret extends Comparable<Caret>{
 
     Point point();
     void at(int row, int col);
+    void at(int row, int col, double vPos);
     void mark();
     void clearMark();
     boolean isMarked();
@@ -115,6 +116,12 @@ public interface Caret extends Comparable<Caret>{
         public void at(int row, int col) {
             point.at(row, col);
             vPos = -1;
+        }
+
+        @Override
+        public void at(int row, int col, double x) {
+            point.at(row, col);
+            vPos = x;
         }
     }
 

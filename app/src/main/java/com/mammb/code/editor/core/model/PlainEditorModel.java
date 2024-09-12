@@ -77,7 +77,7 @@ public class PlainEditorModel implements EditorModel {
         for (Caret caret : carets.carets()) {
             var text = screen.text(caret.point().row());
             if (text == null) continue;
-            int next = text.right(caret.point().col());
+            int next = text.indexRight(caret.point().col());
             if (next <= 0) {
                 caret.at(caret.point().row() + 1, 0);
             } else {
@@ -96,7 +96,7 @@ public class PlainEditorModel implements EditorModel {
                 caret.at(caret.point().row() - 1, text.textLength());
             } else {
                 var text = screen.text(caret.point().row());
-                int next = text.left(caret.point().col());
+                int next = text.indexLeft(caret.point().col());
                 caret.at(caret.point().row(), next);
             }
         }
@@ -105,7 +105,13 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void moveCaretDown() {
         for (Caret caret : carets.carets()) {
-            screen.xOnLayout(caret.point().row(), caret.point().col());
+            int line = screen.rowToLine(caret.point().row(), caret.point().col());
+            if (line == screen.lineSize()) continue;
+            double x = (caret.vPos() < 0)
+                    ? screen.xOnLayout(line, caret.point().col())
+                    : caret.vPos();
+            line++;
+            caret.at(screen.lineToRow(line), screen.xToCol(line, x), x);
         }
     }
 

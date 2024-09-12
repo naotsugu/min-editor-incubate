@@ -15,6 +15,8 @@
  */
 package com.mammb.code.editor.core.text;
 
+import java.util.Arrays;
+
 public interface Text {
 
     int row();
@@ -51,16 +53,31 @@ public interface Text {
         return Character.isLowSurrogate(value().charAt(index));
     }
 
-    default int right(int index) {
+    default int indexRight(int index) {
         if (isEmpty()) return index;
         index += isHighSurrogate(index) ? 2 : 1;
         return  (index > textLength()) ? -1 : index;
     }
 
-    default int left(int index) {
+    default int indexLeft(int index) {
         if (index <= 0) return 0;
         index -= isLowSurrogate(index - 1) ? 2 : 1;
         return index;
+    }
+
+    default double widthTo(int index) {
+        double[] ad = advances();
+        return Arrays.stream(ad, 0, Math.min(index, ad.length)).sum();
+    }
+
+    default int indexTo(double width) {
+        double[] ad = advances();
+        double w = 0;
+        for (int i = 0; i < ad.length; i++) {
+            if (w + ad[i] > width) return i;
+            w += ad[i];
+        }
+        return ad.length;
     }
 
     default boolean isEmpty() {

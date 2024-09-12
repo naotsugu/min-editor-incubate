@@ -64,8 +64,8 @@ public class WrapLayout implements Layout {
         }
     }
     public void refreshAt(int startRow, int endRow) {
-        int start = rowToLine(startRow);
-        int end   = rowToLine(endRow);
+        int start = rowToFirstLine(startRow);
+        int end   = rowToFirstLine(endRow);
         lines.subList(start, end).clear();
         List<SubRange> newLines = IntStream.range(startRow, endRow)
                 .mapToObj(this::subRanges)
@@ -84,7 +84,7 @@ public class WrapLayout implements Layout {
     }
 
     private List<SubRange> subRanges(int row) {
-        int line = rowToLine(row);
+        int line = rowToFirstLine(row);
         return lines.subList(line, line + lines.get(line).subLines());
     }
 
@@ -136,15 +136,31 @@ public class WrapLayout implements Layout {
     }
 
     @Override
+    public int xToCol(int line, double x) {
+        return text(line).indexTo(x) + lines.get(line).fromIndex();
+    }
+
+    @Override
     public int lineSize() {
         return lines.size();
     }
 
     @Override
-    public int rowToLine(int row) {
+    public int rowSize() {
+        return content.rows();
+    }
+
+    @Override
+    public int rowToFirstLine(int row) {
         if (row <= 0) return 0;
         int line = Collections.binarySearch(lines, new SubRange(row, 0, 0, 0, 0));
         return (line < 0) ? lines.size() : line;
+    }
+
+    @Override
+    public int rowToLastLine(int row) {
+        int first = rowToFirstLine(row);
+        return first + lines.get(first).subLines - 1;
     }
 
     @Override
@@ -155,8 +171,8 @@ public class WrapLayout implements Layout {
     }
 
     @Override
-    public int pointToLine(int row, int col) {
-        int line = rowToLine(row);
+    public int rowToLine(int row, int col) {
+        int line = rowToFirstLine(row);
         for (int i = 0; i < lines.get(line).subLines; i++) {
             if (lines.get(line + i).contains(row, col)) {
                 return line + i;
