@@ -139,10 +139,14 @@ public class EditorPane extends StackPane {
             case BACK_SPACE -> model.backspace();
             case UNDO -> model.undo();
             case REDO -> model.redo();
-            case CARET_RIGHT -> model.moveCaretRight();
-            case CARET_LEFT -> model.moveCaretLeft();
-            case CARET_UP -> model.moveCaretUp();
-            case CARET_DOWN -> model.moveCaretDown();
+            case CARET_RIGHT -> model.moveCaretRight(false);
+            case CARET_LEFT -> model.moveCaretLeft(false);
+            case CARET_UP -> model.moveCaretUp(false);
+            case CARET_DOWN -> model.moveCaretDown(false);
+            case SELECT_CARET_RIGHT -> model.moveCaretRight(true);
+            case SELECT_CARET_LEFT -> model.moveCaretLeft(true);
+            case SELECT_CARET_UP -> model.moveCaretUp(true);
+            case SELECT_CARET_DOWN -> model.moveCaretDown(true);
         }
         draw();
         return action;

@@ -49,16 +49,16 @@ interface Layout extends RowLineIc {
         return line * lineHeight();
     }
 
-    default int line(double y) {
+    default int yToLine(double y) {
         return (int) (y / lineHeight());
     }
 
     default int col(double x, double y) {
-        double[] ad = text(line(y)).advances();
+        double[] ad = text(yToLine(y)).advances();
         int col = 0;
         for ( ; col < ad.length; col++) {
-            if ((y - ad[col]) < 0) break;
-            y -= ad[col];
+            if ((x - ad[col]) < 0) break;
+            x -= ad[col];
         }
         return col;
     }

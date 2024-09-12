@@ -29,13 +29,14 @@ public class App extends Application {
         Parameters params = getParameters();
         var editorPane = new EditorPane();
         Scene scene = new Scene(editorPane, 640, 480);
-        scene.getStylesheets().add(String.join(",", "data:text/css;base64", css));
+        scene.getStylesheets().add(css);
         stage.setScene(scene);
         stage.setTitle("min-editor");
         stage.show();
     }
 
-    private static String css = Base64.getEncoder().encodeToString("""
+    private static String css = String.join(",", "data:text/css;base64",
+            Base64.getEncoder().encodeToString("""
             .root {
               -fx-base:app-base;
               -fx-accent:app-accent;
@@ -61,5 +62,5 @@ public class App extends Application {
             .replaceAll("app-text", Theme.dark.fgColor())
             .replaceAll("app-back", Theme.dark.baseColor())
             .replaceAll("app-accent", Theme.dark.paleHighlightColor())
-            .getBytes(StandardCharsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8)));
 }

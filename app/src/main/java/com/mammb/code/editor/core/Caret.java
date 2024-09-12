@@ -35,6 +35,9 @@ public interface Caret extends Comparable<Caret>{
     default void at(Point point) {
         at(point.row(), point.col());
     }
+    default boolean isZero() {
+        return point().isZero();
+    }
 
     static Caret of() {
         return new CaretImpl();
@@ -129,6 +132,9 @@ public interface Caret extends Comparable<Caret>{
         int row();
         int col();
         static Point of(int row, int col) { return new PointRec(row, col); }
+        default boolean isZero() {
+            return row() == 0 && col() == 0;
+        }
         @Override
         default int compareTo(Point that) {
             int c = Integer.compare(this.row(), that.row());

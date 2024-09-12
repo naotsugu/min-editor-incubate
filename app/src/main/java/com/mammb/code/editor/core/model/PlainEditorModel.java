@@ -73,52 +73,57 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
-    public void moveCaretRight() {
-        for (Caret caret : carets.carets()) {
-            var text = screen.text(caret.point().row());
+    public void moveCaretRight(boolean withSel) {
+        for (Caret c : carets.carets()) {
+            var text = screen.text(c.point().row());
             if (text == null) continue;
-            int next = text.indexRight(caret.point().col());
+            int next = text.indexRight(c.point().col());
             if (next <= 0) {
-                caret.at(caret.point().row() + 1, 0);
+                c.at(c.point().row() + 1, 0);
             } else {
-                caret.at(caret.point().row(), next);
+                c.at(c.point().row(), next);
             }
         }
     }
 
     @Override
-    public void moveCaretLeft() {
-        for (Caret caret : carets.carets()) {
-            if (caret.point().row() == 0 && caret.point().col() == 0) {
-                return;
-            } else if (caret.point().col() == 0) {
-                var text = screen.text(caret.point().row() - 1);
-                caret.at(caret.point().row() - 1, text.textLength());
+    public void moveCaretLeft(boolean withSel) {
+        for (Caret c : carets.carets()) {
+            if (c.isZero()) continue;
+            if (c.point().col() == 0) {
+                var text = screen.text(c.point().row() - 1);
+                c.at(c.point().row() - 1, text.textLength());
             } else {
-                var text = screen.text(caret.point().row());
-                int next = text.indexLeft(caret.point().col());
-                caret.at(caret.point().row(), next);
+                var text = screen.text(c.point().row());
+                int next = text.indexLeft(c.point().col());
+                c.at(c.point().row(), next);
             }
         }
     }
 
     @Override
-    public void moveCaretDown() {
-        for (Caret caret : carets.carets()) {
-            int line = screen.rowToLine(caret.point().row(), caret.point().col());
+    public void moveCaretDown(boolean withSel) {
+        for (Caret c : carets.carets()) {
+            int line = screen.rowToLine(c.point().row(), c.point().col());
             if (line == screen.lineSize()) continue;
-            double x = (caret.vPos() < 0)
-                    ? screen.xOnLayout(line, caret.point().col())
-                    : caret.vPos();
+            double x = (c.vPos() < 0)
+                    ? screen.xOnLayout(line, c.point().col())
+                    : c.vPos();
             line++;
-            caret.at(screen.lineToRow(line), screen.xToCol(line, x), x);
+            c.at(screen.lineToRow(line), screen.xToCol(line, x), x);
         }
     }
 
     @Override
-    public void moveCaretUp() {
-        for (Caret caret : carets.carets()) {
-
+    public void moveCaretUp(boolean withSel) {
+        for (Caret c : carets.carets()) {
+            int line = screen.rowToLine(c.point().row(), c.point().col());
+            if (line == 0) continue;
+            double x = (c.vPos() < 0)
+                    ? screen.xOnLayout(line, c.point().col())
+                    : c.vPos();
+            line--;
+            c.at(screen.lineToRow(line), screen.xToCol(line, x), x);
         }
     }
 
