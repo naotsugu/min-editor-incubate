@@ -21,6 +21,7 @@ import com.mammb.code.editor.core.Draw;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -30,9 +31,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * The EditorPane.
@@ -45,7 +48,7 @@ public class EditorPane extends StackPane {
     /** The draw. */
     private final Draw draw;
     /** The editor model. */
-    private final EditorModel model;
+    private EditorModel model;
     /** The vertical scroll bar. */
     private final ScrollBar vScroll = new ScrollBar();
     /** The horizon scroll bar. */
@@ -124,12 +127,47 @@ public class EditorPane extends StackPane {
             var path = board.getFiles().stream().map(File::toPath)
                     .filter(Files::isReadable).filter(Files::isRegularFile).findFirst();
             if (path.isPresent()) {
-                //open(path.get());
+                if (!canDiscardCurrent()) return;
+                open(path.get());
                 e.setDropCompleted(true);
                 return;
             }
         }
         e.setDropCompleted(false);
+    }
+
+    private void openWithChooser() {
+        if (!canDiscardCurrent()) return;
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Select file...");
+        if (model.path().isPresent()) {
+            fc.setInitialDirectory(
+                    model.path().get().toAbsolutePath().getParent().toFile());
+        } else {
+            fc.setInitialDirectory(Path.of(System.getProperty("user.home")).toFile());
+        }
+        File file = fc.showOpenDialog(getScene().getWindow());
+        if (file != null) open(file.toPath());
+    }
+
+    private void open(Path path) {
+        String ext = Optional.of(path.getFileName().toString())
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(f.lastIndexOf(".") + 1))
+                .orElse("");
+        model = EditorModel.of(path, draw.fontMetrics());
+        model.setSize(getWidth(), getHeight());
+        draw();
+    }
+
+    private boolean canDiscardCurrent() {
+        if (model.isModified()) {
+            var result = FxDialog.confirmation(getScene().getWindow(),
+                    "Are you sure you want to discard your changes?").showAndWait();
+            return (result.isPresent() && result.get() == ButtonType.OK);
+        } else {
+            return true;
+        }
     }
 
     private Action execute(Action action) {
@@ -147,6 +185,7 @@ public class EditorPane extends StackPane {
             case SELECT_CARET_LEFT -> model.moveCaretLeft(true);
             case SELECT_CARET_UP -> model.moveCaretUp(true);
             case SELECT_CARET_DOWN -> model.moveCaretDown(true);
+            case OPEN -> openWithChooser();
         }
         draw();
         return action;

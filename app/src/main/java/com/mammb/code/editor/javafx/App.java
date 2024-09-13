@@ -49,6 +49,7 @@ public class App extends Application {
               -fx-mark-color: -fx-light-text-color;
               -fx-mark-highlight-color: derive(-fx-mark-color,20%);
               -fx-background-color:app-back;
+              -fx-default-button: #365880;
             }
             .text-input, .label {
               -fx-font: 14px "Consolas";

@@ -52,6 +52,7 @@ public interface EditorModel {
     void undo();
     void redo();
 
+    boolean isModified();
     Optional<Path> path();
     void save(Path path);
 }

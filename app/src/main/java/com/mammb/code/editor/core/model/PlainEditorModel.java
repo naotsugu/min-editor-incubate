@@ -184,6 +184,12 @@ public class PlainEditorModel implements EditorModel {
     public void redo() {
         carets.at(content.redo());
     }
+
+    @Override
+    public boolean isModified() {
+        return content.isModified();
+    }
+
     @Override
     public Optional<Path> path() {
         return content.path();

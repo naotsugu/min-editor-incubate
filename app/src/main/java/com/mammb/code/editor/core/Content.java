@@ -46,6 +46,7 @@ public interface Content {
     int rows();
     Optional<Path> path();
     void save(Path path);
+    boolean isModified();
 
     static Content of() {
         return new ContentImpl();
@@ -112,6 +113,12 @@ public interface Content {
         @Override
         public void save(Path path) {
             textEdit.save(path);
+        }
+
+        @Override
+        public boolean isModified() {
+            textEdit.flush();
+            return textEdit.hasUndoRecord();
         }
     }
 }
