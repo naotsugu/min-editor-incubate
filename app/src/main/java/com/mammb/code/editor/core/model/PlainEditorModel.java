@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core.model;
 
+import code.editor.syntax.Syntax;
 import com.mammb.code.editor.core.Caret;
 import com.mammb.code.editor.core.CaretGroup;
 import com.mammb.code.editor.core.Content;
@@ -31,51 +32,53 @@ import java.util.Optional;
 public class PlainEditorModel implements EditorModel {
     double marginTop = 5, marginLeft = 5;
     private final Content content;
-    private final LayoutView screen;
+    private final LayoutView view;
+    private final Syntax syntax;
     private final CaretGroup carets = CaretGroup.of();
 
-    public PlainEditorModel(Content content, FontMetrics fm) {
+    public PlainEditorModel(Content content, FontMetrics fm, Syntax syntax) {
         this.content = content;
-        this.screen = LayoutView.of(content, fm);
+        this.view = LayoutView.of(content, fm);
+        this.syntax = syntax;
     }
 
     @Override
     public void draw(Draw draw) {
         draw.clear();
         double y = 0;
-        for (Text text : screen.texts()) {
+        for (Text text : view.texts()) {
             double x = 0;
             draw.text(text.value(), x + marginLeft, y + marginTop, text.width(), List.of());
             x += text.width();
             y += text.height();
         }
         for (Point p : carets.points()) {
-            screen.locationOn(p.row(), p.col())
+            view.locationOn(p.row(), p.col())
                   .ifPresent(loc -> draw.caret(loc.x() + marginLeft, loc.y() + marginTop));
         }
     }
     @Override
     public void setSize(double width, double height) {
-        screen.setSize(width, height);
+        view.setSize(width, height);
     }
     @Override
     public void scrollNext(int delta) {
-        screen.scrollNext(delta);
+        view.scrollNext(delta);
     }
     @Override
     public void scrollPrev(int delta) {
-        screen.scrollPrev(delta);
+        view.scrollPrev(delta);
     }
 
     @Override
     public void scrollAt(int line) {
-        screen.scrollAt(line);
+        view.scrollAt(line);
     }
 
     @Override
     public void moveCaretRight(boolean withSel) {
         for (Caret c : carets.carets()) {
-            var text = screen.textAt(c.point().row());
+            var text = view.textAt(c.point().row());
             if (text == null) continue;
             int next = text.indexRight(c.point().col());
             if (next <= 0) {
@@ -91,10 +94,10 @@ public class PlainEditorModel implements EditorModel {
         for (Caret c : carets.carets()) {
             if (c.isZero()) continue;
             if (c.point().col() == 0) {
-                var text = screen.textAt(c.point().row() - 1);
+                var text = view.textAt(c.point().row() - 1);
                 c.at(c.point().row() - 1, text.textLength());
             } else {
-                var text = screen.textAt(c.point().row());
+                var text = view.textAt(c.point().row());
                 int next = text.indexLeft(c.point().col());
                 c.at(c.point().row(), next);
             }
@@ -104,34 +107,34 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void moveCaretDown(boolean withSel) {
         for (Caret c : carets.carets()) {
-            int line = screen.rowToLine(c.point().row(), c.point().col());
-            if (line == screen.lineSize()) continue;
+            int line = view.rowToLine(c.point().row(), c.point().col());
+            if (line == view.lineSize()) continue;
             double x = (c.vPos() < 0)
-                    ? screen.colToXOnLayout(line, c.point().col())
+                    ? view.colToXOnLayout(line, c.point().col())
                     : c.vPos();
             line++;
-            c.at(screen.lineToRow(line), screen.xToCol(line, x), x);
+            c.at(view.lineToRow(line), view.xToCol(line, x), x);
         }
     }
 
     @Override
     public void moveCaretUp(boolean withSel) {
         for (Caret c : carets.carets()) {
-            int line = screen.rowToLine(c.point().row(), c.point().col());
+            int line = view.rowToLine(c.point().row(), c.point().col());
             if (line == 0) continue;
             double x = (c.vPos() < 0)
-                    ? screen.colToXOnLayout(line, c.point().col())
+                    ? view.colToXOnLayout(line, c.point().col())
                     : c.vPos();
             line--;
-            c.at(screen.lineToRow(line), screen.xToCol(line, x), x);
+            c.at(view.lineToRow(line), view.xToCol(line, x), x);
         }
     }
 
     @Override
     public void click(double x, double y) {
         Caret c = carets.unique();
-        int line = screen.yToLineOnView(y - marginTop);
-        c.at(screen.lineToRow(line), screen.xToCol(line, x));
+        int line = view.yToLineOnView(y - marginTop);
+        c.at(view.lineToRow(line), view.xToCol(line, x));
     }
     @Override
     public void clickDouble(double x, double y) {
@@ -150,7 +153,7 @@ public class PlainEditorModel implements EditorModel {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
             var pos = content.insert(caret.point(), text);
-            screen.refreshBuffer(caret.point().row(), pos.row() + 1);
+            view.refreshBuffer(caret.point().row(), pos.row() + 1);
             caret.at(pos);
         } else {
 
@@ -161,7 +164,7 @@ public class PlainEditorModel implements EditorModel {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
             var del = content.delete(caret.point());
-            screen.refreshBuffer(caret.point().row(), caret.point().row() + 1);
+            view.refreshBuffer(caret.point().row(), caret.point().row() + 1);
         } else {
 
         }
@@ -171,7 +174,7 @@ public class PlainEditorModel implements EditorModel {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
             var pos = content.backspace(caret.point());
-            screen.refreshBuffer(pos.row(), caret.point().row() + 1);
+            view.refreshBuffer(pos.row(), caret.point().row() + 1);
         } else {
 
         }

@@ -117,7 +117,7 @@ public class EditorPane extends StackPane {
 
     private void handleDragOver(DragEvent e) {
         if (e.getDragboard().hasFiles()) {
-            e.acceptTransferModes(TransferMode.MOVE);
+            e.acceptTransferModes(TransferMode.COPY);
         }
     }
 
@@ -128,46 +128,13 @@ public class EditorPane extends StackPane {
                     .filter(Files::isReadable).filter(Files::isRegularFile).findFirst();
             if (path.isPresent()) {
                 if (!canDiscardCurrent()) return;
-                open(path.get());
                 e.setDropCompleted(true);
+                open(path.get());
+                draw();
                 return;
             }
         }
         e.setDropCompleted(false);
-    }
-
-    private void openWithChooser() {
-        if (!canDiscardCurrent()) return;
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Select file...");
-        if (model.path().isPresent()) {
-            fc.setInitialDirectory(
-                    model.path().get().toAbsolutePath().getParent().toFile());
-        } else {
-            fc.setInitialDirectory(Path.of(System.getProperty("user.home")).toFile());
-        }
-        File file = fc.showOpenDialog(getScene().getWindow());
-        if (file != null) open(file.toPath());
-    }
-
-    private void open(Path path) {
-        String ext = Optional.of(path.getFileName().toString())
-                .filter(f -> f.contains("."))
-                .map(f -> f.substring(f.lastIndexOf(".") + 1))
-                .orElse("");
-        model = EditorModel.of(path, draw.fontMetrics());
-        model.setSize(getWidth(), getHeight());
-        draw();
-    }
-
-    private boolean canDiscardCurrent() {
-        if (model.isModified()) {
-            var result = FxDialog.confirmation(getScene().getWindow(),
-                    "Are you sure you want to discard your changes?").showAndWait();
-            return (result.isPresent() && result.get() == ButtonType.OK);
-        } else {
-            return true;
-        }
     }
 
     private Action execute(Action action) {
@@ -193,6 +160,35 @@ public class EditorPane extends StackPane {
 
     private void draw() {
         model.draw(draw);
+    }
+
+    private void openWithChooser() {
+        if (!canDiscardCurrent()) return;
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Select file...");
+        if (model.path().isPresent()) {
+            fc.setInitialDirectory(
+                    model.path().get().toAbsolutePath().getParent().toFile());
+        } else {
+            fc.setInitialDirectory(Path.of(System.getProperty("user.home")).toFile());
+        }
+        File file = fc.showOpenDialog(getScene().getWindow());
+        if (file != null) open(file.toPath());
+    }
+
+    private void open(Path path) {
+        model = EditorModel.of(path, draw.fontMetrics());
+        model.setSize(getWidth(), getHeight());
+    }
+
+    private boolean canDiscardCurrent() {
+        if (model.isModified()) {
+            var result = FxDialog.confirmation(getScene().getWindow(),
+                    "Are you sure you want to discard your changes?").showAndWait();
+            return (result.isPresent() && result.get() == ButtonType.OK);
+        } else {
+            return true;
+        }
     }
 
 }

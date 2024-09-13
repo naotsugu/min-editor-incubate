@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core;
 
+import code.editor.syntax.Syntax;
 import com.mammb.code.editor.core.model.PlainEditorModel;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -25,10 +26,11 @@ import java.util.Optional;
 public interface EditorModel {
 
     static EditorModel of(FontMetrics fm) {
-        return new PlainEditorModel(Content.of(), fm);
+        return new PlainEditorModel(Content.of(), fm, Syntax.of(""));
     }
+
     static EditorModel of(Path path, FontMetrics fm) {
-        return new PlainEditorModel(Content.of(path), fm);
+        return new PlainEditorModel(Content.of(path), fm, Syntax.of(extension(path)));
     }
 
     void draw(Draw draw);
@@ -55,4 +57,12 @@ public interface EditorModel {
     boolean isModified();
     Optional<Path> path();
     void save(Path path);
+
+    private static String extension(Path path) {
+        return Optional.of(path.getFileName().toString())
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(f.lastIndexOf(".") + 1))
+                .orElse("");
+    }
+
 }
