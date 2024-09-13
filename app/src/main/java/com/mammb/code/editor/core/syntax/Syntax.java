@@ -8,6 +8,8 @@ public interface Syntax {
     List<StyleSpan> apply(int row, String text);
     static Syntax of(String name) {
         return switch (name.toLowerCase()) {
+            case "java" -> new JavaSyntax();
+            case "md" -> new MarkdownSyntax();
             default -> new PassThrough(name);
         };
     }
