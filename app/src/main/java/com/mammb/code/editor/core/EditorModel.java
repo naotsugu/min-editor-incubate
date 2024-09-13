@@ -53,7 +53,9 @@ public interface EditorModel {
     void backspace();
     void undo();
     void redo();
-
+    void pasteFromClipboard();
+    void copyToClipboard();
+    void cutToClipboard();
     boolean isModified();
     Optional<Path> path();
     void save(Path path);

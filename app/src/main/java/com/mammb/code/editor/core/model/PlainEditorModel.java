@@ -189,6 +189,21 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
+    public void pasteFromClipboard() {
+
+    }
+
+    @Override
+    public void copyToClipboard() {
+
+    }
+
+    @Override
+    public void cutToClipboard() {
+
+    }
+
+    @Override
     public boolean isModified() {
         return content.isModified();
     }

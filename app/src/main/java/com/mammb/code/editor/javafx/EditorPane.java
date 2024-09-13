@@ -153,6 +153,8 @@ public class EditorPane extends StackPane {
             case SELECT_CARET_UP -> model.moveCaretUp(true);
             case SELECT_CARET_DOWN -> model.moveCaretDown(true);
             case OPEN -> openWithChooser();
+            case SAVE -> save();
+            case SAVE_AS -> saveAs();
         }
         draw();
         return action;
@@ -189,6 +191,22 @@ public class EditorPane extends StackPane {
         } else {
             return true;
         }
+    }
+    private void save() {
+        if (model.path().isPresent()) {
+            model.save(model.path().get());
+        } else {
+            saveAs();
+        }
+    }
+    private void saveAs() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Save As...");
+        fc.setInitialDirectory(model.path().isPresent()
+                ? model.path().get().toAbsolutePath().getParent().toFile()
+                : Path.of(System.getProperty("user.home")).toFile());
+        File file = fc.showSaveDialog(getScene().getWindow());
+        if (file != null) model.save(file.toPath());
     }
 
 }
