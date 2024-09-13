@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public interface ScreenLayout extends RowLineIc {
+public interface LayoutView extends RowLineIc {
 
     void setSize(double width, double height);
     void scrollNext(int delta);
@@ -30,22 +30,27 @@ public interface ScreenLayout extends RowLineIc {
     void scrollAt(int line);
     void refreshBuffer(int startRow, int endRow);
     List<Text> texts();
-    Text text(int row);
+    Text text(int line);
+    Text textAt(int row);
     Optional<Loc> locationOn(int row, int col);
-    double xOnLayout(int line, int col);
+    double lineToYOnLayout(int line);
+    double lineToYOnView(int line);
+    double colToXOnLayout(int line, int col);
+    double colToXOnView(int line, int col);
     int xToCol(int line, double x);
+    int yToLineOnView(double y);
 
-    static ScreenLayout of(Content content, FontMetrics fm) {
+    static LayoutView of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
-        return new BasicScreenLayout(layout, content);
+        return new BasicLayoutView(layout, content);
     }
 
-    static ScreenLayout wrapOf(Content content, FontMetrics fm) {
+    static LayoutView wrapOf(Content content, FontMetrics fm) {
         Layout layout = new WrapLayout(content, fm);
-        return new BasicScreenLayout(layout, content);
+        return new BasicLayoutView(layout, content);
     }
 
-    class BasicScreenLayout implements ScreenLayout {
+    class BasicLayoutView implements LayoutView {
         private double width = 0, height = 0;
         private double xShift = 0;
         private int topLine = 0;
@@ -53,7 +58,7 @@ public interface ScreenLayout extends RowLineIc {
         private final Layout layout;
         private final Content content;
 
-        public BasicScreenLayout(Layout layout, Content content) {
+        public BasicLayoutView(Layout layout, Content content) {
             this.layout = layout;
             this.content = content;
         }
@@ -81,7 +86,7 @@ public interface ScreenLayout extends RowLineIc {
             line = Math.clamp(line, 0, layout.lineSize() - 1);
             int delta = line - topLine;
             if (delta == 0) return;
-            if (Math.abs(delta) < screenLineSize() * 2 / 3) {
+            if (Math.abs(delta) < lineSizeOnView() * 2 / 3) {
                 topLine = line;
                 if (delta > 0) {
                     // scroll next
@@ -110,14 +115,29 @@ public interface ScreenLayout extends RowLineIc {
         }
 
         @Override
-        public Text text(int row) {
+        public Text text(int line) {
+            return layout.text(line);
+        }
+
+        @Override
+        public Text textAt(int row) {
             return layout.rowTextAt(row);
         }
 
         @Override
         public Optional<Loc> locationOn(int row, int col) {
-            return layout.loc(row, col, topLine, topLine + screenLineSize())
-                    .map(loc -> new Loc(loc.x(), loc.y() - topY()));
+            return layout.loc(row, col, topLine, topLine + lineSizeOnView())
+                    .map(loc -> new Loc(loc.x(), loc.y() - lineToYOnLayout(topLine)));
+        }
+
+        @Override
+        public double lineToYOnLayout(int line) {
+            return layout.y(line);
+        }
+
+        @Override
+        public double lineToYOnView(int line) {
+            return lineToYOnLayout(line) - lineToYOnLayout(topLine);
         }
 
         @Override
@@ -131,8 +151,13 @@ public interface ScreenLayout extends RowLineIc {
         }
 
         @Override
-        public double xOnLayout(int line, int col) {
+        public double colToXOnLayout(int line, int col) {
             return layout.x(rowToLine(line, col), col);
+        }
+
+        @Override
+        public double colToXOnView(int line, int col) {
+            return colToXOnLayout(line, col) - xShift;
         }
 
         @Override
@@ -160,17 +185,18 @@ public interface ScreenLayout extends RowLineIc {
             return layout.xToCol(line, x);
         }
 
+        @Override
+        public int yToLineOnView(double y) {
+            return topLine + (int) (y / layout.lineHeight());
+        }
+
         private void fillBuffer() {
             buffer.clear();
-            buffer.addAll(layout.texts(topLine, topLine + screenLineSize()));
+            buffer.addAll(layout.texts(topLine, topLine + lineSizeOnView()));
         }
 
-        public int screenLineSize() {
+        public int lineSizeOnView() {
             return (int) Math.ceil(Math.max(0, height) / layout.lineHeight());
-        }
-
-        private double topY() {
-            return topLine * layout.lineHeight();
         }
 
     }

@@ -27,6 +27,7 @@ import java.util.List;
 public interface CaretGroup {
 
     Caret getFirst();
+    Caret unique();
     List<Point> points();
     List<Caret> carets();
     List<Range> marked();
@@ -47,6 +48,14 @@ public interface CaretGroup {
 
         @Override
         public Caret getFirst() {
+            return carets.getFirst();
+        }
+
+        @Override
+        public Caret unique() {
+            if (carets.size() > 1) {
+                carets.subList(1, carets.size()).clear();
+            }
             return carets.getFirst();
         }
 

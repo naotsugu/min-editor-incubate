@@ -21,7 +21,7 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
-import com.mammb.code.editor.core.layout.ScreenLayout;
+import com.mammb.code.editor.core.layout.LayoutView;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import java.nio.file.Path;
@@ -31,12 +31,12 @@ import java.util.Optional;
 public class PlainEditorModel implements EditorModel {
     double marginTop = 5, marginLeft = 5;
     private final Content content;
-    private final ScreenLayout screen;
+    private final LayoutView screen;
     private final CaretGroup carets = CaretGroup.of();
 
     public PlainEditorModel(Content content, FontMetrics fm) {
         this.content = content;
-        this.screen = ScreenLayout.of(content, fm);
+        this.screen = LayoutView.of(content, fm);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void moveCaretRight(boolean withSel) {
         for (Caret c : carets.carets()) {
-            var text = screen.text(c.point().row());
+            var text = screen.textAt(c.point().row());
             if (text == null) continue;
             int next = text.indexRight(c.point().col());
             if (next <= 0) {
@@ -91,10 +91,10 @@ public class PlainEditorModel implements EditorModel {
         for (Caret c : carets.carets()) {
             if (c.isZero()) continue;
             if (c.point().col() == 0) {
-                var text = screen.text(c.point().row() - 1);
+                var text = screen.textAt(c.point().row() - 1);
                 c.at(c.point().row() - 1, text.textLength());
             } else {
-                var text = screen.text(c.point().row());
+                var text = screen.textAt(c.point().row());
                 int next = text.indexLeft(c.point().col());
                 c.at(c.point().row(), next);
             }
@@ -107,7 +107,7 @@ public class PlainEditorModel implements EditorModel {
             int line = screen.rowToLine(c.point().row(), c.point().col());
             if (line == screen.lineSize()) continue;
             double x = (c.vPos() < 0)
-                    ? screen.xOnLayout(line, c.point().col())
+                    ? screen.colToXOnLayout(line, c.point().col())
                     : c.vPos();
             line++;
             c.at(screen.lineToRow(line), screen.xToCol(line, x), x);
@@ -120,7 +120,7 @@ public class PlainEditorModel implements EditorModel {
             int line = screen.rowToLine(c.point().row(), c.point().col());
             if (line == 0) continue;
             double x = (c.vPos() < 0)
-                    ? screen.xOnLayout(line, c.point().col())
+                    ? screen.colToXOnLayout(line, c.point().col())
                     : c.vPos();
             line--;
             c.at(screen.lineToRow(line), screen.xToCol(line, x), x);
@@ -129,11 +129,13 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void click(double x, double y) {
-        // TODO
+        Caret c = carets.unique();
+        int line = screen.yToLineOnView(y - marginTop);
+        c.at(screen.lineToRow(line), screen.xToCol(line, x));
     }
     @Override
     public void clickDouble(double x, double y) {
-        // TODO
+        Caret c = carets.getFirst();
     }
     @Override
     public void clickTriple(double x, double y) {
