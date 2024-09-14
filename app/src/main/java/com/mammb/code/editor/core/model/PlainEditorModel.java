@@ -23,8 +23,10 @@ import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.layout.LayoutView;
+import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
+import com.mammb.code.editor.core.Caret.Range;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,14 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void draw(Draw draw) {
         draw.clear();
+        for (Range r : carets.marked()) {
+            Loc l1 = view.locationOn(r.start().row(), r.start().col()).orElse(new Loc(0, 0));
+            Loc l2 = view.locationOn(r.end().row(), r.end().col()).orElse(new Loc(view.width(), view.height()));
+            draw.fillRange(
+                    l1.x() + marginLeft, l1.y() + marginLeft,
+                    l2.x() + marginLeft, l2.y() + marginLeft,
+                    marginLeft, view.width());
+        }
         double y = 0;
         for (Text text : view.texts()) {
             double x = 0;
