@@ -178,7 +178,7 @@ public class PlainEditorModel implements EditorModel {
             view.refreshBuffer(caret.point().row(), pos.row() + 1);
             caret.at(pos);
         } else {
-
+            // TODO
         }
     }
     @Override
@@ -188,7 +188,7 @@ public class PlainEditorModel implements EditorModel {
             var del = content.delete(caret.point());
             view.refreshBuffer(caret.point().row(), caret.point().row() + 1);
         } else {
-
+            // TODO
         }
     }
     @Override
@@ -198,7 +198,7 @@ public class PlainEditorModel implements EditorModel {
             var pos = content.backspace(caret.point());
             view.refreshBuffer(pos.row(), caret.point().row() + 1);
         } else {
-
+            // TODO
         }
     }
     @Override
@@ -212,17 +212,17 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void pasteFromClipboard() {
-
+        // TODO
     }
 
     @Override
     public void copyToClipboard() {
-
+        // TODO
     }
 
     @Override
     public void cutToClipboard() {
-
+        // TODO
     }
 
     @Override
