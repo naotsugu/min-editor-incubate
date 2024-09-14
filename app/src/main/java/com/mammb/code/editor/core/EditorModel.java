@@ -39,10 +39,12 @@ public interface EditorModel {
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int line);
-    void moveCaretRight(boolean withSel);
-    void moveCaretLeft(boolean withSel);
-    void moveCaretDown(boolean withSel);
-    void moveCaretUp(boolean withSel);
+    void moveCaretRight(boolean withSelect);
+    void moveCaretLeft(boolean withSelect);
+    void moveCaretDown(boolean withSelect);
+    void moveCaretUp(boolean withSelect);
+    void moveCaretHome(boolean withSelect);
+    void moveCaretEnd(boolean withSelect);
     void click(double x, double y);
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);

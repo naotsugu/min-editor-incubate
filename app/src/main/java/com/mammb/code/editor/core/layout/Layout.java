@@ -30,6 +30,10 @@ interface Layout extends RowLineIc {
     RowText rowTextAt(int row);
     double lineHeight();
     int xToCol(int line, double x);
+    int homeColOnRow(int line);
+    default int endColOnRow(int line) {
+        return homeColOnRow(line) + text(line).textLength();
+    }
 
     /**
      *

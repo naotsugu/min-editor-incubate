@@ -76,8 +76,9 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
-    public void moveCaretRight(boolean withSel) {
+    public void moveCaretRight(boolean withSelect) {
         for (Caret c : carets.carets()) {
+            c.markIf(withSelect);
             var text = view.textAt(c.point().row());
             if (text == null) continue;
             int next = text.indexRight(c.point().col());
@@ -90,8 +91,9 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
-    public void moveCaretLeft(boolean withSel) {
+    public void moveCaretLeft(boolean withSelect) {
         for (Caret c : carets.carets()) {
+            c.markIf(withSelect);
             if (c.isZero()) continue;
             if (c.point().col() == 0) {
                 var text = view.textAt(c.point().row() - 1);
@@ -105,8 +107,9 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
-    public void moveCaretDown(boolean withSel) {
+    public void moveCaretDown(boolean withSelect) {
         for (Caret c : carets.carets()) {
+            c.markIf(withSelect);
             int line = view.rowToLine(c.point().row(), c.point().col());
             if (line == view.lineSize()) continue;
             double x = (c.vPos() < 0)
@@ -118,8 +121,9 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
-    public void moveCaretUp(boolean withSel) {
+    public void moveCaretUp(boolean withSelect) {
         for (Caret c : carets.carets()) {
+            c.markIf(withSelect);
             int line = view.rowToLine(c.point().row(), c.point().col());
             if (line == 0) continue;
             double x = (c.vPos() < 0)
@@ -127,6 +131,24 @@ public class PlainEditorModel implements EditorModel {
                     : c.vPos();
             line--;
             c.at(view.lineToRow(line), view.xToCol(line, x), x);
+        }
+    }
+
+    @Override
+    public void moveCaretHome(boolean withSelect) {
+        for (Caret c : carets.carets()) {
+            c.markIf(withSelect);
+            int line = view.rowToLine(c.point().row(), c.point().col());
+            c.at(c.point().row(), view.homeColOnRow(line));
+        }
+    }
+
+    @Override
+    public void moveCaretEnd(boolean withSelect) {
+        for (Caret c : carets.carets()) {
+            c.markIf(withSelect);
+            int line = view.rowToLine(c.point().row(), c.point().col());
+            c.at(c.point().row(), view.endColOnRow(line));
         }
     }
 

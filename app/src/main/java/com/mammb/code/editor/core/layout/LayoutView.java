@@ -39,8 +39,11 @@ public interface LayoutView extends RowLineIc {
     double colToXOnView(int line, int col);
     int xToCol(int line, double x);
     int yToLineOnView(double y);
+    int homeColOnRow(int line);
+    int endColOnRow(int line);
 
-    static LayoutView of(Content content, FontMetrics fm) {
+
+        static LayoutView of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
         return new BasicLayoutView(layout, content);
     }
@@ -188,6 +191,16 @@ public interface LayoutView extends RowLineIc {
         @Override
         public int yToLineOnView(double y) {
             return topLine + (int) (y / layout.lineHeight());
+        }
+
+        @Override
+        public int homeColOnRow(int line) {
+            return layout.homeColOnRow(line);
+        }
+
+        @Override
+        public int endColOnRow(int line) {
+            return layout.endColOnRow(line);
         }
 
         private void fillBuffer() {

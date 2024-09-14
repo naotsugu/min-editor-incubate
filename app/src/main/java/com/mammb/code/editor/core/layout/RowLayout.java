@@ -79,6 +79,11 @@ public class RowLayout implements Layout {
     }
 
     @Override
+    public int homeColOnRow(int line) {
+        return 0;
+    }
+
+    @Override
     public int lineSize() {
         return rowSize();
     }

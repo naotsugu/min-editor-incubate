@@ -141,6 +141,11 @@ public class WrapLayout implements Layout {
     }
 
     @Override
+    public int homeColOnRow(int line) {
+        return lines.get(line).fromIndex();
+    }
+
+    @Override
     public int lineSize() {
         return lines.size();
     }

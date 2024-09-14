@@ -39,6 +39,14 @@ public interface Caret extends Comparable<Caret>{
         return point().isZero();
     }
 
+    default void markIf(boolean withSelect) {
+        if (!withSelect) {
+            clearMark();
+        } else if (!isMarked()) {
+            mark();
+        }
+    }
+
     static Caret of() {
         return new CaretImpl();
     }

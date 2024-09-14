@@ -144,6 +144,8 @@ public class EditorPane extends StackPane {
             case BACK_SPACE -> model.backspace();
             case UNDO -> model.undo();
             case REDO -> model.redo();
+            case HOME -> model.moveCaretHome(false);
+            case END -> model.moveCaretEnd(false);
             case CARET_RIGHT -> model.moveCaretRight(false);
             case CARET_LEFT -> model.moveCaretLeft(false);
             case CARET_UP -> model.moveCaretUp(false);
@@ -192,6 +194,7 @@ public class EditorPane extends StackPane {
             return true;
         }
     }
+
     private void save() {
         if (model.path().isPresent()) {
             model.save(model.path().get());
@@ -199,6 +202,7 @@ public class EditorPane extends StackPane {
             saveAs();
         }
     }
+
     private void saveAs() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Save As...");
