@@ -15,7 +15,7 @@
  */
 package com.mammb.code.editor.core;
 
-import code.editor.Style;
+import com.mammb.code.editor.core.text.Style;
 import java.util.List;
 
 public interface Draw {

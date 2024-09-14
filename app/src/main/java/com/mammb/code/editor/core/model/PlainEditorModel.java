@@ -60,7 +60,7 @@ public class PlainEditorModel implements EditorModel {
         for (Text text : view.texts()) {
             double x = 0;
             for (StyledText st : StyledText.of(text).putAll(syntax.apply(text.row(), text.value())).build()) {
-                draw.text(text.value(), x + marginLeft, y + marginTop, text.width(), List.of());
+                draw.text(st.value(), x + marginLeft, y + marginTop, st.width(), st.styles());
                 x += text.width();
             }
             y += text.height();

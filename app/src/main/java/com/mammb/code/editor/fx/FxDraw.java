@@ -15,7 +15,7 @@
  */
 package com.mammb.code.editor.fx;
 
-import code.editor.Style;
+import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.Theme;
