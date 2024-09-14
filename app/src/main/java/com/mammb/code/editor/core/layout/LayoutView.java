@@ -43,6 +43,7 @@ public interface LayoutView extends RowLineIc {
     int endColOnRow(int line);
     double width();
     double height();
+    int lineSizeOnView();
 
     static LayoutView of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
@@ -214,14 +215,16 @@ public interface LayoutView extends RowLineIc {
             return height;
         }
 
+        @Override
+        public int lineSizeOnView() {
+            return (int) Math.ceil(Math.max(0, height) / layout.lineHeight());
+        }
+
         private void fillBuffer() {
             buffer.clear();
             buffer.addAll(layout.texts(topLine, topLine + lineSizeOnView()));
         }
 
-        public int lineSizeOnView() {
-            return (int) Math.ceil(Math.max(0, height) / layout.lineHeight());
-        }
 
     }
 }

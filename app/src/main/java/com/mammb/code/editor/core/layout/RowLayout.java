@@ -95,22 +95,22 @@ public class RowLayout implements Layout {
 
     @Override
     public int rowToFirstLine(int row) {
-        return row;
+        return Math.clamp(row, 0, lineSize());
     }
 
     @Override
     public int rowToLastLine(int row) {
-        return row;
+        return Math.clamp(row, 0, lineSize());
     }
 
     @Override
     public int lineToRow(int line) {
-        return line;
+        return Math.clamp(line, 0, rowSize());
     }
 
     @Override
     public int rowToLine(int row, int col) {
-        return row;
+        return Math.clamp(row, 0, lineSize());
     }
 
     @Override

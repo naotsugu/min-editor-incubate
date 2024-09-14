@@ -45,7 +45,9 @@ public interface EditorModel {
     void moveCaretUp(boolean withSelect);
     void moveCaretHome(boolean withSelect);
     void moveCaretEnd(boolean withSelect);
-    void click(double x, double y);
+    void moveCaretPageUp(boolean withSelect);
+    void moveCaretPageDown(boolean withSelect);
+    void click(double x, double y, boolean withSelect);
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);
     void moveDragged(double x, double y);

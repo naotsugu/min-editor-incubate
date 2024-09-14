@@ -29,7 +29,6 @@ import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 
 public class PlainEditorModel implements EditorModel {
@@ -166,7 +165,35 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
-    public void click(double x, double y) {
+    public void moveCaretPageUp(boolean withSelect) {
+        int n = view.lineSizeOnView() - 1;
+        scrollPrev(n);
+        if (withSelect && carets.size() > 1) carets.unique();
+        if (carets.size() == 1) {
+            Caret c = carets.getFirst();
+            c.markIf(withSelect);
+            int line = view.rowToLine(c.point().row(), c.point().col());
+            double x = view.colToXOnLayout(line, c.point().col());
+            c.at(view.lineToRow(line - n), view.xToCol(line, x));
+        }
+    }
+
+    @Override
+    public void moveCaretPageDown(boolean withSelect) {
+        int n = view.lineSizeOnView() - 1;
+        scrollNext(n);
+        if (withSelect && carets.size() > 1) carets.unique();
+        if (carets.size() == 1) {
+            Caret c = carets.getFirst();
+            c.markIf(withSelect);
+            int line = view.rowToLine(c.point().row(), c.point().col());
+            double x = view.colToXOnLayout(line, c.point().col());
+            c.at(view.lineToRow(line + n), view.xToCol(line, x));
+        }
+    }
+
+    @Override
+    public void click(double x, double y, boolean withSelect) {
         Caret c = carets.unique();
         int line = view.yToLineOnView(y - marginTop);
         c.at(view.lineToRow(line), view.xToCol(line, x));

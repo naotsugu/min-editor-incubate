@@ -95,7 +95,7 @@ public class EditorPane extends StackPane {
     private void handleMouseClicked(MouseEvent e) {
         if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == canvas) {
             switch (e.getClickCount()) {
-                case 1 -> model.click(e.getX(), e.getY());
+                case 1 -> model.click(e.getX(), e.getY(), false);
                 case 2 -> model.clickDouble(e.getX(), e.getY());
                 case 3 -> model.clickTriple(e.getX(), e.getY());
             }
@@ -153,6 +153,10 @@ public class EditorPane extends StackPane {
             case SELECT_CARET_LEFT -> model.moveCaretLeft(true);
             case SELECT_CARET_UP -> model.moveCaretUp(true);
             case SELECT_CARET_DOWN -> model.moveCaretDown(true);
+            case PAGE_UP -> model.moveCaretPageUp(false);
+            case PAGE_DOWN -> model.moveCaretPageDown(false);
+            case SELECT_PAGE_UP -> model.moveCaretPageUp(true);
+            case SELECT_PAGE_DOWN -> model.moveCaretPageDown(true);
             case OPEN -> openWithChooser();
             case SAVE -> save();
             case SAVE_AS -> saveAs();

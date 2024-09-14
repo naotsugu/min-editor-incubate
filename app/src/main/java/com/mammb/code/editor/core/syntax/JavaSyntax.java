@@ -17,12 +17,24 @@ package com.mammb.code.editor.core.syntax;
 
 import com.mammb.code.editor.core.text.Style;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * The Java syntax.
  * @author Naotsugu Kobayashi
  */
 public class JavaSyntax implements Syntax {
+
+    private final Trie keywords = new Trie();
+    {
+        Stream.of("""
+        abstract,continue,for,new,switch,assert,default,goto,package,synchronized,boolean,do,if,private,
+        this,break,double,implements,protected,throw,byte,else,import,public,throws,case,enum,instanceof,
+        return,transient,catch,extends,int,short,try,char,final,interface,static,void,class,finally,long,
+        strictfp,volatile,const,float,native,super,while,var,record,sealed,with,yield,to,transitive,uses
+        """.split("[,\\s]")).forEach(keywords::put);
+    }
+
 
     @Override
     public String name() {
