@@ -15,7 +15,7 @@
  */
 package com.mammb.code.editor;
 
-import com.mammb.code.editor.javafx.App;
+import com.mammb.code.editor.fx.App;
 import java.util.Locale;
 
 /**

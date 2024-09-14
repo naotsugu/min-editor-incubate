@@ -6,5 +6,5 @@ module code.editor {
     exports code.editor.syntax;
 
     exports com.mammb.code.editor;
-    exports com.mammb.code.editor.javafx;
+    exports com.mammb.code.editor.fx;
 }

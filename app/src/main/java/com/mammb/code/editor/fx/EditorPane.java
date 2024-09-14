@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mammb.code.editor.javafx;
+package com.mammb.code.editor.fx;
 
 import com.mammb.code.editor.core.Action;
 import com.mammb.code.editor.core.EditorModel;
@@ -35,7 +35,6 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * The EditorPane.
