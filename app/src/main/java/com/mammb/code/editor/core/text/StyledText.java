@@ -40,18 +40,20 @@ public interface StyledText extends Text {
             this.text = text;
         }
 
-        public void putAll(List<StyleSpan> spans) {
+        public Builder putAll(List<StyleSpan> spans) {
             spans.forEach(this::put);
+            return this;
         }
 
-        public void put(StyleSpan span) {
+        public Builder put(StyleSpan span) {
             bounds.add(span.offset());
             bounds.add(span.offset() + span.length());
             spans.add(span);
+            return this;
         }
 
-        public void put(Style style, int offset, int length) {
-            put(new StyleSpan(style, offset, length));
+        public Builder put(Style style, int offset, int length) {
+            return put(new StyleSpan(style, offset, length));
         }
 
         public List<StyledText> build() {

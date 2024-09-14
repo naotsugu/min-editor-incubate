@@ -15,8 +15,8 @@
  */
 package com.mammb.code.editor.core;
 
-import code.editor.syntax.Syntax;
 import com.mammb.code.editor.core.model.PlainEditorModel;
+import com.mammb.code.editor.core.syntax.Syntax;
 import java.nio.file.Path;
 import java.util.Optional;
 

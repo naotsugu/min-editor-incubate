@@ -15,7 +15,6 @@
  */
 package com.mammb.code.editor.core.model;
 
-import code.editor.syntax.Syntax;
 import com.mammb.code.editor.core.Caret;
 import com.mammb.code.editor.core.CaretGroup;
 import com.mammb.code.editor.core.Content;
@@ -24,6 +23,8 @@ import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.layout.LayoutView;
 import com.mammb.code.editor.core.layout.Loc;
+import com.mammb.code.editor.core.syntax.Syntax;
+import com.mammb.code.editor.core.text.StyledText;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
@@ -58,8 +59,10 @@ public class PlainEditorModel implements EditorModel {
         double y = 0;
         for (Text text : view.texts()) {
             double x = 0;
-            draw.text(text.value(), x + marginLeft, y + marginTop, text.width(), List.of());
-            x += text.width();
+            for (StyledText st : StyledText.of(text).putAll(syntax.apply(text.row(), text.value())).build()) {
+                draw.text(text.value(), x + marginLeft, y + marginTop, text.width(), List.of());
+                x += text.width();
+            }
             y += text.height();
         }
         for (Point p : carets.points()) {
