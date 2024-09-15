@@ -16,6 +16,7 @@
 package com.mammb.code.editor.core;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * The Caret.
@@ -193,14 +194,26 @@ public interface Caret extends Comparable<Caret>{
             return Objects.hash(row, col);
         }
 
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", PointMut.class.getSimpleName() + "[", "]")
+                    .add("row=" + row)
+                    .add("col=" + col)
+                    .toString();
+        }
     }
 
-    record Range(Point start, Point end) {
+    record Range(Point start, Point end) implements Comparable<Range> {
         public Point min() {
             return start.compareTo(end) < 0 ? start : end;
         }
         public Point max() {
-            return start.compareTo(end) > 0 ? end : start;
+            return start.compareTo(end) > 0 ? start : end;
+        }
+
+        @Override
+        public int compareTo(Range o) {
+            return min().compareTo(o.min());
         }
     }
 

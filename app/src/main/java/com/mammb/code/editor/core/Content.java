@@ -18,7 +18,9 @@ package com.mammb.code.editor.core;
 import com.mammb.code.piecetable.TextEdit;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.PointRec;
+import com.mammb.code.editor.core.Caret.Range;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,8 @@ public interface Content {
     Point insert(Point point, String text);
     String delete(Point point);
     Point backspace(Point point);
+
+    List<Point> delete(List<Range> ranges);
 
     /**
      * Undo.
@@ -80,6 +84,20 @@ public interface Content {
             var pos = textEdit.backspace(point.row(), point.col());
             return new PointRec(pos.row(), pos.col());
         }
+
+        @Override
+        public List<Point> delete(List<Range> ranges) {
+            // TODO transaction delete
+            return ranges.stream().sorted(Comparator.reverseOrder())
+                    .map(range -> textEdit.replace(
+                            range.min().row(), range.min().col(),
+                            range.max().row(), range.max().col(),
+                            ""))
+                    .map(pos -> new PointRec(pos.row(), pos.col()))
+                    .map(Point.class::cast)
+                    .toList();
+        }
+
         @Override
         public List<Point> undo() {
             return textEdit.undo().stream().map(p -> Point.of(p.row(), p.col())).toList();

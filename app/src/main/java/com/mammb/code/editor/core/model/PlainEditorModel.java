@@ -30,6 +30,7 @@ import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -257,7 +258,8 @@ public class PlainEditorModel implements EditorModel {
     public void pasteFromClipboard() {
         var clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
         var text = clipboard.hasString() ? clipboard.getString() : "";
-        if (text != null && !text.isEmpty()) input(text);
+        if (text.isEmpty()) return;
+        input(text);
     }
 
     @Override
@@ -265,13 +267,15 @@ public class PlainEditorModel implements EditorModel {
         String copy = carets.marked().stream()
                 .map(range -> content.getText(range.min(), range.max()))
                 .collect(Collectors.joining(System.lineSeparator()));
+        if (copy.isEmpty()) return;
         javafx.scene.input.Clipboard.getSystemClipboard()
                 .setContent(Map.of(DataFormat.PLAIN_TEXT, copy));
     }
 
     @Override
     public void cutToClipboard() {
-        // TODO
+        copyToClipboard();
+        content.delete(carets.marked());
     }
 
     @Override

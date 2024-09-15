@@ -157,6 +157,9 @@ public class EditorPane extends StackPane {
             case PAGE_DOWN -> model.moveCaretPageDown(false);
             case SELECT_PAGE_UP -> model.moveCaretPageUp(true);
             case SELECT_PAGE_DOWN -> model.moveCaretPageDown(true);
+            case COPY -> model.copyToClipboard();
+            case CUT -> model.cutToClipboard();
+            case PASTE -> model.pasteFromClipboard();
             case OPEN -> openWithChooser();
             case SAVE -> save();
             case SAVE_AS -> saveAs();

@@ -44,7 +44,7 @@ public class App extends Application {
               -fx-control-inner-background:app-back;
               -fx-control-inner-background-alt: derive(-fx-control-inner-background,-2%);
               -fx-focus-color: -fx-accent;
-              -fx-faint-focus-color:app-accent22;
+              -fx-faint-focus-color:app-accent;
               -fx-light-text-color:app-text;
               -fx-mark-color: -fx-light-text-color;
               -fx-mark-highlight-color: derive(-fx-mark-color,20%);
