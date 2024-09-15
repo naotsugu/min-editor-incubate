@@ -195,6 +195,13 @@ public interface Caret extends Comparable<Caret>{
 
     }
 
-    record Range(Point start, Point end) { }
+    record Range(Point start, Point end) {
+        public Point min() {
+            return start.compareTo(end) < 0 ? start : end;
+        }
+        public Point max() {
+            return start.compareTo(end) > 0 ? end : start;
+        }
+    }
 
 }
