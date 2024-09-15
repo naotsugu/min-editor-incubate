@@ -82,7 +82,7 @@ public interface Text {
             if (w + ad[i] > width) return i;
             w += ad[i];
         }
-        return ad.length;
+        return Math.min(ad.length, textLength());
     }
 
     default boolean isEmpty() {
