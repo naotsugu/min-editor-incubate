@@ -47,7 +47,9 @@ public class FxDraw implements Draw {
 
     @Override
     public void text(String text, double x, double y, double w, List<Style> styles) {
-        Color color = color(Theme.dark.fgColor());
+        Color color = color(styles.stream().filter(Style.TextColor.class::isInstance)
+                .map(Style.TextColor.class::cast).findFirst()
+                .map(Style.TextColor::colorString).orElse(Theme.dark.fgColor()));
         gc.setStroke(color);
         gc.setFill(color);
         gc.fillText(text, x, y + fontMetrics.getAscent());

@@ -89,4 +89,9 @@ public interface Text {
         return value().isEmpty();
     }
 
+    static Text of(int row, String value, double[] advances, double height) {
+        record TextRecord(int row, String value, double[] advances, double width, double height) implements Text { }
+        return new TextRecord(row, value, advances, Arrays.stream(advances).sum(), height);
+    }
+
 }

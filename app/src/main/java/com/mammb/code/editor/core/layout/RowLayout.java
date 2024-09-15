@@ -84,6 +84,11 @@ public class RowLayout implements Layout {
     }
 
     @Override
+    public FontMetrics fontMetrics() {
+        return fm;
+    }
+
+    @Override
     public int lineSize() {
         return rowSize();
     }

@@ -21,21 +21,24 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
+import com.mammb.code.editor.core.Theme;
 import com.mammb.code.editor.core.layout.LayoutView;
 import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.syntax.Syntax;
+import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.StyledText;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PlainEditorModel implements EditorModel {
-    private double marginTop = 5, marginLeft = 60;
+    private double marginTop = 5, marginLeft = 70;
     private final Content content;
     private final LayoutView view;
     private final Syntax syntax;
@@ -50,14 +53,33 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void draw(Draw draw) {
         draw.clear();
+
+        // left garter
+        List<Text> lineNumbers = view.lineNumbers();
+        double nw = lineNumbers.stream().mapToDouble(Text::width).max().orElse(0);
+        if (nw + 16 * 2 > marginLeft) {
+            double newMarginLeft = nw + 8 * 2;
+            setSize(view.width() + marginLeft - newMarginLeft, view.height());
+            draw(draw);
+            return;
+        }
         draw.rect(0, 0, marginLeft - 5, view.height() + marginTop);
+        double yn = 0;
+        for (Text num : lineNumbers) {
+            String colorString = carets.points().stream().anyMatch(p -> p.row() == num.row())
+                    ? Theme.dark.fgColor()
+                    : Theme.dark.fgColor() + "66";
+            draw.text(num.value(), marginLeft - 16 - num.width(), yn + marginTop, num.width(), List.of(new Style.TextColor(colorString)));
+            yn += num.height();
+        }
+
         for (Range r : carets.marked()) {
             Loc l1 = view.locationOn(r.start().row(), r.start().col()).orElse(new Loc(0, 0));
             Loc l2 = view.locationOn(r.end().row(), r.end().col()).orElse(new Loc(view.width(), view.height()));
             draw.select(
-                    l1.x() + marginLeft, l1.y() + marginLeft,
-                    l2.x() + marginLeft, l2.y() + marginLeft,
-                    marginLeft, view.width());
+                    l1.x() + marginLeft, l1.y() + marginTop,
+                    l2.x() + marginLeft, l2.y() + marginTop,
+                    marginLeft, view.width() + marginLeft);
         }
         double y = 0;
         for (Text text : view.texts()) {

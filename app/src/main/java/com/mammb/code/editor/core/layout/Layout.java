@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core.layout;
 
+import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.text.RowText;
 import com.mammb.code.editor.core.text.Text;
 import java.util.List;
@@ -31,6 +32,7 @@ interface Layout extends RowLineIc {
     double lineHeight();
     int xToCol(int line, double x);
     int homeColOnRow(int line);
+    FontMetrics fontMetrics();
     default int endColOnRow(int line) {
         return homeColOnRow(line) + text(line).textLength();
     }

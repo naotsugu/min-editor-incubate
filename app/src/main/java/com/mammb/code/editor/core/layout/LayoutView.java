@@ -19,6 +19,7 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,7 @@ public interface LayoutView extends RowLineIc {
     List<Text> texts();
     Text text(int line);
     Text textAt(int row);
+    List<Text> lineNumbers();
     Optional<Loc> locationOn(int row, int col);
     double lineToYOnLayout(int line);
     double lineToYOnView(int line);
@@ -127,6 +129,24 @@ public interface LayoutView extends RowLineIc {
         @Override
         public Text textAt(int row) {
             return layout.rowTextAt(row);
+        }
+
+        @Override
+        public List<Text> lineNumbers() {
+            List<Text> ret = new ArrayList<>();
+            int prev = -1;
+            double w = layout.fontMetrics().getAdvance("0");
+            for (Text text : buffer) {
+                if (text.row() == prev) {
+                    ret.add(Text.of(text.row(), "", new double[0], text.height()));
+                } else {
+                    String num = String.valueOf(text.row());
+                    double[] advances = new double[num.length()];
+                    Arrays.fill(advances, w);
+                    ret.add(Text.of(text.row(), num, advances, text.height()));
+                }
+            }
+            return ret;
         }
 
         @Override
