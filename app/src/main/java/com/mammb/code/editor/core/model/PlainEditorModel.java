@@ -330,4 +330,21 @@ public class PlainEditorModel implements EditorModel {
         carets.unique().clearMark();
     }
 
+    @Override
+    public Optional<Loc> imeOn() {
+        Caret caret = carets.getFirst();
+        return view.locationOn(caret.row(), caret.col())
+                .map(top -> new Loc(top.x(), top.y() + view.lineHeight() + 5));
+    }
+
+    @Override
+    public void imeOff() {
+        // TODO
+    }
+
+    @Override
+    public void inputImeComposed(String text) {
+        // TODO
+    }
+
 }

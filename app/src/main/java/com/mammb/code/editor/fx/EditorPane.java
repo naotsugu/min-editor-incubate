@@ -20,21 +20,26 @@ import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.InputMethodEvent;
+import javafx.scene.input.InputMethodRequests;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 /**
  * The EditorPane.
@@ -71,6 +76,9 @@ public class EditorPane extends StackPane {
         setOnKeyTyped(this::handleKeyAction);
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
+
+        canvas.setInputMethodRequests(inputMethodRequests());
+        canvas.setOnInputMethodTextChanged(this::handleInputMethodTextChanged);
     }
 
     private void handleLayoutBoundsChanged(
@@ -136,6 +144,21 @@ public class EditorPane extends StackPane {
         e.setDropCompleted(false);
     }
 
+    private void handleInputMethodTextChanged(InputMethodEvent e) {
+        if (!e.getCommitted().isEmpty()) {
+            model.imeOff();
+            execute(Action.of(Action.Type.TYPED, e.getCommitted()));
+        } else if (!e.getComposed().isEmpty()) {
+            //if (!model.isImeOn()) model.imeOn();
+            model.inputImeComposed(e.getComposed().stream()
+                    .map(InputMethodTextRun::getText)
+                    .collect(Collectors.joining()));
+        } else {
+            model.imeOff();
+        }
+        draw();
+    }
+
     private Action execute(Action action) {
         switch (action.type()) {
             case TYPED -> model.input(action.attr());
@@ -160,9 +183,11 @@ public class EditorPane extends StackPane {
             case COPY -> model.copyToClipboard();
             case CUT -> model.cutToClipboard();
             case PASTE -> model.pasteFromClipboard();
+            case ESC -> model.escape();
             case OPEN -> openWithChooser();
             case SAVE -> save();
             case SAVE_AS -> saveAs();
+            case NEW -> newEdit();
         }
         draw();
         return action;
@@ -217,6 +242,27 @@ public class EditorPane extends StackPane {
                 : Path.of(System.getProperty("user.home")).toFile());
         File file = fc.showSaveDialog(getScene().getWindow());
         if (file != null) model.save(file.toPath());
+    }
+
+    private void newEdit() {
+        // TODO
+    }
+
+    private InputMethodRequests inputMethodRequests() {
+        return new InputMethodRequests() {
+            @Override
+            public Point2D getTextLocation(int i) {
+                return model.imeOn()
+                        .map(loc -> canvas.localToScreen(loc.x(), loc.y()))
+                        .orElse(null);
+            }
+            @Override
+            public void cancelLatestCommittedText() { model.imeOff(); }
+            @Override
+            public int getLocationOffset(int x, int y) { return 0; }
+            @Override
+            public String getSelectedText() { return ""; }
+        };
     }
 
 }
