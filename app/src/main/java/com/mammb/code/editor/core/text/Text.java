@@ -17,6 +17,10 @@ package com.mammb.code.editor.core.text;
 
 import java.util.Arrays;
 
+/**
+ * The Text.
+ * @author Naotsugu Kobayashi
+ */
 public interface Text {
 
     int row();
@@ -34,9 +38,10 @@ public interface Text {
     }
 
     default int textLength() {
-        char ch1 = (value().length() > 1) ? value().charAt(value().length() - 1) : 0;
-        char ch2 = (value().length() > 2) ? value().charAt(value().length() - 2) : 0;
-        return value().length() - (
+        int len = value().length();
+        char ch1 = (len > 0) ? value().charAt(len - 1) : 0;
+        char ch2 = (len > 1) ? value().charAt(len - 2) : 0;
+        return len - (
                 (ch2 == '\r' && ch1  == '\n') ? 2 : (ch1  == '\n') ? 1 : 0
         );
     }
@@ -56,7 +61,7 @@ public interface Text {
     default int indexRight(int index) {
         if (isEmpty()) return index;
         index += isHighSurrogate(index) ? 2 : 1;
-        return  (index > textLength()) ? -1 : index;
+        return (index > textLength()) ? -1 : index;
     }
 
     default int indexLeft(int index) {

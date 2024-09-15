@@ -33,6 +33,12 @@ public interface Caret extends Comparable<Caret>{
     boolean isFloating();
     Range markedRange();
     double vPos();
+    default int row() {
+        return point().row();
+    }
+    default int col() {
+        return point().col();
+    }
     default void at(Point point) {
         at(point.row(), point.col());
     }
