@@ -63,6 +63,7 @@ public interface EditorModel {
     boolean isModified();
     Optional<Path> path();
     void save(Path path);
+    void escape();
 
     private static String extension(Path path) {
         return Optional.of(path.getFileName().toString())

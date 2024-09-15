@@ -30,13 +30,12 @@ import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PlainEditorModel implements EditorModel {
-    double marginTop = 5, marginLeft = 5;
+    private double marginTop = 5, marginLeft = 60;
     private final Content content;
     private final LayoutView view;
     private final Syntax syntax;
@@ -51,10 +50,11 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void draw(Draw draw) {
         draw.clear();
+        draw.rect(0, 0, marginLeft - 5, view.height() + marginTop);
         for (Range r : carets.marked()) {
             Loc l1 = view.locationOn(r.start().row(), r.start().col()).orElse(new Loc(0, 0));
             Loc l2 = view.locationOn(r.end().row(), r.end().col()).orElse(new Loc(view.width(), view.height()));
-            draw.fillRange(
+            draw.select(
                     l1.x() + marginLeft, l1.y() + marginLeft,
                     l2.x() + marginLeft, l2.y() + marginLeft,
                     marginLeft, view.width());
@@ -73,14 +73,17 @@ public class PlainEditorModel implements EditorModel {
                   .ifPresent(loc -> draw.caret(loc.x() + marginLeft, loc.y() + marginTop));
         }
     }
+
     @Override
     public void setSize(double width, double height) {
-        view.setSize(width, height);
+        view.setSize(width - marginLeft, height - marginTop);
     }
+
     @Override
     public void scrollNext(int delta) {
         view.scrollNext(delta);
     }
+
     @Override
     public void scrollPrev(int delta) {
         view.scrollPrev(delta);
@@ -202,18 +205,22 @@ public class PlainEditorModel implements EditorModel {
         int line = view.yToLineOnView(y - marginTop);
         c.at(view.lineToRow(line), view.xToCol(line, x));
     }
+
     @Override
     public void clickDouble(double x, double y) {
         Caret c = carets.getFirst();
     }
+
     @Override
     public void clickTriple(double x, double y) {
         // TODO
     }
+
     @Override
     public void moveDragged(double x, double y) {
         // TODO
     }
+
     @Override
     public void input(String text) {
         if (carets.size() == 1) {
@@ -225,6 +232,7 @@ public class PlainEditorModel implements EditorModel {
             // TODO
         }
     }
+
     @Override
     public void delete() {
         if (carets.size() == 1) {
@@ -235,6 +243,7 @@ public class PlainEditorModel implements EditorModel {
             // TODO
         }
     }
+
     @Override
     public void backspace() {
         if (carets.size() == 1) {
@@ -245,10 +254,12 @@ public class PlainEditorModel implements EditorModel {
             // TODO
         }
     }
+
     @Override
     public void undo() {
         carets.at(content.undo());
     }
+
     @Override
     public void redo() {
         carets.at(content.redo());
@@ -290,6 +301,11 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void save(Path path) {
         content.save(path);
+    }
+
+    @Override
+    public void escape() {
+        carets.unique().clearMark();
     }
 
 }

@@ -57,14 +57,4 @@ interface Layout extends RowLineIc {
         return (int) (y / lineHeight());
     }
 
-    default int col(double x, double y) {
-        double[] ad = text(yToLine(y)).advances();
-        int col = 0;
-        for ( ; col < ad.length; col++) {
-            if ((x - ad[col]) < 0) break;
-            x -= ad[col];
-        }
-        return col;
-    }
-
 }

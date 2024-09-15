@@ -53,6 +53,7 @@ public abstract class FxActions {
         else if (e.getCode() == PAGE_DOWN) return e.isShiftDown()
                 ? Action.of(Action.Type.SELECT_PAGE_DOWN)
                 : Action.of(Action.Type.PAGE_DOWN);
+        else if (e.getCode() == ESCAPE) return Action.of(Action.Type.ESC);
         else if (e.getCode() == DELETE) return Action.of(Action.Type.DELETE);
         else if (e.getCode() == BACK_SPACE) return Action.of(Action.Type.BACK_SPACE);
         else if (SC_C.match(e)) return Action.of(Action.Type.COPY);

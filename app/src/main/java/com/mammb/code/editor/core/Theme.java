@@ -17,16 +17,18 @@ package com.mammb.code.editor.core;
 
 public interface Theme {
 
-    Theme dark = new ThemeRecord("#292929", "#C9D7E6", "#214283AA");
+    Theme dark = new ThemeRecord("#292929", "#C9D7E6", "#214283AA", "#303030");
 
     String baseColor();
     String fgColor();
     String paleHighlightColor();
+    String uiBaseColor();
 
     record ThemeRecord(
             String baseColor,
             String fgColor,
-            String paleHighlightColor
+            String paleHighlightColor,
+            String uiBaseColor
     ) implements Theme { }
 
 }

@@ -47,7 +47,7 @@ public class FxDraw implements Draw {
 
     @Override
     public void text(String text, double x, double y, double w, List<Style> styles) {
-        Color color = colors.computeIfAbsent(Theme.dark.fgColor(), Color::web);
+        Color color = color(Theme.dark.fgColor());
         gc.setStroke(color);
         gc.setFill(color);
         gc.fillText(text, x, y + fontMetrics.getAscent());
@@ -62,7 +62,7 @@ public class FxDraw implements Draw {
     }
 
     @Override
-    public void fillRange(double x1, double y1, double x2, double y2, double l, double r) {
+    public void select(double x1, double y1, double x2, double y2, double l, double r) {
         double lineHeight = fontMetrics().getLineHeight();
         gc.setFill(color(Theme.dark.paleHighlightColor()));
         if (y1 == y2) {
@@ -89,6 +89,14 @@ public class FxDraw implements Draw {
         x[7] = x1; y[7]= y1 + lineHeight;
         gc.fillPolygon(x, y, 8);
     }
+
+    @Override
+    public void rect(double x, double y, double w, double h) {
+        Color color = color(Theme.dark.uiBaseColor());
+        gc.setFill(color);
+        gc.fillRect(x, y, w, h);
+    }
+
 
     @Override
     public FontMetrics fontMetrics() {
