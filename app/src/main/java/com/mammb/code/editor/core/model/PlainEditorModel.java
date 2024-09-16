@@ -272,6 +272,7 @@ public class PlainEditorModel implements EditorModel {
             Caret caret = carets.getFirst();
             var pos = content.backspace(caret.point());
             view.refreshBuffer(pos.row(), caret.row() + 1);
+            caret.at(pos);
         } else {
             // TODO
         }
@@ -334,7 +335,7 @@ public class PlainEditorModel implements EditorModel {
     public Optional<Loc> imeOn() {
         Caret caret = carets.getFirst();
         return view.locationOn(caret.row(), caret.col())
-                .map(top -> new Loc(top.x(), top.y() + view.lineHeight() + 5));
+                .map(top -> new Loc(top.x() + marginLeft, top.y() + marginTop + view.lineHeight() + 5));
     }
 
     @Override
