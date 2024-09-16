@@ -58,6 +58,33 @@ public class App extends Application {
               -fx-use-system-menu-bar:true;
               -fx-background-color:derive(-fx-control-inner-background,20%);
             }
+            .scroll-bar {
+                -fx-background-color:transparent;
+            }
+            .scroll-bar .thumb {
+                -fx-background-color :-fx-inner-border;
+                -fx-background-insets : 1.0, 0.0, 0.0;
+            }
+            .scroll-bar .increment-button,
+            .scroll-bar .decrement-button {
+                -fx-background-color:transparent;
+                -fx-background-radius:0;
+            }
+            
+            .scroll-bar:vertical .increment-button,
+            .scroll-bar:vertical .decrement-button {
+                -fx-padding:0 6;
+            }
+            .scroll-bar:horizontal .increment-button,
+            .scroll-bar:horizontal .decrement-button {
+                -fx-padding:6 0;
+            }
+            .scroll-bar .increment-arrow,
+            .scroll-bar .decrement-arrow {
+                -fx-background-color:transparent;
+                -fx-shape:"";
+                -fx-padding:0;
+            }
             """
             .replaceAll("app-base", Theme.dark.baseColor())
             .replaceAll("app-text", Theme.dark.fgColor())

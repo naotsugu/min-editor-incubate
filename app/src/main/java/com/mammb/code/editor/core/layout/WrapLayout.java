@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class WrapLayout implements Layout {
+
     private double width = 0;
     private final double lineHeight;
     private final Content content;

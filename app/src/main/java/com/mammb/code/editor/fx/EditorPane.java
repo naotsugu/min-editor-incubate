@@ -20,7 +20,9 @@ import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
+import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollBar;
@@ -62,11 +64,16 @@ public class EditorPane extends StackPane {
      * Constructor.
      */
     public EditorPane() {
+
         canvas = new Canvas(640, 480);
         canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
         model = EditorModel.of(Path.of("build.gradle.kts"), draw.fontMetrics());
-        getChildren().add(canvas);
+        vScroll.setOrientation(Orientation.VERTICAL);
+        hScroll.setOrientation(Orientation.HORIZONTAL);
+        StackPane.setAlignment(vScroll, Pos.TOP_RIGHT);
+        StackPane.setAlignment(hScroll, Pos.BOTTOM_LEFT);
+        getChildren().addAll(canvas, vScroll, hScroll);
 
         layoutBoundsProperty().addListener(this::handleLayoutBoundsChanged);
         setOnScroll(this::handleScroll);
@@ -77,6 +84,8 @@ public class EditorPane extends StackPane {
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
 
+        vScroll.valueProperty().addListener(this::handleVerticalScroll);
+        hScroll.valueProperty().addListener(this::handleHorizontalScroll);
         canvas.setInputMethodRequests(inputMethodRequests());
         canvas.setOnInputMethodTextChanged(this::handleInputMethodTextChanged);
     }
@@ -144,11 +153,22 @@ public class EditorPane extends StackPane {
         e.setDropCompleted(false);
     }
 
+    private void handleVerticalScroll(ObservableValue<? extends Number> ob, Number o, Number n) {
+        model.scrollAt(n.intValue());
+        draw();
+    }
+
+    private void handleHorizontalScroll(ObservableValue<? extends Number> ob, Number o, Number n) {
+        model.scrollX(n.doubleValue());
+        draw();
+    }
+
     private void handleInputMethodTextChanged(InputMethodEvent e) {
         if (!e.getCommitted().isEmpty()) {
             model.imeOff();
             execute(Action.of(Action.Type.TYPED, e.getCommitted()));
         } else if (!e.getComposed().isEmpty()) {
+            // TODO
             //if (!model.isImeOn()) model.imeOn();
             model.inputImeComposed(e.getComposed().stream()
                     .map(InputMethodTextRun::getText)

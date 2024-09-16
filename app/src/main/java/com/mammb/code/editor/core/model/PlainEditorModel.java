@@ -117,6 +117,26 @@ public class PlainEditorModel implements EditorModel {
     }
 
     @Override
+    public void scrollX(double x) {
+        view.scrollX(x);
+    }
+
+    @Override
+    public void scrollToCaret() {
+        Caret caret = carets.getFirst();
+        int line = view.rowToLine(caret.row(), caret.col());
+        if (line - view.topLine() < 0) {
+            // scroll up
+            int newLine = (view.topLine() - line) - view.lineSizeOnView() / 4;
+            view.scrollAt(newLine);
+        } else if (line - (view.topLine() + view.lineSizeOnView()) > 0) {
+            // scroll down
+            int newLine = line - (view.topLine() + view.lineSizeOnView()) + view.lineSizeOnView() / 4;
+            view.scrollAt(newLine);
+        }
+    }
+
+    @Override
     public void moveCaretRight(boolean withSelect) {
         for (Caret c : carets.carets()) {
             c.markIf(withSelect);

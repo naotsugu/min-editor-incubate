@@ -29,6 +29,7 @@ public interface LayoutView extends RowLineIc {
     void scrollNext(int delta);
     void scrollPrev(int delta);
     void scrollAt(int line);
+    void scrollX(double x);
     void refreshBuffer(int startRow, int endRow);
     List<Text> texts();
     Text text(int line);
@@ -47,6 +48,7 @@ public interface LayoutView extends RowLineIc {
     double height();
     int lineSizeOnView();
     double lineHeight();
+    int topLine();
 
     static LayoutView of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
@@ -109,6 +111,11 @@ public interface LayoutView extends RowLineIc {
                 this.topLine = line;
                 fillBuffer();
             }
+        }
+
+        @Override
+        public void scrollX(double x) {
+            xShift = x;
         }
 
         @Override
@@ -244,6 +251,11 @@ public interface LayoutView extends RowLineIc {
         @Override
         public double lineHeight() {
             return layout.lineHeight();
+        }
+
+        @Override
+        public int topLine() {
+            return topLine;
         }
 
         private void fillBuffer() {
