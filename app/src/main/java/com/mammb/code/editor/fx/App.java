@@ -58,8 +58,9 @@ public class App extends Application {
               -fx-use-system-menu-bar:true;
               -fx-background-color:derive(-fx-control-inner-background,20%);
             }
+            
             .scroll-bar {
-                -fx-background-color:transparent;
+                -fx-background-color: derive(-fx-box-border,30%)
             }
             .scroll-bar .thumb {
                 -fx-background-color :-fx-inner-border;
@@ -70,14 +71,17 @@ public class App extends Application {
                 -fx-background-color:transparent;
                 -fx-background-radius:0;
             }
-            
-            .scroll-bar:vertical .increment-button,
             .scroll-bar:vertical .decrement-button {
-                -fx-padding:0 6;
+                -fx-padding:0 10 0 0;
             }
-            .scroll-bar:horizontal .increment-button,
+            .scroll-bar:vertical .increment-button {
+                -fx-padding:0 0 10 0;
+            }
             .scroll-bar:horizontal .decrement-button {
-                -fx-padding:6 0;
+                -fx-padding:0 0 10 0;
+            }
+            .scroll-bar:horizontal .increment-button {
+                -fx-padding:0 10 0 0;
             }
             .scroll-bar .increment-arrow,
             .scroll-bar .decrement-arrow {
