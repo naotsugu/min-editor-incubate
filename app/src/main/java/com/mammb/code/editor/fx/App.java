@@ -58,7 +58,6 @@ public class App extends Application {
               -fx-use-system-menu-bar:true;
               -fx-background-color:derive(-fx-control-inner-background,20%);
             }
-            
             .scroll-bar {
                 -fx-background-color: derive(-fx-box-border,30%)
             }

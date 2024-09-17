@@ -54,7 +54,14 @@ public interface Action {
         OPEN, SAVE, SAVE_AS, NEW,
         ESC, EMPTY,
         ;
+
+        public boolean syncCaret() {
+            return !(this == OPEN || this == SAVE || this ==  SAVE_AS || this ==  NEW || this == ESC || this ==  EMPTY);
+        }
     }
+
+
+
 
     record ActionRecord(Type type, String attr, long occurredAt) implements Action { }
 

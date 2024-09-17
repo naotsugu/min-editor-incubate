@@ -209,6 +209,7 @@ public class EditorPane extends StackPane {
             case SAVE_AS -> saveAs();
             case NEW -> newEdit();
         }
+        if (action.type().syncCaret()) model.scrollToCaret();
         draw();
         return action;
     }
