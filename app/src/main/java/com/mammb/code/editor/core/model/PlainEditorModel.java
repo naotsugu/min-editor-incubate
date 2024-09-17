@@ -130,6 +130,7 @@ public class PlainEditorModel implements EditorModel {
         } else if (line - (view.topLine() + view.lineSizeOnView() - 3) > 0) {
             view.scrollAt(line - view.lineSizeOnView() + 3);
         }
+        // TODO scroll x
     }
 
     @Override

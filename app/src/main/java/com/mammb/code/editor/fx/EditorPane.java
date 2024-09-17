@@ -68,7 +68,7 @@ public class EditorPane extends StackPane {
         canvas = new Canvas(640, 480);
         canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
-        model = EditorModel.of(Path.of("build.gradle.kts"), draw.fontMetrics());
+        model = EditorModel.of(draw.fontMetrics());
         vScroll.setOrientation(Orientation.VERTICAL);
         hScroll.setOrientation(Orientation.HORIZONTAL);
         StackPane.setAlignment(vScroll, Pos.TOP_RIGHT);
@@ -209,7 +209,9 @@ public class EditorPane extends StackPane {
             case SAVE_AS -> saveAs();
             case NEW -> newEdit();
         }
-        if (action.type().syncCaret()) model.scrollToCaret();
+        if (action.type().syncCaret()) {
+            model.scrollToCaret();
+        }
         draw();
         return action;
     }
