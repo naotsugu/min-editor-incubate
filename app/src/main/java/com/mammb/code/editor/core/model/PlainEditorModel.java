@@ -127,8 +127,8 @@ public class PlainEditorModel implements EditorModel {
         int line = view.rowToLine(caret.row(), caret.col());
         if (line - view.topLine() < 0) {
             view.scrollAt(line);
-        } else if (line - (view.topLine() + view.lineSizeOnView() - 2) > 0) {
-            view.scrollAt(line - view.lineSizeOnView() + 2);
+        } else if (line - (view.topLine() + view.lineSizeOnView() - 3) > 0) {
+            view.scrollAt(line - view.lineSizeOnView() + 3);
         }
     }
 
