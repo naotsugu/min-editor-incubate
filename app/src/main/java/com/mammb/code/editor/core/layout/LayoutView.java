@@ -270,7 +270,8 @@ public interface LayoutView extends RowLineIc {
         @Override
         public void applyScreenScroll(ScreenScroll scroll) {
             scroll.vertical(0, layout.lineSize() - 1, topLine, lineSizeOnView());
-            scroll.horizontal(0, xMax - width / 2, xShift, width / 2);
+            double max = xMax - Math.min(xMax, width / 2);
+            scroll.horizontal(0, max, xShift, width * max / xMax);
         }
 
         private void fillBuffer() {
