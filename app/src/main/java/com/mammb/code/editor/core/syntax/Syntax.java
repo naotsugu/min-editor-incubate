@@ -21,6 +21,7 @@ import java.util.List;
 public interface Syntax {
 
     String name();
+
     List<StyleSpan> apply(int row, String text);
 
     static Syntax of(String name) {

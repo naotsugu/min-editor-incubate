@@ -269,8 +269,8 @@ public interface LayoutView extends RowLineIc {
 
         @Override
         public void applyScreenScroll(ScreenScroll scroll) {
-            scroll.vertical(0,layout.lineSize(), topLine, lineSizeOnView());
-            scroll.horizontal(0, xMax, xShift, width);
+            scroll.vertical(0, layout.lineSize() - 1, topLine, lineSizeOnView());
+            scroll.horizontal(0, xMax - width / 2, xShift, width / 2);
         }
 
         private void fillBuffer() {

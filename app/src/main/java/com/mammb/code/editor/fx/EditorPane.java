@@ -234,6 +234,11 @@ public class EditorPane extends StackPane {
                 hScroll.setVisibleAmount(len);
                 hScroll.setVisible(max > len);
             }
+
+            @Override
+            public double xVal() {
+                return hScroll.getValue();
+            }
         };
     }
 

@@ -33,9 +33,6 @@ interface Layout extends RowLineIc {
     int xToCol(int line, double x);
     int homeColOnRow(int line);
     FontMetrics fontMetrics();
-    default int endColOnRow(int line) {
-        return homeColOnRow(line) + text(line).textLength();
-    }
 
     /**
      *
@@ -57,6 +54,10 @@ interface Layout extends RowLineIc {
 
     default int yToLine(double y) {
         return (int) (y / lineHeight());
+    }
+
+    default int endColOnRow(int line) {
+        return homeColOnRow(line) + text(line).textLength();
     }
 
 }

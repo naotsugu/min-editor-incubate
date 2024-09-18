@@ -39,6 +39,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PlainEditorModel implements EditorModel {
+
     private double marginTop = 5, marginLeft = 70;
     private final Content content;
     private final LayoutView view;
@@ -55,30 +56,31 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void draw(Draw draw) {
+        view.applyScreenScroll(scroll);
         draw.clear();
         for (Range r : carets.marked()) {
             Loc l1 = view.locationOn(r.start().row(), r.start().col()).orElse(new Loc(0, 0));
             Loc l2 = view.locationOn(r.end().row(), r.end().col()).orElse(new Loc(view.width(), view.height()));
             draw.select(
-                    l1.x() + marginLeft, l1.y() + marginTop,
-                    l2.x() + marginLeft, l2.y() + marginTop,
-                    marginLeft, view.width() + marginLeft);
+                    l1.x() + marginLeft - scroll.xVal(), l1.y() + marginTop,
+                    l2.x() + marginLeft - scroll.xVal(), l2.y() + marginTop,
+                    marginLeft - scroll.xVal(), view.width() + marginLeft);
         }
         double y = 0;
         for (Text text : view.texts()) {
             double x = 0;
             for (StyledText st : StyledText.of(text).putAll(syntax.apply(text.row(), text.value())).build()) {
-                draw.text(st.value(), x + marginLeft, y + marginTop, st.width(), st.styles());
+                draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
                 x += text.width();
             }
             y += text.height();
         }
         for (Point p : carets.points()) {
             view.locationOn(p.row(), p.col())
-                  .ifPresent(loc -> draw.caret(loc.x() + marginLeft, loc.y() + marginTop));
+                  .ifPresent(loc -> draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
         }
         drawLeftGarter(draw);
-        view.applyScreenScroll(scroll);
+
     }
 
     private void drawLeftGarter(Draw draw) {
