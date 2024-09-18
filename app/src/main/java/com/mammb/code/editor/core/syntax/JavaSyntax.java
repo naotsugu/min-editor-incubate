@@ -16,7 +16,9 @@
 package com.mammb.code.editor.core.syntax;
 
 import com.mammb.code.editor.core.text.Style;
+import java.util.Collections;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 /**
@@ -35,6 +37,9 @@ public class JavaSyntax implements Syntax {
         """.split("[,\\s]")).forEach(keywords::put);
     }
 
+    private final TreeMap<Anchor, String> scopes = new TreeMap<>();
+
+
 
     @Override
     public String name() {
@@ -43,6 +48,13 @@ public class JavaSyntax implements Syntax {
 
     @Override
     public List<Style.StyleSpan> apply(int row, String text) {
+
+        if (text == null || text.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        scopes.subMap(new Anchor(row, 0), new Anchor(row, Integer.MAX_VALUE)).clear();
+
         return List.of();
     }
 }

@@ -38,4 +38,12 @@ public interface Syntax {
         }
     }
 
+    record Anchor(int row, int col) implements Comparable<Anchor> {
+        @Override
+        public int compareTo(Anchor that) {
+            int c = Integer.compare(this.row, that.row);
+            return c == 0 ? Integer.compare(this.col, that.col) : c;
+        }
+    }
+
 }
