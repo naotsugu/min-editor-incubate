@@ -21,6 +21,7 @@ import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
+import com.mammb.code.editor.core.ScreenScroll;
 import com.mammb.code.editor.core.Theme;
 import com.mammb.code.editor.core.layout.LayoutView;
 import com.mammb.code.editor.core.layout.Loc;
@@ -43,11 +44,13 @@ public class PlainEditorModel implements EditorModel {
     private final LayoutView view;
     private final Syntax syntax;
     private final CaretGroup carets = CaretGroup.of();
+    private final ScreenScroll scroll;
 
-    public PlainEditorModel(Content content, FontMetrics fm, Syntax syntax) {
+    public PlainEditorModel(Content content, FontMetrics fm, Syntax syntax, ScreenScroll scroll) {
         this.content = content;
         this.view = LayoutView.of(content, fm);
         this.syntax = syntax;
+        this.scroll = scroll;
     }
 
     @Override
@@ -94,6 +97,7 @@ public class PlainEditorModel implements EditorModel {
             view.locationOn(p.row(), p.col())
                   .ifPresent(loc -> draw.caret(loc.x() + marginLeft, loc.y() + marginTop));
         }
+        view.applyScreenScroll(scroll);
     }
 
     @Override

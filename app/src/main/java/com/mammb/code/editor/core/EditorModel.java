@@ -27,12 +27,16 @@ import java.util.Optional;
  */
 public interface EditorModel {
 
-    static EditorModel of(FontMetrics fm) {
-        return new PlainEditorModel(Content.of(), fm, Syntax.of(""));
+    static EditorModel of(FontMetrics fm, ScreenScroll scroll) {
+        return new PlainEditorModel(Content.of(), fm, Syntax.of(""), scroll);
     }
 
-    static EditorModel of(Path path, FontMetrics fm) {
-        return new PlainEditorModel(Content.of(path), fm, Syntax.of(extension(path)));
+    static EditorModel of(Path path, FontMetrics fm, ScreenScroll scroll) {
+        return new PlainEditorModel(
+                Content.of(path),
+                fm,
+                Syntax.of(extension(path)),
+                scroll);
     }
 
     void draw(Draw draw);

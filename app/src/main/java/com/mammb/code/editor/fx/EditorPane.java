@@ -18,6 +18,7 @@ package com.mammb.code.editor.fx;
 import com.mammb.code.editor.core.Action;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
+import com.mammb.code.editor.core.ScreenScroll;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
@@ -68,7 +69,7 @@ public class EditorPane extends StackPane {
         canvas = new Canvas(640, 480);
         canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
-        model = EditorModel.of(draw.fontMetrics());
+        model = EditorModel.of(draw.fontMetrics(), screenScroll());
         vScroll.setOrientation(Orientation.VERTICAL);
         hScroll.setOrientation(Orientation.HORIZONTAL);
         StackPane.setAlignment(vScroll, Pos.TOP_RIGHT);
@@ -216,6 +217,25 @@ public class EditorPane extends StackPane {
         return action;
     }
 
+    private ScreenScroll screenScroll() {
+        return new ScreenScroll() {
+            @Override
+            public void vertical(int min, int max, int val, int len) {
+                vScroll.setMin(min);
+                vScroll.setMax(max);
+                vScroll.setValue(val);
+                vScroll.setVisibleAmount(len);
+            }
+            @Override
+            public void horizontal(double min, double max, double val, double len) {
+                hScroll.setMin(min);
+                hScroll.setMax(max);
+                hScroll.setValue(val);
+                hScroll.setVisibleAmount(len);
+            }
+        };
+    }
+
     private void draw() {
         model.draw(draw);
     }
@@ -235,7 +255,7 @@ public class EditorPane extends StackPane {
     }
 
     private void open(Path path) {
-        model = EditorModel.of(path, draw.fontMetrics());
+        model = EditorModel.of(path, draw.fontMetrics(), screenScroll());
         model.setSize(getWidth(), getHeight());
     }
 

@@ -17,6 +17,7 @@ package com.mammb.code.editor.core.layout;
 
 import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.FontMetrics;
+import com.mammb.code.editor.core.ScreenScroll;
 import com.mammb.code.editor.core.text.Text;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +50,7 @@ public interface LayoutView extends RowLineIc {
     int lineSizeOnView();
     double lineHeight();
     int topLine();
+    void applyScreenScroll(ScreenScroll screenScroll);
 
     static LayoutView of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
@@ -63,6 +65,7 @@ public interface LayoutView extends RowLineIc {
     class BasicLayoutView implements LayoutView {
         private double width = 0, height = 0;
         private double xShift = 0;
+        private double xMax = 0;
         private int topLine = 0;
         private final List<Text> buffer = new ArrayList<>();
         private final Layout layout;
@@ -98,15 +101,21 @@ public interface LayoutView extends RowLineIc {
             if (delta == 0) return;
             if (Math.abs(delta) < lineSizeOnView() * 2 / 3) {
                 topLine = line;
+                List<Text> texts;
                 if (delta > 0) {
                     // scroll next
                     buffer.subList(0, delta).clear();
-                    buffer.addAll(layout.texts(line + buffer.size(), line + buffer.size() + delta));
+                    texts = layout.texts(line + buffer.size(), line + buffer.size() + delta);
+                    buffer.addAll(texts);
                 } else {
                     // scroll prev
                     buffer.subList(buffer.size() + delta, buffer.size()).clear();
-                    buffer.addAll(0, layout.texts(line, line - delta));
+                    texts = layout.texts(line, line - delta);
+                    buffer.addAll(0, texts);
                 }
+                texts.stream().mapToDouble(Text::width)
+                        .filter(w -> w > xMax).max()
+                        .ifPresent(w -> xMax = w);
             } else {
                 this.topLine = line;
                 fillBuffer();
@@ -258,11 +267,19 @@ public interface LayoutView extends RowLineIc {
             return topLine;
         }
 
+        @Override
+        public void applyScreenScroll(ScreenScroll scroll) {
+            scroll.vertical(0,layout.lineSize(), topLine, lineSizeOnView());
+            scroll.horizontal(0, xMax, xShift, width);
+        }
+
         private void fillBuffer() {
             buffer.clear();
             buffer.addAll(layout.texts(topLine, topLine + lineSizeOnView()));
+            buffer.stream().mapToDouble(Text::width)
+                    .filter(w -> w > xMax).max()
+                    .ifPresent(w -> xMax = w);
         }
-
 
     }
 }
