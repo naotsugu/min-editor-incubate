@@ -232,6 +232,7 @@ public class EditorPane extends StackPane {
                 hScroll.setMax(max);
                 hScroll.setValue(val);
                 hScroll.setVisibleAmount(len);
+                hScroll.setVisible(max > len);
             }
         };
     }
