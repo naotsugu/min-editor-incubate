@@ -55,6 +55,11 @@ public class JavaSyntax implements Syntax {
 
         scopes.subMap(new Anchor(row, 0), new Anchor(row, Integer.MAX_VALUE)).clear();
 
+        LexerSource source = LexerSource.of(text);
+        while (source.hasNext()) {
+
+        }
+
         return List.of();
     }
 }
