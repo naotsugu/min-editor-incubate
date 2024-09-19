@@ -16,6 +16,9 @@
 package com.mammb.code.editor.core.syntax;
 
 import com.mammb.code.editor.core.text.Style;
+import com.mammb.code.editor.core.text.Style.StyleSpan;
+import com.mammb.code.editor.core.text.Style.TextColor;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
@@ -47,7 +50,7 @@ public class JavaSyntax implements Syntax {
     }
 
     @Override
-    public List<Style.StyleSpan> apply(int row, String text) {
+    public List<StyleSpan> apply(int row, String text) {
 
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
@@ -55,11 +58,20 @@ public class JavaSyntax implements Syntax {
 
         scopes.subMap(new Anchor(row, 0), new Anchor(row, Integer.MAX_VALUE)).clear();
 
+        List<StyleSpan> spans = new ArrayList<>();
+
         LexerSource source = LexerSource.of(text);
         while (source.hasNext()) {
-
+            if (source.match("//")) {
+                var s = source.nextRemaining();
+                spans.add(new StyleSpan(lineComment, s.index(), s.length()));
+            } else {
+                source.next();
+            }
         }
 
-        return List.of();
+        return spans;
     }
+
+    static final TextColor lineComment = new TextColor("#888888");
 }

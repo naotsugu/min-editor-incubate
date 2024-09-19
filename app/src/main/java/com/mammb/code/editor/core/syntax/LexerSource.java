@@ -20,7 +20,7 @@ import java.util.Objects;
 public class LexerSource {
     private String source;
     private int index = 0;
-    private int
+    private int peek = 0;
 
     private LexerSource(String source) {
         this.source = source;
@@ -38,17 +38,53 @@ public class LexerSource {
     public boolean match(char ch) {
         return source.charAt(index) == ch;
     }
+
     public boolean match(CharSequence cs) {
         return index + cs.length() < source.length() &&
-                Objects.equals(source.substring(index, cs.length()), cs.toString());
+                Objects.equals(source.substring(index, index + cs.length()), cs.toString());
     }
 
-
-    public char next() {
-        return source.charAt(index++);
+    public Indexed next() {
+        var ret = new Indexed(index, source.charAt(index));
+        index++;
+        peek = 0;
+        return ret;
     }
 
-    public String peek() {
-
+    public Indexed next(int n) {
+        var ret = new Indexed(index, source.substring(index, index + n));
+        index += n;
+        peek = 0;
+        return ret;
     }
+
+    public Indexed nextRemaining() {
+        var ret = new Indexed(index, source.substring(index));
+        index = source.length();
+        peek = 0;
+        return ret;
+    }
+
+    public Indexed peek() {
+        var ret = new Indexed(index + peek, source.charAt(index + peek));
+        peek++;
+        return ret;
+    }
+
+    public void rollbackPeek() {
+        peek = 0;
+    }
+
+    public void commitPeek() {
+        index += peek;
+        peek = 0;
+    }
+
+    public record Indexed(int index, String string) {
+        private Indexed(int index, char ch) {
+            this(index, String.valueOf(ch));
+        }
+        int length() { return string.length(); }
+    }
+
 }

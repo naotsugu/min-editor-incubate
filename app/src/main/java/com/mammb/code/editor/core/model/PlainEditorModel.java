@@ -69,9 +69,10 @@ public class PlainEditorModel implements EditorModel {
         double y = 0;
         for (Text text : view.texts()) {
             double x = 0;
-            for (StyledText st : StyledText.of(text).putAll(syntax.apply(text.row(), text.value())).build()) {
+            var spans = syntax.apply(text.row(), text.value());
+            for (StyledText st : StyledText.of(text).putAll(spans).build()) {
                 draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
-                x += text.width();
+                x += st.width();
             }
             y += text.height();
         }
@@ -250,7 +251,7 @@ public class PlainEditorModel implements EditorModel {
     public void click(double x, double y, boolean withSelect) {
         Caret c = carets.unique();
         int line = view.yToLineOnView(y - marginTop);
-        c.at(view.lineToRow(line), view.xToCol(line, x));
+        c.at(view.lineToRow(line), view.xToCol(line, x - marginLeft));
     }
 
     @Override
