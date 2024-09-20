@@ -17,7 +17,7 @@ package com.mammb.code.editor.core.syntax;
 
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import com.mammb.code.editor.core.text.Style.TextColor;
-import com.mammb.code.editor.core.syntax.LexerSource.Indexed;
+import com.mammb.code.editor.core.syntax.BlockScope.BlockType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,12 +65,16 @@ public class JavaSyntax implements Syntax {
 
             var ch = source.peek();
             switch (ch.string()) {
+                case "'" -> {
+
+                }
                 case "/" -> {
                     if (source.match("//")) {
                         var s = source.nextRemaining();
                         spans.add(new StyleSpan(lineComment, s.index(), s.length()));
                     }
                 }
+
                 default -> {
                     if (ch.isAlphabeticStart()) {
                         var s = source.nextAlphabeticToken();
@@ -89,4 +93,7 @@ public class JavaSyntax implements Syntax {
 
     static final TextColor lineComment = new TextColor("#888888");
     static final TextColor keyword = new TextColor("#FF8C00");
+
+    BlockType blockComment = BlockType.close("/*", "*/");
+
 }
