@@ -71,6 +71,17 @@ public class LexerSource {
         return ret;
     }
 
+    public Indexed nextAlphabeticToken() {
+        int i = index;
+        for (; i < source.length(); i++) {
+            if (!Character.isAlphabetic(source.charAt(i))) break;
+        }
+        var ret = new Indexed(index, source.substring(index, i));
+        index = i;
+        peek = 0;
+        return ret;
+    }
+
     public void rollbackPeek() {
         peek = 0;
     }
@@ -85,6 +96,9 @@ public class LexerSource {
             this(index, String.valueOf(ch));
         }
         int length() { return string.length(); }
+        boolean isAlphabeticStart() {
+            return Character.isAlphabetic(string.charAt(0));
+        }
     }
 
 }

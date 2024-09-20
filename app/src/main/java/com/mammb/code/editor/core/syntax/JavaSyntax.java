@@ -15,9 +15,9 @@
  */
 package com.mammb.code.editor.core.syntax;
 
-import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import com.mammb.code.editor.core.text.Style.TextColor;
+import com.mammb.code.editor.core.syntax.LexerSource.Indexed;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,16 +62,31 @@ public class JavaSyntax implements Syntax {
 
         LexerSource source = LexerSource.of(text);
         while (source.hasNext()) {
-            if (source.match("//")) {
-                var s = source.nextRemaining();
-                spans.add(new StyleSpan(lineComment, s.index(), s.length()));
-            } else {
-                source.next();
+
+            var ch = source.peek();
+            switch (ch.string()) {
+                case "/" -> {
+                    if (source.match("//")) {
+                        var s = source.nextRemaining();
+                        spans.add(new StyleSpan(lineComment, s.index(), s.length()));
+                    }
+                }
+                default -> {
+                    if (ch.isAlphabeticStart()) {
+                        var s = source.nextAlphabeticToken();
+                        if (keywords.match(s.string())) {
+                            spans.add(new StyleSpan(keyword, s.index(), s.length()));
+                        }
+                    }
+                }
             }
+            source.commitPeek();
+
         }
 
         return spans;
     }
 
     static final TextColor lineComment = new TextColor("#888888");
+    static final TextColor keyword = new TextColor("#FF8C00");
 }
