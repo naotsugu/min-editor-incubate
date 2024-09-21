@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -39,7 +40,7 @@ public class JavaSyntax implements Syntax {
         strictfp,volatile,const,float,native,super,while,var,record,sealed,with,yield,to,transitive,uses
         """.split("[,\\s]")).forEach(keywords::put);
     }
-
+    static final BlockType.Range blockComment = BlockType.range("/*", "*/");
     private final BlockScopes scopes = new BlockScopes();
 
 
@@ -51,51 +52,53 @@ public class JavaSyntax implements Syntax {
     @Override
     public List<StyleSpan> apply(int row, String text) {
 
+        scopes.clearAt(row);
+
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
         }
 
         var spans = new ArrayList<StyleSpan>();
-        var source = LexerSource.of(text);
+        var source = LexerSource.of(row, text);
 
         while (source.hasNext()) {
 
             var peek = source.peek();
             char ch = peek.ch();
-            Optional<BlockType> block = scopes.inScope(row, peek.index());
+            Optional<BlockType> block = scopes.inScope(source.row(), peek.index());
 
             if (block.filter(t -> t == blockComment).isPresent()) {
                 var match = source.nextMatch(block.get().close());
                 if (match.isPresent()) {
                     var s = match.get();
-                    spans.add(new StyleSpan(blockCommentColor, peek.index(), s.index() + s.length() - peek.index()));
-                    scopes.putClose(row, s.lastIndex(), blockComment);
+                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), s.index() + s.length() - peek.index()));
+                    scopes.putClose(source.row(), s.lastIndex(), blockComment);
                 } else {
-                    spans.add(new StyleSpan(blockCommentColor, peek.index(), text.length() - peek.index()));
+                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), text.length() - peek.index()));
                 }
 
             } else if (ch == '/' && source.match("/*")) {
-                scopes.putOpen(row, peek.index(), blockComment);
+                scopes.putOpen(source.row(), peek.index(), blockComment);
                 var match = source.nextMatch("*/");
                 if (match.isPresent()) {
                     var s = match.get();
-                    spans.add(new StyleSpan(blockCommentColor, peek.index(), s.index() + s.length() - peek.index()));
-                    scopes.putClose(row, s.lastIndex(), blockComment);
+                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), s.index() + s.length() - peek.index()));
+                    scopes.putClose(source.row(), s.lastIndex(), blockComment);
                 } else {
-                    spans.add(new StyleSpan(blockCommentColor, peek.index(), text.length() - peek.index()));
+                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), source.length() - peek.index()));
                 }
 
             } else if (ch == '*' && source.match("*/")) {
-                scopes.putClose(row, peek.index(), blockComment);
+                scopes.putClose(source.row(), peek.index(), blockComment);
 
             } else if (ch == '/' && source.match("//")) {
                 var s = source.nextRemaining();
-                spans.add(new StyleSpan(lineCommentColor, s.index(), s.length()));
+                spans.add(new StyleSpan(Palette.gray, s.index(), s.length()));
 
             } else if (Character.isAlphabetic(ch)) {
                 var s = source.nextAlphabeticToken();
                 if (keywords.match(s.string())) {
-                    spans.add(new StyleSpan(keywordColor, s.index(), s.length()));
+                    spans.add(new StyleSpan(Palette.darkOrange, s.index(), s.length()));
                 }
             }
 
@@ -105,11 +108,5 @@ public class JavaSyntax implements Syntax {
 
         return spans;
     }
-
-    static final TextColor lineCommentColor = new TextColor("#888888");
-    static final TextColor blockCommentColor = new TextColor("#6A8759");
-    static final TextColor keywordColor = new TextColor("#CC7832");
-
-    static final BlockType.Range blockComment = BlockType.range("/*", "*/");
 
 }

@@ -19,78 +19,83 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class LexerSource {
-    private String source;
+    private int row;
+    private String text;
     private int index = 0;
     private int peek = 0;
 
-    private LexerSource(String source) {
-        this.source = source;
+    private LexerSource(int row, String text) {
+        this.row = row;
+        this.text = text;
     }
 
-    public static LexerSource of(String source) {
-        return new LexerSource(source);
+    public static LexerSource of(int row, String source) {
+        return new LexerSource(row, source);
     }
 
+    public int row() { return row; }
+    public String text() { return text; }
+    public int length() { return text.length(); }
 
     public boolean hasNext() {
-        return index < source.length();
+        return index < text.length();
     }
 
     public boolean match(char ch) {
-        return source.charAt(index) == ch;
+        return text.charAt(index) == ch;
     }
 
     public boolean match(CharSequence cs) {
-        return index + cs.length() < source.length() &&
-                Objects.equals(source.substring(index, index + cs.length()), cs.toString());
+        return index + cs.length() < text.length() &&
+                Objects.equals(text.substring(index, index + cs.length()), cs.toString());
     }
 
     public Indexed next() {
-        var ret = new Indexed(index, source.charAt(index), source.length());
+        var ret = new Indexed(index, text.charAt(index), text.length());
         index++;
         peek = 0;
         return ret;
     }
 
     public Indexed next(int n) {
-        var ret = new Indexed(index, source.substring(index, index + n), source.length());
+        var ret = new Indexed(index, text.substring(index, index + n), text.length());
         index += n;
         peek = 0;
         return ret;
     }
 
     public Indexed nextRemaining() {
-        var ret = new Indexed(index, source.substring(index), source.length());
-        index = source.length();
+        var ret = new Indexed(index, text.substring(index), text.length());
+        index = text.length();
         peek = 0;
         return ret;
     }
 
     public Optional<Indexed> nextMatch(String until) {
-        int n = source.substring(index).indexOf(until);
+        int n = text.substring(index).indexOf(until);
         if (n < 0) {
-            index = source.length();
+            index = text.length();
             peek = 0;
             return Optional.empty();
         }
-        var ret = new Indexed(index + n, until, source.length());
+        var ret = new Indexed(index + n, until, text.length());
         index = ret.index + until.length();
         peek = 0;
         return Optional.of(ret);
     }
 
     public Indexed peek() {
-        var ret = new Indexed(index + peek, source.charAt(index + peek), source.length());
+        var ret = new Indexed(index + peek, text.charAt(index + peek), text.length());
         peek++;
         return ret;
     }
 
     public Indexed nextAlphabeticToken() {
         int i = index;
-        for (; i < source.length(); i++) {
-            if (!Character.isAlphabetic(source.charAt(i))) break;
+        for (; i < text.length(); i++) {
+            if (!Character.isAlphabetic(text.charAt(i))) break;
         }
-        var ret = new Indexed(index, source.substring(index, i), source.length());
+        var ret = new Indexed(index, text.substring(index, i), text.length());
         index = i;
         peek = 0;
         return ret;
