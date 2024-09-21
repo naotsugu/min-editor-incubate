@@ -16,6 +16,7 @@
 package com.mammb.code.editor.core.syntax;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class LexerSource {
     private String source;
@@ -45,28 +46,41 @@ public class LexerSource {
     }
 
     public Indexed next() {
-        var ret = new Indexed(index, source.charAt(index));
+        var ret = new Indexed(index, source.charAt(index), source.length());
         index++;
         peek = 0;
         return ret;
     }
 
     public Indexed next(int n) {
-        var ret = new Indexed(index, source.substring(index, index + n));
+        var ret = new Indexed(index, source.substring(index, index + n), source.length());
         index += n;
         peek = 0;
         return ret;
     }
 
     public Indexed nextRemaining() {
-        var ret = new Indexed(index, source.substring(index));
+        var ret = new Indexed(index, source.substring(index), source.length());
         index = source.length();
         peek = 0;
         return ret;
     }
 
+    public Optional<Indexed> nextMatch(String until) {
+        int n = source.substring(index).indexOf(until);
+        if (n < 0) {
+            index = source.length();
+            peek = 0;
+            return Optional.empty();
+        }
+        var ret = new Indexed(index + n, until, source.length());
+        index = ret.index + until.length();
+        peek = 0;
+        return Optional.of(ret);
+    }
+
     public Indexed peek() {
-        var ret = new Indexed(index + peek, source.charAt(index + peek));
+        var ret = new Indexed(index + peek, source.charAt(index + peek), source.length());
         peek++;
         return ret;
     }
@@ -76,7 +90,7 @@ public class LexerSource {
         for (; i < source.length(); i++) {
             if (!Character.isAlphabetic(source.charAt(i))) break;
         }
-        var ret = new Indexed(index, source.substring(index, i));
+        var ret = new Indexed(index, source.substring(index, i), source.length());
         index = i;
         peek = 0;
         return ret;
@@ -91,14 +105,19 @@ public class LexerSource {
         peek = 0;
     }
 
-    public record Indexed(int index, String string) {
-        private Indexed(int index, char ch) {
-            this(index, String.valueOf(ch));
+    public record Indexed(int index, String string, int parentLength) {
+        private Indexed(int index, char ch, int parentLength) {
+            this(index, String.valueOf(ch), parentLength);
+        }
+        char ch() {
+            return length() == 0 ? 0 : string.charAt(0);
+        }
+        int lastIndex() {
+            return index + string.length() - 1;
         }
         int length() { return string.length(); }
-        boolean isAlphabeticStart() {
-            return Character.isAlphabetic(string.charAt(0));
-        }
+        boolean isFirst() { return index == 0; }
+        boolean isLast() { return index == parentLength - 1; }
     }
 
 }
