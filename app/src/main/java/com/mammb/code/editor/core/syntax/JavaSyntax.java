@@ -16,13 +16,11 @@
 package com.mammb.code.editor.core.syntax;
 
 import com.mammb.code.editor.core.text.Style.StyleSpan;
-import com.mammb.code.editor.core.text.Style.TextColor;
 import com.mammb.code.editor.core.syntax.BlockScopes.BlockType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -68,9 +66,9 @@ public class JavaSyntax implements Syntax {
             Optional<BlockType> block = scopes.inScope(source.row(), peek.index());
 
             if (block.filter(t -> t == blockComment).isPresent()) {
-                var match = source.nextMatch(block.get().close());
-                if (match.isPresent()) {
-                    var s = match.get();
+                var close = source.nextMatch(block.get().close());
+                if (close.isPresent()) {
+                    var s = close.get();
                     spans.add(new StyleSpan(Palette.darkGreen, peek.index(), s.index() + s.length() - peek.index()));
                     scopes.putClose(source.row(), s.lastIndex(), blockComment);
                 } else {
@@ -79,9 +77,9 @@ public class JavaSyntax implements Syntax {
 
             } else if (ch == '/' && source.match("/*")) {
                 scopes.putOpen(source.row(), peek.index(), blockComment);
-                var match = source.nextMatch("*/");
-                if (match.isPresent()) {
-                    var s = match.get();
+                var close = source.nextMatch("*/");
+                if (close.isPresent()) {
+                    var s = close.get();
                     spans.add(new StyleSpan(Palette.darkGreen, peek.index(), s.index() + s.length() - peek.index()));
                     scopes.putClose(source.row(), s.lastIndex(), blockComment);
                 } else {
@@ -94,6 +92,9 @@ public class JavaSyntax implements Syntax {
             } else if (ch == '/' && source.match("//")) {
                 var s = source.nextRemaining();
                 spans.add(new StyleSpan(Palette.gray, s.index(), s.length()));
+
+            //} else if (ch == '"' && !source.match("\"\"\"")) {
+            //    var match = source.nextMatch('"', 2, '\\');
 
             } else if (Character.isAlphabetic(ch)) {
                 var s = source.nextAlphabeticToken();

@@ -20,6 +20,7 @@ import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.PointRec;
 import com.mammb.code.editor.core.Caret.Range;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -44,13 +45,15 @@ public interface Content {
      */
     List<Point> redo();
 
-
     String getText(int row);
     String getText(Point start, Point end);
     int rows();
     Optional<Path> path();
     void save(Path path);
     boolean isModified();
+    Point insertFlush(Point point, String text);
+    void clearFlush();
+
 
     static Content of() {
         return new ContentImpl();
@@ -60,28 +63,30 @@ public interface Content {
     }
 
     class ContentImpl implements Content {
-        private final TextEdit textEdit;
+        private final TextEdit edit;
+        private final List<PointText> flushes = new ArrayList<>();
 
         public ContentImpl() {
-            this.textEdit = TextEdit.of();
+            this.edit = TextEdit.of();
         }
         public ContentImpl(Path path) {
-            this.textEdit = TextEdit.of(path);
+            this.edit = TextEdit.of(path);
         }
 
         @Override
         public Point insert(Point point, String text) {
-            var pos = textEdit.insert(point.row(), point.col(), text);
+            var pos = edit.insert(point.row(), point.col(), text);
             return new PointRec(pos.row(), pos.col());
         }
 
         @Override
         public String delete(Point point) {
-            return textEdit.delete(point.row(), point.col());
+            return edit.delete(point.row(), point.col());
         }
+
         @Override
         public Point backspace(Point point) {
-            var pos = textEdit.backspace(point.row(), point.col());
+            var pos = edit.backspace(point.row(), point.col());
             return new PointRec(pos.row(), pos.col());
         }
 
@@ -89,7 +94,7 @@ public interface Content {
         public List<Point> delete(List<Range> ranges) {
             // TODO transaction delete
             return ranges.stream().sorted(Comparator.reverseOrder())
-                    .map(range -> textEdit.replace(
+                    .map(range -> edit.replace(
                             range.min().row(), range.min().col(),
                             range.max().row(), range.max().col(),
                             ""))
@@ -100,43 +105,74 @@ public interface Content {
 
         @Override
         public List<Point> undo() {
-            return textEdit.undo().stream().map(p -> Point.of(p.row(), p.col())).toList();
+            return edit.undo().stream().map(p -> Point.of(p.row(), p.col())).toList();
         }
 
         @Override
         public List<Point> redo() {
-            return textEdit.redo().stream().map(p -> Point.of(p.row(), p.col())).toList();
+            return edit.redo().stream().map(p -> Point.of(p.row(), p.col())).toList();
         }
 
         @Override
         public String getText(int row) {
-            return textEdit.getText(row);
+            if (!flushes.isEmpty()) {
+                var sb = new StringBuilder(edit.getText(row));
+                flushes.stream().filter(p -> p.point.row() == row)
+                        .forEach(p -> sb.insert(p.point().col(), p.text()));
+                return sb.toString();
+            } else {
+                return edit.getText(row);
+            }
         }
 
         @Override
         public String getText(Point start, Point end) {
-            return textEdit.getText(start.row(), start.col(), end.row(), end.col());
+            if (!flushes.isEmpty()) {
+                var sb = new StringBuilder();
+                for (int i = start.row(); i <= end.row(); i++) {
+                    String row = getText(i);
+                    row = (i == end.row()) ? row.substring(0, end.col()) : row;
+                    row = (i == start.row()) ? row.substring(start.col()) : row;
+                    sb.append(row);
+                }
+                return sb.toString();
+            } else {
+                return edit.getText(start.row(), start.col(), end.row(), end.col());
+            }
         }
 
         @Override
         public int rows() {
-            return textEdit.rows();
+            return edit.rows();
         }
 
         @Override
         public Optional<Path> path() {
-            return Optional.ofNullable(textEdit.path());
+            return Optional.ofNullable(edit.path());
         }
 
         @Override
         public void save(Path path) {
-            textEdit.save(path);
+            edit.save(path);
         }
 
         @Override
         public boolean isModified() {
-            textEdit.flush();
-            return textEdit.hasUndoRecord();
+            edit.flush();
+            return edit.hasUndoRecord();
         }
+
+        @Override
+        public Point insertFlush(Point point, String text) {
+            flushes.add(new PointText(point, text));
+            return new PointRec(point.row(), point.col() + text.length());
+        }
+
+        @Override
+        public void clearFlush() {
+            flushes.clear();
+        }
+
+        private record PointText(Point point, String text) {}
     }
 }

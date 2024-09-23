@@ -84,6 +84,11 @@ public class LexerSource {
         return Optional.of(ret);
     }
 
+    public Optional<Indexed> nextMatch(char until, int times, char escape) {
+        // TODO
+        return Optional.empty();
+    }
+
     public Indexed peek() {
         var ret = new Indexed(index + peek, text.charAt(index + peek), text.length());
         peek++;

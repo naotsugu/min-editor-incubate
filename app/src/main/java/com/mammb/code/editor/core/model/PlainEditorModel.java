@@ -366,12 +366,15 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void imeOff() {
-        // TODO
+        content.clearFlush();
     }
 
     @Override
     public void inputImeComposed(String text) {
-        // TODO
+        Caret caret = carets.getFirst();
+        content.clearFlush();
+        content.insertFlush(caret.point(), text);
+        view.refreshBuffer(caret.row(), caret.row() + 1);
     }
 
 }

@@ -174,6 +174,7 @@ public class EditorPane extends StackPane {
             model.inputImeComposed(e.getComposed().stream()
                     .map(InputMethodTextRun::getText)
                     .collect(Collectors.joining()));
+            model.draw(draw);
         } else {
             model.imeOff();
         }
