@@ -257,6 +257,7 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void clickDouble(double x, double y) {
         Caret c = carets.getFirst();
+        // TODO
     }
 
     @Override

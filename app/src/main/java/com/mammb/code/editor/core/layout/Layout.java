@@ -21,7 +21,19 @@ import com.mammb.code.editor.core.text.Text;
 import java.util.List;
 import java.util.Optional;
 
-interface Layout extends RowLineIc {
+/**
+ * The Layout.
+ * @author Naotsugu Kobayashi
+ */
+interface Layout {
+
+    int rowToFirstLine(int row);
+    int rowToLastLine(int row);
+    int rowToLine(int row, int col);
+    int lineToRow(int line);
+    int lineSize();
+    int rowSize();
+
     void setWidth(double width);
     void refresh(int line);
     void refreshAt(int startRow, int endRow);

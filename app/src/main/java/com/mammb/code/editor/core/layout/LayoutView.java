@@ -24,7 +24,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public interface LayoutView extends RowLineIc {
+/**
+ * The LayoutView.
+ * @author Naotsugu Kobayashi
+ */
+public interface LayoutView {
+
+    int rowToFirstLine(int row);
+    int rowToLastLine(int row);
+    int rowToLine(int row, int col);
+    int lineToRow(int line);
+    int lineSize();
+    int rowSize();
 
     void setSize(double width, double height);
     void scrollNext(int delta);

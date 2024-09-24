@@ -247,10 +247,6 @@ public interface Caret extends Comparable<Caret>{
             return start.compareTo(end) > 0 ? start : end;
         }
 
-        public boolean inline() {
-            return start.row() == end.row();
-        }
-
         @Override
         public int compareTo(Range o) {
             return min().compareTo(o.min());

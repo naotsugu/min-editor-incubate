@@ -29,6 +29,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+/**
+ * The WrapLayout.
+ * @author Naotsugu Kobayashi
+ */
 public class WrapLayout implements Layout {
 
     private double width = 0;

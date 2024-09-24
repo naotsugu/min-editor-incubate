@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+/**
+ * The RowLayout.
+ * @author Naotsugu Kobayashi
+ */
 public class RowLayout implements Layout {
     private final double lineHeight;
     private final Content content;
