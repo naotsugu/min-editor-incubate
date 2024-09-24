@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
  * @author Naotsugu Kobayashi
  */
 public class RowLayout implements Layout {
+
     private final double lineHeight;
     private final Content content;
     private final FontMetrics fm;

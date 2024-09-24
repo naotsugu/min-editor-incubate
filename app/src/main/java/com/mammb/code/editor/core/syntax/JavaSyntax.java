@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core.syntax;
 
+import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import com.mammb.code.editor.core.syntax.BlockScopes.BlockType;
 import java.util.ArrayList;
@@ -66,25 +67,11 @@ public class JavaSyntax implements Syntax {
             Optional<BlockType> block = scopes.inScope(source.row(), peek.index());
 
             if (block.filter(t -> t == blockComment).isPresent()) {
-                var close = source.nextMatch(block.get().close());
-                if (close.isPresent()) {
-                    var s = close.get();
-                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), s.index() + s.length() - peek.index()));
-                    scopes.putClose(source.row(), s.lastIndex(), blockComment);
-                } else {
-                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), text.length() - peek.index()));
-                }
+                spans.add(readBlockClose(source, peek, blockComment, Palette.darkGreen));
 
             } else if (ch == '/' && source.match("/*")) {
                 scopes.putOpen(source.row(), peek.index(), blockComment);
-                var close = source.nextMatch("*/");
-                if (close.isPresent()) {
-                    var s = close.get();
-                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), s.index() + s.length() - peek.index()));
-                    scopes.putClose(source.row(), s.lastIndex(), blockComment);
-                } else {
-                    spans.add(new StyleSpan(Palette.darkGreen, peek.index(), source.length() - peek.index()));
-                }
+                spans.add(readBlockClose(source, peek, blockComment, Palette.darkGreen));
 
             } else if (ch == '*' && source.match("*/")) {
                 scopes.putClose(source.row(), peek.index(), blockComment);
@@ -93,8 +80,10 @@ public class JavaSyntax implements Syntax {
                 var s = source.nextRemaining();
                 spans.add(new StyleSpan(Palette.gray, s.index(), s.length()));
 
-            //} else if (ch == '"' && !source.match("\"\"\"")) {
+            } else if (ch == '"' && !source.match("\"\"\"")) {
             //    var match = source.nextMatch('"', 2, '\\');
+
+            } else if (ch == '"') {
 
             } else if (Character.isAlphabetic(ch)) {
                 var s = source.nextAlphabeticToken();
@@ -102,12 +91,22 @@ public class JavaSyntax implements Syntax {
                     spans.add(new StyleSpan(Palette.darkOrange, s.index(), s.length()));
                 }
             }
-
             source.commitPeek();
-
         }
 
         return spans;
+    }
+
+
+    private StyleSpan readBlockClose(LexerSource source, LexerSource.Indexed peek, BlockType blockType, Style style) {
+        var close = source.nextMatch(blockType.close());
+        if (close.isPresent()) {
+            var s = close.get();
+            scopes.putClose(source.row(), s.lastIndex(), blockComment);
+            return new StyleSpan(style, peek.index(), s.index() + s.length() - peek.index());
+        } else {
+            return new StyleSpan(style, peek.index(), source.length() - peek.index());
+        }
     }
 
 }
