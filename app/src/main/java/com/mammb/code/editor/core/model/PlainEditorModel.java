@@ -273,9 +273,13 @@ public class PlainEditorModel implements EditorModel {
     public void input(String text) {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
-            var pos = content.insert(caret.point(), text);
-            view.refreshBuffer(caret.row(), pos.row() + 1);
-            caret.at(pos);
+            if (caret.isMarked()) {
+                selectionReplace(caret, text);
+            } else {
+                var pos = content.insert(caret.point(), text);
+                view.refreshBuffer(caret.row(), pos.row() + 1);
+                caret.at(pos);
+            }
         } else {
             // TODO
         }
@@ -285,8 +289,12 @@ public class PlainEditorModel implements EditorModel {
     public void delete() {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
-            var del = content.delete(caret.point());
-            view.refreshBuffer(caret.row(), caret.row() + 1);
+            if (caret.isMarked()) {
+                selectionReplace(caret, "");
+            } else {
+                var del = content.delete(caret.point());
+                view.refreshBuffer(caret.row(), caret.row() + 1);
+            }
         } else {
             // TODO
         }
@@ -296,12 +304,26 @@ public class PlainEditorModel implements EditorModel {
     public void backspace() {
         if (carets.size() == 1) {
             Caret caret = carets.getFirst();
-            var pos = content.backspace(caret.point());
-            view.refreshBuffer(pos.row(), caret.row() + 1);
-            caret.at(pos);
+            if (caret.isMarked()) {
+                selectionReplace(caret, "");
+            } else {
+                var pos = content.backspace(caret.point());
+                view.refreshBuffer(pos.row(), caret.row() + 1);
+                caret.at(pos);
+            }
         } else {
             // TODO
         }
+    }
+
+    private Point selectionReplace(Caret caret, String text) {
+        assert caret.isMarked();
+        var range = caret.markedRange();
+        var pos = content.replace(range.start(), range.end(), text);
+        view.refreshBuffer(range.start().row(), range.end().row() + 1);
+        caret.clearMark();
+        caret.at(pos);
+        return pos;
     }
 
     @Override

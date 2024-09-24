@@ -30,7 +30,7 @@ public interface Content {
     Point insert(Point point, String text);
     String delete(Point point);
     Point backspace(Point point);
-
+    Point replace(Point start, Point end, String text);
     List<Point> delete(List<Range> ranges);
 
     /**
@@ -87,6 +87,12 @@ public interface Content {
         @Override
         public Point backspace(Point point) {
             var pos = edit.backspace(point.row(), point.col());
+            return new PointRec(pos.row(), pos.col());
+        }
+
+        @Override
+        public Point replace(Point start, Point end, String text) {
+            var pos = edit.replace(start.row(), start.col(), end.row(), end.col(), text);
             return new PointRec(pos.row(), pos.col());
         }
 
