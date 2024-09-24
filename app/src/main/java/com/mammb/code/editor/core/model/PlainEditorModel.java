@@ -360,6 +360,7 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public Optional<Loc> imeOn() {
         Caret caret = carets.getFirst();
+        caret.flushAt(caret.point());
         return view.locationOn(caret.row(), caret.col())
                 .map(top -> new Loc(top.x() + marginLeft, top.y() + marginTop + view.lineHeight() + 5));
     }
@@ -367,14 +368,21 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void imeOff() {
         content.clearFlush();
+        carets.getFirst().clearFlush();
+    }
+
+    @Override
+    public boolean isImeOn() {
+        return carets.getFirst().hasFlush();
     }
 
     @Override
     public void inputImeComposed(String text) {
         Caret caret = carets.getFirst();
         content.clearFlush();
-        content.insertFlush(caret.point(), text);
-        view.refreshBuffer(caret.row(), caret.row() + 1);
+        var pos = content.insertFlush(caret.point(), text);
+        view.refreshBuffer(caret.row(), pos.row() + 1);
+        caret.flushAt(pos);
     }
 
 }

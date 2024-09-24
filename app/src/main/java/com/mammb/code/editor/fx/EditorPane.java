@@ -169,8 +169,7 @@ public class EditorPane extends StackPane {
             model.imeOff();
             execute(Action.of(Action.Type.TYPED, e.getCommitted()));
         } else if (!e.getComposed().isEmpty()) {
-            // TODO
-            //if (!model.isImeOn()) model.imeOn();
+            if (!model.isImeOn()) model.imeOn();
             model.inputImeComposed(e.getComposed().stream()
                     .map(InputMethodTextRun::getText)
                     .collect(Collectors.joining()));
@@ -182,6 +181,8 @@ public class EditorPane extends StackPane {
     }
 
     private Action execute(Action action) {
+        if (model.isImeOn()) return Action.EMPTY;
+
         switch (action.type()) {
             case TYPED -> model.input(action.attr());
             case DELETE -> model.delete();

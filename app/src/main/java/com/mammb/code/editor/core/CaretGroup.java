@@ -61,7 +61,7 @@ public interface CaretGroup {
 
         @Override
         public List<Point> points() {
-            return carets.stream().map(Caret::point).toList();
+            return carets.stream().map(Caret::pointFlush).toList();
         }
 
         @Override

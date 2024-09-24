@@ -75,6 +75,7 @@ public interface EditorModel {
 
     Optional<Loc> imeOn();
     void imeOff();
+    boolean isImeOn();
     void inputImeComposed(String text);
 
     private static String extension(Path path) {

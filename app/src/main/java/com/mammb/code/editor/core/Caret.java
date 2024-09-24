@@ -27,6 +27,10 @@ public interface Caret extends Comparable<Caret>{
     Point point();
     void at(int row, int col);
     void at(int row, int col, double vPos);
+    void flushAt(int row, int col);
+    void clearFlush();
+    boolean hasFlush();
+    Point pointFlush();
     void mark();
     void clearMark();
     boolean isMarked();
@@ -41,6 +45,9 @@ public interface Caret extends Comparable<Caret>{
     }
     default void at(Point point) {
         at(point.row(), point.col());
+    }
+    default void flushAt(Point point) {
+        flushAt(point.row(), point.col());
     }
     default boolean isZero() {
         return point().isZero();
@@ -68,6 +75,7 @@ public interface Caret extends Comparable<Caret>{
         private Point mark;
         private double vPos = -1;
         private boolean floating;
+        private Point flush;
 
         public CaretImpl(int row, int col) {
             this.point = new PointMut(row, col);
@@ -134,12 +142,34 @@ public interface Caret extends Comparable<Caret>{
         public void at(int row, int col) {
             point.at(row, col);
             vPos = -1;
+            flush = null;
         }
 
         @Override
         public void at(int row, int col, double x) {
             point.at(row, col);
             vPos = x;
+            flush = null;
+        }
+
+        @Override
+        public void flushAt(int row, int col) {
+            flush = Point.of(row, col);
+        }
+
+        @Override
+        public void clearFlush() {
+            flush = null;
+        }
+
+        @Override
+        public boolean hasFlush() {
+            return flush != null;
+        }
+
+        @Override
+        public Point pointFlush() {
+            return Objects.isNull(flush) ? point : flush;
         }
     }
 
