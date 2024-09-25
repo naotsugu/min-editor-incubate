@@ -17,6 +17,7 @@ package com.mammb.code.editor.core.syntax;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class LexerSource {
     private int row;
@@ -84,22 +85,24 @@ public class LexerSource {
         return Optional.of(ret);
     }
 
-    public Optional<Indexed> nextMatch(char until, int times, char escape) {
-
-        // TODO
-        return Optional.empty();
-    }
-
     public Indexed peek() {
         var ret = new Indexed(index + peek, text.charAt(index + peek), text.length());
         peek++;
         return ret;
     }
 
-    public Indexed nextAlphabeticToken() {
+    public Indexed nextAlphabetic() {
+        return nextUntil(Character::isAlphabetic);
+    }
+
+    public Indexed nextIdentifierPart() {
+        return nextUntil(Character::isUnicodeIdentifierPart);
+    }
+
+    public Indexed nextUntil(Predicate<Character> predicate) {
         int i = index;
         for (; i < text.length(); i++) {
-            if (!Character.isAlphabetic(text.charAt(i))) break;
+            if (!predicate.test(text.charAt(i))) break;
         }
         var ret = new Indexed(index, text.substring(index, i), text.length());
         index = i;

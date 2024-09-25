@@ -96,7 +96,7 @@ public class JavaSyntax implements Syntax {
             } else if (Character.isDigit(ch)) {
 
             } else if (Character.isAlphabetic(ch)) {
-                var s = source.nextAlphabeticToken();
+                var s = source.nextAlphabetic();
                 if (keywords.match(s.string())) {
                     spans.add(new StyleSpan(Palette.darkOrange, s.index(), s.length()));
                 }

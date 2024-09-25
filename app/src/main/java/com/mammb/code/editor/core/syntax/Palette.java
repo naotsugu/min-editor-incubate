@@ -23,5 +23,6 @@ public interface Palette {
     TextColor gray = new Style.TextColor("#888888");
     TextColor darkGreen = new Style.TextColor("#6A8759");
     TextColor darkOrange = new Style.TextColor("#CC7832");
+    TextColor darkPale = new Style.TextColor("#6897BB");
 
 }
