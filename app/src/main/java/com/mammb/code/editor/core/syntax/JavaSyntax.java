@@ -81,9 +81,19 @@ public class JavaSyntax implements Syntax {
                 spans.add(new StyleSpan(Palette.gray, s.index(), s.length()));
 
             } else if (ch == '"' && !source.match("\"\"\"")) {
-            //    var match = source.nextMatch('"', 2, '\\');
+                char prev = source.next().ch();
+                while (source.hasNext()) {
+                    var s = source.next();
+                    if (prev != '\\' && s.ch() == '"') {
+                        var span = new StyleSpan(Palette.darkGreen, peek.index(), s.index() - peek.index() + 1);
+                        spans.add(span);
+                        break;
+                    }
+                    prev = s.ch();
+                }
+            } else if (ch == '\'') {
 
-            } else if (ch == '"') {
+            } else if (Character.isDigit(ch)) {
 
             } else if (Character.isAlphabetic(ch)) {
                 var s = source.nextAlphabeticToken();
@@ -96,6 +106,7 @@ public class JavaSyntax implements Syntax {
 
         return spans;
     }
+
 
 
     private StyleSpan readBlockClose(LexerSource source, LexerSource.Indexed peek, BlockType blockType, Style style) {

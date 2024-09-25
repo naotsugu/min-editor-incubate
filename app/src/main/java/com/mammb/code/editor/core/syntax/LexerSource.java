@@ -85,6 +85,7 @@ public class LexerSource {
     }
 
     public Optional<Indexed> nextMatch(char until, int times, char escape) {
+
         // TODO
         return Optional.empty();
     }
