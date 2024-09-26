@@ -60,9 +60,6 @@ public interface Action {
         }
     }
 
-
-
-
     record ActionRecord(Type type, String attr, long occurredAt) implements Action { }
 
     static Action of(Type type) {

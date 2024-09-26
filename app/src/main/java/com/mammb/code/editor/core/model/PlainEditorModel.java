@@ -76,9 +76,16 @@ public class PlainEditorModel implements EditorModel {
             }
             y += text.height();
         }
-        for (Point p : carets.points()) {
-            view.locationOn(p.row(), p.col())
-                  .ifPresent(loc -> draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
+        for (Caret c : carets.carets()) {
+            Point p = c.pointFlush();
+            view.locationOn(p.row(), p.col()).ifPresent(loc -> {
+                draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop);
+                if (c.hasFlush()) {
+                    view.locationOn(c.point().row(), c.point().col()).ifPresent(org ->
+                            draw.underline(org.x() + marginLeft - scroll.xVal(), org.y() + marginTop,
+                                           loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
+                }
+            });
         }
         drawLeftGarter(draw);
 

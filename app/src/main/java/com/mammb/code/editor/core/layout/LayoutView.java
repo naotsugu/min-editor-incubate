@@ -65,12 +65,12 @@ public interface LayoutView {
 
     static LayoutView of(Content content, FontMetrics fm) {
         Layout layout = new RowLayout(content, fm);
-        return new BasicLayoutView(layout, content);
+        return new BasicLayoutView(layout);
     }
 
     static LayoutView wrapOf(Content content, FontMetrics fm) {
         Layout layout = new WrapLayout(content, fm);
-        return new BasicLayoutView(layout, content);
+        return new BasicLayoutView(layout);
     }
 
     class BasicLayoutView implements LayoutView {
@@ -80,11 +80,9 @@ public interface LayoutView {
         private int topLine = 0;
         private final List<Text> buffer = new ArrayList<>();
         private final Layout layout;
-        private final Content content;
 
-        public BasicLayoutView(Layout layout, Content content) {
+        public BasicLayoutView(Layout layout) {
             this.layout = layout;
-            this.content = content;
         }
 
         @Override

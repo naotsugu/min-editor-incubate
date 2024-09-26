@@ -93,6 +93,14 @@ public class FxDraw implements Draw {
     }
 
     @Override
+    public void underline(double x1, double y1, double x2, double y2) {
+        double height = fontMetrics().getAscent();
+        gc.setStroke(Color.LIGHTGRAY);
+        gc.setLineWidth(1);
+        gc.strokeLine(x1, y1 + height, x2, y2 + height);
+    }
+
+    @Override
     public void rect(double x, double y, double w, double h) {
         Color color = color(Theme.dark.uiBaseColor());
         gc.setFill(color);

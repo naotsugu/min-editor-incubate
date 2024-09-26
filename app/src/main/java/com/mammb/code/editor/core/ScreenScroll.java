@@ -15,6 +15,10 @@
  */
 package com.mammb.code.editor.core;
 
+/**
+ * The ScreenScroll.
+ * @author Naotsugu Kobayashi
+ */
 public interface ScreenScroll {
     void vertical(int min, int max, int val, int len);
     void horizontal(double min, double max, double val, double len);

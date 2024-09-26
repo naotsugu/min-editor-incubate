@@ -15,7 +15,6 @@
  */
 package com.mammb.code.editor.core;
 
-import code.editor.Lang;
 import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.model.PlainEditorModel;
 import com.mammb.code.editor.core.syntax.Syntax;

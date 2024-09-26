@@ -17,7 +17,11 @@ package com.mammb.code.editor.core;
 
 public interface Theme {
 
-    Theme dark = new ThemeRecord("#292929", "#A9B7C6", "#214283AA", "#303030");
+    Theme dark = new ThemeRecord(
+            "#292929",
+            "#A9B7C6",
+            "#214283AA",
+            "#303030");
 
     String baseColor();
     String fgColor();

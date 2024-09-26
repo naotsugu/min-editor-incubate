@@ -18,11 +18,16 @@ package com.mammb.code.editor.core;
 import com.mammb.code.editor.core.text.Style;
 import java.util.List;
 
+/**
+ * The Draw.
+ * @author Naotsugu Kobayashi
+ */
 public interface Draw {
     void clear();
     void text(String text, double x, double y, double w, List<Style> styles);
     void caret(double x, double y);
     void select(double x1, double y1, double x2, double y2, double l, double r);
+    void underline(double x1, double y1, double x2, double y2);
     void rect(double x, double y, double w, double h);
     FontMetrics fontMetrics();
 }
