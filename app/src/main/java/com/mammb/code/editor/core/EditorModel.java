@@ -27,7 +27,11 @@ import java.util.Optional;
 public interface EditorModel {
 
     static EditorModel of(FontMetrics fm, ScreenScroll scroll) {
-        return new PlainEditorModel(Content.of(), fm, Syntax.of(""), scroll);
+        return new PlainEditorModel(
+                Content.of(),
+                fm,
+                Syntax.of(""),
+                scroll);
     }
 
     static EditorModel of(Path path, FontMetrics fm, ScreenScroll scroll) {
