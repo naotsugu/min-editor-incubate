@@ -273,20 +273,25 @@ public class PlainEditorModel implements EditorModel {
     public void clickDouble(double x, double y) {
         int line = view.yToLineOnView(y - marginTop);
         var text = view.text(line);
-
-        // TODO
+        double xp = 0;
+        for (var word : text.words()) {
+            if (xp + word.width() > x - marginLeft) {
+                Caret c = carets.getFirst();
+                int row = view.lineToRow(line);
+                c.markTo(row, view.xToCol(line, xp),
+                        row, view.xToCol(line, xp + word.width()));
+                break;
+            }
+            xp += word.width();
+        }
     }
 
     @Override
     public void clickTriple(double x, double y) {
         int line = view.yToLineOnView(y - marginTop);
         int row = view.lineToRow(line);
-        int startCol = view.xToCol(line, 0);
-        int endCol = view.xToCol(line, Double.MAX_VALUE);
         Caret c = carets.unique();
-        c.at(row, startCol);
-        c.mark();
-        c.at(row, endCol);
+        c.markTo(row, view.xToCol(line, 0), row, view.xToCol(line, Double.MAX_VALUE));
     }
 
     @Override
