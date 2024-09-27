@@ -144,6 +144,9 @@ public interface Caret extends Comparable<Caret>{
             point.at(row, col);
             vPos = -1;
             flush = null;
+            if (!floating) {
+                mark = null;
+            }
             floating = false;
         }
 
