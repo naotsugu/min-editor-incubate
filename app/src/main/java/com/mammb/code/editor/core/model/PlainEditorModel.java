@@ -260,19 +260,33 @@ public class PlainEditorModel implements EditorModel {
     @Override
     public void click(double x, double y, boolean withSelect) {
         Caret c = carets.unique();
+        if (c.isFloating()) {
+            c.clearFloat();
+            return;
+        }
+        c.clearMark();
         int line = view.yToLineOnView(y - marginTop);
         c.at(view.lineToRow(line), view.xToCol(line, x - marginLeft));
     }
 
     @Override
     public void clickDouble(double x, double y) {
-        Caret c = carets.getFirst();
+        int line = view.yToLineOnView(y - marginTop);
+        var text = view.text(line);
+
         // TODO
     }
 
     @Override
     public void clickTriple(double x, double y) {
-        // TODO
+        int line = view.yToLineOnView(y - marginTop);
+        int row = view.lineToRow(line);
+        int startCol = view.xToCol(line, 0);
+        int endCol = view.xToCol(line, Double.MAX_VALUE);
+        Caret c = carets.unique();
+        c.at(row, startCol);
+        c.mark();
+        c.at(row, endCol);
     }
 
     @Override
