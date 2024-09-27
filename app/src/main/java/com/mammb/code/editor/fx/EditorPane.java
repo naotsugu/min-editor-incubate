@@ -24,6 +24,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollBar;
@@ -39,6 +40,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -296,7 +299,16 @@ public class EditorPane extends StackPane {
     }
 
     private void newEdit() {
-        // TODO
+        Stage current = (Stage) getScene().getWindow();
+        Stage stage = new Stage();
+        stage.setX(current.getX() + (current.isFullScreen() ? 0 : 15));
+        stage.setY(current.getY() + (current.isFullScreen() ? 0 : 15));
+        var editorPane = new EditorPane();
+        Scene scene = new Scene(editorPane, current.getWidth(), current.getHeight());
+        scene.getStylesheets().addAll(getScene().getStylesheets());
+        stage.setScene(scene);
+        stage.setTitle("min-editor");
+        stage.show();
     }
 
     private InputMethodRequests inputMethodRequests() {
