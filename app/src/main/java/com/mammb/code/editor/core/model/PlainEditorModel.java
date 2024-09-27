@@ -59,8 +59,11 @@ public class PlainEditorModel implements EditorModel {
         view.applyScreenScroll(scroll);
         draw.clear();
         for (Range r : carets.marked()) {
-            Loc l1 = view.locationOn(r.start().row(), r.start().col()).orElse(new Loc(0, 0));
-            Loc l2 = view.locationOn(r.end().row(), r.end().col()).orElse(new Loc(view.width(), view.height()));
+            Loc l1 = view.locationOn(r.min().row(), r.min().col()).orElse(null);
+            Loc l2 = view.locationOn(r.max().row(), r.max().col()).orElse(null);
+            if (l1 == null && l2 == null) break;
+            if (l1 == null) l1 = new Loc(0, 0);
+            if (l2 == null) l2 = new Loc(view.width(), view.height());
             draw.select(
                     l1.x() + marginLeft - scroll.xVal(), l1.y() + marginTop,
                     l2.x() + marginLeft - scroll.xVal(), l2.y() + marginTop,
@@ -274,7 +277,12 @@ public class PlainEditorModel implements EditorModel {
 
     @Override
     public void moveDragged(double x, double y) {
-        // TODO
+        int line = view.yToLineOnView(y - marginTop);
+        int row = view.lineToRow(line);
+        int col = view.xToCol(line, x - marginLeft);
+        Caret caret = carets.getFirst();
+        caret.floatAt(row, col);
+        caret.markIf(true);
     }
 
     @Override
