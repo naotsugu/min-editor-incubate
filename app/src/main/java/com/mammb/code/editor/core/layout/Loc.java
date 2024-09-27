@@ -15,5 +15,9 @@
  */
 package com.mammb.code.editor.core.layout;
 
+/**
+ * The location.
+ * @author Naotsugu Kobayashi
+ */
 public record Loc(double x, double y) {
 }

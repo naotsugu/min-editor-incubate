@@ -38,6 +38,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * The editor model.
+ * @author Naotsugu Kobayashi
+ */
 public class PlainEditorModel implements EditorModel {
 
     private double marginTop = 5, marginLeft = 70;

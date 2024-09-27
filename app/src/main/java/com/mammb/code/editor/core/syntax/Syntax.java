@@ -18,6 +18,10 @@ package com.mammb.code.editor.core.syntax;
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import java.util.List;
 
+/**
+ * The syntax.
+ * @author Naotsugu Kobayashi
+ */
 public interface Syntax {
 
     String name();

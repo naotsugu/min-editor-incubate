@@ -21,6 +21,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
+/**
+ * The block scopes.
+ * @author Naotsugu Kobayashi
+ */
 public class BlockScopes {
 
     private final TreeMap<Anchor, Token> scopes = new TreeMap<>();
