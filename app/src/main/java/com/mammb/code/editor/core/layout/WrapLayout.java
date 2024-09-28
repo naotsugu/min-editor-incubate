@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
  * The WrapLayout.
  * @author Naotsugu Kobayashi
  */
-public class WrapLayout implements Layout {
+public class WrapLayout implements ContentLayout {
 
     private double screenWidth = 0;
     private final double lineHeight;
@@ -196,7 +196,7 @@ public class WrapLayout implements Layout {
         for (int i = rangeLineStart; i < rangeLineEnd; i++) {
             SubRange sub = lines.get(i);
             if (sub.contains(row, col)) {
-                return Optional.of(new Loc(x(i, col), y(i)));
+                return Optional.of(new Loc(xOnLayout(i, col), yOnLayout(i)));
             }
         }
         return Optional.empty();

@@ -25,16 +25,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The screen buffered layout.
+ * The screen layout.
  * @author Naotsugu Kobayashi
  */
-public interface ScreenBufferedLayout {
-
-    int rowToFirstLine(int row);
-    int rowToLastLine(int row);
-    int rowToLine(int row, int col);
-    int lineToRow(int line);
-    int lineSize();
+public interface ScreenLayout extends LineLayout {
 
     void setScreenSize(double width, double height);
     void scrollNext(int lineDelta);
@@ -43,44 +37,34 @@ public interface ScreenBufferedLayout {
     void scrollX(double x);
     void refreshBuffer(int startRow, int endRow);
     List<Text> texts();
-    Text text(int line);
-    Text textAt(int row);
     List<Text> lineNumbers();
     Optional<Loc> locationOn(int row, int col);
-    double lineToYOnLayout(int line);
-    double lineToYOnScreen(int line);
-    double colToXOnLayout(int line, int col);
-    double colToXOnScreen(int line, int col);
-    int xToCol(int line, double x);
     int yToLineOnScreen(double y);
-    int homeColOnRow(int line);
-    int endColOnRow(int line);
     double screenWidth();
     double screenHeight();
     int screenLineSize();
-    double lineHeight();
     int topLine();
     void applyScreenScroll(ScreenScroll screenScroll);
 
-    static ScreenBufferedLayout of(Content content, FontMetrics fm) {
-        Layout layout = new RowLayout(content, fm);
-        return new BasicScreenBufferedLayout(layout);
+    static ScreenLayout of(Content content, FontMetrics fm) {
+        ContentLayout layout = new RowLayout(content, fm);
+        return new BasicScreenLayout(layout);
     }
 
-    static ScreenBufferedLayout wrapOf(Content content, FontMetrics fm) {
-        Layout layout = new WrapLayout(content, fm);
-        return new BasicScreenBufferedLayout(layout);
+    static ScreenLayout wrapOf(Content content, FontMetrics fm) {
+        ContentLayout layout = new WrapLayout(content, fm);
+        return new BasicScreenLayout(layout);
     }
 
-    class BasicScreenBufferedLayout implements ScreenBufferedLayout {
+    class BasicScreenLayout implements ScreenLayout {
         private double screenWidth = 0, screenHeight = 0;
         private double xShift = 0;
         private double xMax = 0;
         private int topLine = 0;
         private final List<Text> buffer = new ArrayList<>();
-        private final Layout layout;
+        private final ContentLayout layout;
 
-        private BasicScreenBufferedLayout(Layout layout) {
+        private BasicScreenLayout(ContentLayout layout) {
             this.layout = layout;
         }
 
@@ -152,7 +136,7 @@ public interface ScreenBufferedLayout {
         }
 
         @Override
-        public Text textAt(int row) {
+        public Text rowTextAt(int row) {
             return layout.rowTextAt(row);
         }
 
@@ -177,17 +161,7 @@ public interface ScreenBufferedLayout {
         @Override
         public Optional<Loc> locationOn(int row, int col) {
             return layout.loc(row, col, topLine, topLine + screenLineSize())
-                    .map(loc -> new Loc(loc.x(), loc.y() - lineToYOnLayout(topLine)));
-        }
-
-        @Override
-        public double lineToYOnLayout(int line) {
-            return layout.y(line);
-        }
-
-        @Override
-        public double lineToYOnScreen(int line) {
-            return lineToYOnLayout(line) - lineToYOnLayout(topLine);
+                    .map(loc -> new Loc(loc.x(), loc.y() - yOnLayout(topLine)));
         }
 
         @Override
@@ -196,13 +170,13 @@ public interface ScreenBufferedLayout {
         }
 
         @Override
-        public double colToXOnLayout(int line, int col) {
-            return layout.x(rowToLine(line, col), col);
+        public double yOnLayout(int line) {
+            return layout.yOnLayout(line);
         }
 
         @Override
-        public double colToXOnScreen(int line, int col) {
-            return colToXOnLayout(line, col) - xShift;
+        public double xOnLayout(int line, int col) {
+            return layout.xOnLayout(line, col);
         }
 
         @Override

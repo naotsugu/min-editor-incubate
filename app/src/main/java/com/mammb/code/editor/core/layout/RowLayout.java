@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
  * The RowLayout.
  * @author Naotsugu Kobayashi
  */
-public class RowLayout implements Layout {
+public class RowLayout implements ContentLayout {
 
     private final double lineHeight;
     private final Content content;
@@ -121,7 +121,7 @@ public class RowLayout implements Layout {
     @Override
     public Optional<Loc> loc(int row, int col, int rangeLineStart, int rangeLineEnd) {
         if (rangeLineStart <= row && row < rangeLineEnd) {
-            return Optional.of(new Loc(x(row, col),y(row)));
+            return Optional.of(new Loc(xOnLayout(row, col), yOnLayout(row)));
         } else {
             return Optional.empty();
         }

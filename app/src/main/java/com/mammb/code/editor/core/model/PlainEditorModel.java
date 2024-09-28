@@ -23,7 +23,7 @@ import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
 import com.mammb.code.editor.core.ScreenScroll;
 import com.mammb.code.editor.core.Theme;
-import com.mammb.code.editor.core.layout.ScreenBufferedLayout;
+import com.mammb.code.editor.core.layout.ScreenLayout;
 import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.syntax.Syntax;
 import com.mammb.code.editor.core.text.Style;
@@ -46,14 +46,14 @@ public class PlainEditorModel implements EditorModel {
 
     private double marginTop = 5, marginLeft = 70;
     private final Content content;
-    private final ScreenBufferedLayout view;
+    private final ScreenLayout view;
     private final Syntax syntax;
     private final CaretGroup carets = CaretGroup.of();
     private final ScreenScroll scroll;
 
     public PlainEditorModel(Content content, FontMetrics fm, Syntax syntax, ScreenScroll scroll) {
         this.content = content;
-        this.view = ScreenBufferedLayout.of(content, fm);
+        this.view = ScreenLayout.of(content, fm);
         this.syntax = syntax;
         this.scroll = scroll;
     }
@@ -160,7 +160,7 @@ public class PlainEditorModel implements EditorModel {
     public void moveCaretRight(boolean withSelect) {
         for (Caret c : carets.carets()) {
             c.markIf(withSelect);
-            var text = view.textAt(c.row());
+            var text = view.rowTextAt(c.row());
             if (text == null) continue;
             int next = text.indexRight(c.col());
             if (next <= 0) {
@@ -177,10 +177,10 @@ public class PlainEditorModel implements EditorModel {
             c.markIf(withSelect);
             if (c.isZero()) continue;
             if (c.col() == 0) {
-                var text = view.textAt(c.row() - 1);
+                var text = view.rowTextAt(c.row() - 1);
                 c.at(c.row() - 1, text.textLength());
             } else {
-                var text = view.textAt(c.row());
+                var text = view.rowTextAt(c.row());
                 int next = text.indexLeft(c.col());
                 c.at(c.row(), next);
             }
@@ -194,7 +194,7 @@ public class PlainEditorModel implements EditorModel {
             int line = view.rowToLine(c.row(), c.col());
             if (line == view.lineSize()) continue;
             double x = (c.vPos() < 0)
-                    ? view.colToXOnLayout(line, c.col())
+                    ? view.xOnLayout(line, c.col())
                     : c.vPos();
             line++;
             c.at(view.lineToRow(line), view.xToCol(line, x), x);
@@ -208,7 +208,7 @@ public class PlainEditorModel implements EditorModel {
             int line = view.rowToLine(c.row(), c.col());
             if (line == 0) continue;
             double x = (c.vPos() < 0)
-                    ? view.colToXOnLayout(line, c.col())
+                    ? view.xOnLayout(line, c.col())
                     : c.vPos();
             line--;
             c.at(view.lineToRow(line), view.xToCol(line, x), x);
@@ -242,7 +242,7 @@ public class PlainEditorModel implements EditorModel {
             Caret c = carets.getFirst();
             c.markIf(withSelect);
             int line = view.rowToLine(c.row(), c.col());
-            double x = view.colToXOnLayout(line, c.col());
+            double x = view.xOnLayout(line, c.col());
             c.at(view.lineToRow(line - n), view.xToCol(line, x));
         }
     }
@@ -256,7 +256,7 @@ public class PlainEditorModel implements EditorModel {
             Caret c = carets.getFirst();
             c.markIf(withSelect);
             int line = view.rowToLine(c.row(), c.col());
-            double x = view.colToXOnLayout(line, c.col());
+            double x = view.xOnLayout(line, c.col());
             c.at(view.lineToRow(line + n), view.xToCol(line, x));
         }
     }
