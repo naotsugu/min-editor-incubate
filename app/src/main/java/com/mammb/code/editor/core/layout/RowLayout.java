@@ -39,7 +39,7 @@ public class RowLayout implements Layout {
         this.fm = fm;
     }
 
-    public void setWidth(double width) {
+    public void setScreenWidth(double width) {
         // nothing to do
     }
 
@@ -95,11 +95,6 @@ public class RowLayout implements Layout {
 
     @Override
     public int lineSize() {
-        return rowSize();
-    }
-
-    @Override
-    public int rowSize() {
         return content.rows();
     }
 
@@ -115,7 +110,7 @@ public class RowLayout implements Layout {
 
     @Override
     public int lineToRow(int line) {
-        return Math.clamp(line, 0, rowSize());
+        return Math.clamp(line, 0, content.rows());
     }
 
     @Override
@@ -124,8 +119,8 @@ public class RowLayout implements Layout {
     }
 
     @Override
-    public Optional<Loc> loc(int row, int col, int startLine, int endLine) {
-        if (startLine <= row && row < endLine) {
+    public Optional<Loc> loc(int row, int col, int rangeLineStart, int rangeLineEnd) {
+        if (rangeLineStart <= row && row < rangeLineEnd) {
             return Optional.of(new Loc(x(row, col),y(row)));
         } else {
             return Optional.empty();

@@ -32,9 +32,8 @@ interface Layout {
     int rowToLine(int row, int col);
     int lineToRow(int line);
     int lineSize();
-    int rowSize();
 
-    void setWidth(double width);
+    void setScreenWidth(double width);
     void refresh(int line);
     void refreshAt(int startRow, int endRow);
     Text text(int line);
@@ -42,34 +41,25 @@ interface Layout {
     RowText rowText(int line);
     RowText rowTextAt(int row);
     double lineHeight();
-    int xToCol(int line, double x);
-    int homeColOnRow(int line);
-    FontMetrics fontMetrics();
-
-    /**
-     *
-     * @param row
-     * @param col
-     * @param startLine the limit
-     * @param endLine the limit
-     * @return
-     */
-    Optional<Loc> loc(int row, int col, int startLine, int endLine);
 
     default double x(int line, int col) {
         return text(line).widthTo(col);
     }
-
     default double y(int line) {
         return line * lineHeight();
     }
-
+    int xToCol(int line, double x);
     default int yToLine(double y) {
         return (int) (y / lineHeight());
     }
 
+    int homeColOnRow(int line);
     default int endColOnRow(int line) {
         return homeColOnRow(line) + text(line).textLength();
     }
+
+    FontMetrics fontMetrics();
+
+    Optional<Loc> loc(int row, int col, int rangeLineStart, int rangeLineEnd);
 
 }
