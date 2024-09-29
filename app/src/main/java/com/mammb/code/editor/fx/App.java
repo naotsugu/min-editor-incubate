@@ -17,7 +17,12 @@ package com.mammb.code.editor.fx;
 
 import com.mammb.code.editor.core.Theme;
 import javafx.application.Application;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -31,12 +36,15 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         Parameters params = getParameters();
+        var appPane = new AppPane();
         var editorPane = new EditorPane();
-        Scene scene = new Scene(editorPane, 640, 480);
+        appPane.setMain(editorPane);
+        Scene scene = new Scene(appPane, 640, 480);
         scene.getStylesheets().add(css);
         stage.setScene(scene);
         stage.setTitle("min-editor");
         stage.show();
+        scene.focusOwnerProperty().addListener((ob, o, n) -> editorPane.focus() );
     }
 
     private static String css = String.join(",", "data:text/css;base64",
@@ -92,6 +100,27 @@ public class App extends Application {
                 -fx-shape:"";
                 -fx-padding:0;
             }
+            
+            .tab-pane > .tab-header-area > .headers-region > .tab:top {
+                -fx-background-color: derive(-fx-box-border,30%)
+            }
+            
+            .tab-pane > .tab-header-area > .headers-region > .tab:selected {
+                -fx-color: -fx-hover-base;
+            }
+            .tab-pane > .tab-header-area > .tab-header-background {
+                -fx-background-color: derive(-fx-text-box-border, 30%);
+            }
+            .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+                -fx-border-width: 0;
+            }
+            .tab-pane > .tab-header-area {
+                -fx-padding: 0;
+            }
+            .tab-label {
+              -fx-font: 12px "Consolas";
+            }
+
             """
             .replaceAll("app-base", Theme.dark.baseColor())
             .replaceAll("app-text", Theme.dark.fgColor())

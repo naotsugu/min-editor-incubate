@@ -44,6 +44,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -93,6 +94,11 @@ public class EditorPane extends StackPane {
         canvas.setOnInputMethodTextChanged(this::handleInputMethodTextChanged);
     }
 
+    public Optional<Path> path() { return model.path(); }
+
+    public void focus() {
+        canvas.requestFocus();
+    }
 
     private void handleLayoutBoundsChanged(
             ObservableValue<? extends Bounds> ob, Bounds o, Bounds n) {
@@ -101,7 +107,6 @@ public class EditorPane extends StackPane {
         model.setSize(n.getWidth(), n.getHeight());
         draw();
     }
-
 
     private void handleScroll(ScrollEvent e) {
         if (e.getEventType() == ScrollEvent.SCROLL && e.getDeltaY() != 0) {
@@ -114,8 +119,8 @@ public class EditorPane extends StackPane {
         }
     }
 
-
     private void handleMouseClicked(MouseEvent e) {
+        canvas.requestFocus();
         if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == canvas) {
             switch (e.getClickCount()) {
                 case 1 -> model.click(e.getX(), e.getY(), false);
@@ -126,7 +131,6 @@ public class EditorPane extends StackPane {
         }
     }
 
-
     private void handleMouseDragged(MouseEvent e) {
         if (e.getButton() == MouseButton.PRIMARY) {
             model.moveDragged(e.getX(), e.getY());
@@ -134,18 +138,15 @@ public class EditorPane extends StackPane {
         }
     }
 
-
     private void handleKeyAction(KeyEvent e) {
         execute(FxActions.of(e));
     }
-
 
     private void handleDragOver(DragEvent e) {
         if (e.getDragboard().hasFiles()) {
             e.acceptTransferModes(TransferMode.COPY);
         }
     }
-
 
     private void handleDragDropped(DragEvent e) {
         Dragboard board = e.getDragboard();
@@ -163,18 +164,15 @@ public class EditorPane extends StackPane {
         e.setDropCompleted(false);
     }
 
-
     private void handleVerticalScroll(ObservableValue<? extends Number> ob, Number o, Number n) {
         model.scrollAt(n.intValue());
         draw();
     }
 
-
     private void handleHorizontalScroll(ObservableValue<? extends Number> ob, Number o, Number n) {
         model.scrollX(n.doubleValue());
         draw();
     }
-
 
     private void handleInputMethodTextChanged(InputMethodEvent e) {
         if (!e.getCommitted().isEmpty()) {
@@ -192,7 +190,6 @@ public class EditorPane extends StackPane {
         }
         draw();
     }
-
 
     private Action execute(Action action) {
         if (model.isImeOn()) return Action.EMPTY;
@@ -233,7 +230,6 @@ public class EditorPane extends StackPane {
         return action;
     }
 
-
     private ScreenScroll screenScroll() {
         return new ScreenScroll() {
             @Override
@@ -258,11 +254,9 @@ public class EditorPane extends StackPane {
         };
     }
 
-
     private void draw() {
         model.draw(draw);
     }
-
 
     private void openWithChooser() {
         if (!canDiscardCurrent()) return;
@@ -278,12 +272,10 @@ public class EditorPane extends StackPane {
         if (file != null) open(file.toPath());
     }
 
-
     private void open(Path path) {
         model = EditorModel.of(path, draw.fontMetrics(), screenScroll());
         model.setSize(getWidth(), getHeight());
     }
-
 
     private boolean canDiscardCurrent() {
         if (model.isModified()) {
@@ -295,7 +287,6 @@ public class EditorPane extends StackPane {
         }
     }
 
-
     private void save() {
         if (model.path().isPresent()) {
             model.save(model.path().get());
@@ -303,7 +294,6 @@ public class EditorPane extends StackPane {
             saveAs();
         }
     }
-
 
     private void saveAs() {
         FileChooser fc = new FileChooser();
@@ -314,7 +304,6 @@ public class EditorPane extends StackPane {
         File file = fc.showSaveDialog(getScene().getWindow());
         if (file != null) model.save(file.toPath());
     }
-
 
     private void newEdit() {
         Stage current = (Stage) getScene().getWindow();
@@ -328,7 +317,6 @@ public class EditorPane extends StackPane {
         stage.setTitle("min-editor");
         stage.show();
     }
-
 
     private InputMethodRequests inputMethodRequests() {
         return new InputMethodRequests() {
