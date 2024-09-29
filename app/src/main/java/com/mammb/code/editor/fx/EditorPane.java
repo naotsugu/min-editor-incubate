@@ -19,6 +19,8 @@ import com.mammb.code.editor.core.Action;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.ScreenScroll;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
@@ -44,7 +46,6 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -63,6 +64,8 @@ public class EditorPane extends StackPane {
     private final ScrollBar vScroll = new ScrollBar();
     /** The horizon scroll bar. */
     private final ScrollBar hScroll = new ScrollBar();
+
+    private final SimpleStringProperty fileNameProperty = new SimpleStringProperty("Untitled");
 
     /**
      * Constructor.
@@ -94,7 +97,9 @@ public class EditorPane extends StackPane {
         canvas.setOnInputMethodTextChanged(this::handleInputMethodTextChanged);
     }
 
-    public Optional<Path> path() { return model.path(); }
+    public ReadOnlyStringProperty fileNameProperty() {
+        return fileNameProperty;
+    }
 
     public void focus() {
         canvas.requestFocus();
@@ -269,12 +274,14 @@ public class EditorPane extends StackPane {
             fc.setInitialDirectory(Path.of(System.getProperty("user.home")).toFile());
         }
         File file = fc.showOpenDialog(getScene().getWindow());
-        if (file != null) open(file.toPath());
+        if (file == null) return;
+        open(file.toPath());
     }
 
     private void open(Path path) {
         model = EditorModel.of(path, draw.fontMetrics(), screenScroll());
         model.setSize(getWidth(), getHeight());
+        fileNameProperty.setValue(path.getFileName().toString());
     }
 
     private boolean canDiscardCurrent() {
@@ -302,7 +309,10 @@ public class EditorPane extends StackPane {
                 ? model.path().get().toAbsolutePath().getParent().toFile()
                 : Path.of(System.getProperty("user.home")).toFile());
         File file = fc.showSaveDialog(getScene().getWindow());
-        if (file != null) model.save(file.toPath());
+        if (file == null) return;
+        Path path = file.toPath();
+        model.save(path);
+        fileNameProperty.setValue(path.getFileName().toString());
     }
 
     private void newEdit() {
