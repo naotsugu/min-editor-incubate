@@ -26,8 +26,8 @@ import javafx.scene.layout.GridPane;
  */
 public class AppPane extends BorderPane {
 
-    private GridPane gridPane = new GridPane();
-    private TabPane tabPane = new TabPane();
+    private final GridPane gridPane = new GridPane();
+    private final TabPane tabPane = new TabPane();
 
     public AppPane() {
         tabPane.setTabDragPolicy(TabPane.TabDragPolicy.REORDER);
