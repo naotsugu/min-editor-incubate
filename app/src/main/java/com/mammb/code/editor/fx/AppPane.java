@@ -19,6 +19,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 /**
  * The application pane.
@@ -41,6 +42,8 @@ public class AppPane extends BorderPane {
         gridPane.add(tabPane, 0, 0);
         setCenter(gridPane);
         editorPane.fileNameProperty().addListener((ob, o, n) -> tab.setText(n));
+        GridPane.setHgrow(tabPane, Priority.ALWAYS);
+        GridPane.setVgrow(tabPane, Priority.ALWAYS);
     }
 
 }

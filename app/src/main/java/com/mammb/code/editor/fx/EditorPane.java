@@ -64,7 +64,7 @@ public class EditorPane extends StackPane {
     private final ScrollBar vScroll = new ScrollBar();
     /** The horizon scroll bar. */
     private final ScrollBar hScroll = new ScrollBar();
-
+    /** The file name property. */
     private final SimpleStringProperty fileNameProperty = new SimpleStringProperty("Untitled");
 
     /**
@@ -125,7 +125,6 @@ public class EditorPane extends StackPane {
     }
 
     private void handleMouseClicked(MouseEvent e) {
-        canvas.requestFocus();
         if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == canvas) {
             switch (e.getClickCount()) {
                 case 1 -> model.click(e.getX(), e.getY(), false);
