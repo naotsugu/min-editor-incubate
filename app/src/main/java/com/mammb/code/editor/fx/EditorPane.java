@@ -46,6 +46,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -67,11 +68,12 @@ public class EditorPane extends StackPane {
     /** The file name property. */
     private final SimpleStringProperty fileNameProperty = new SimpleStringProperty("Untitled");
 
-    /**
-     * Constructor.
-     */
-    public EditorPane() {
+    private final Consumer<Path> newOpenHandler;
 
+    public EditorPane() { this(null); }
+
+    public EditorPane(Consumer<Path> newOpenHandler) {
+        this.newOpenHandler = newOpenHandler;
         canvas = new Canvas();
         canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
@@ -315,6 +317,11 @@ public class EditorPane extends StackPane {
     }
 
     private void newEdit() {
+        var handler = newOpenHandler;
+        if (handler != null) {
+            handler.accept(null);
+            return;
+        }
         Stage current = (Stage) getScene().getWindow();
         Stage stage = new Stage();
         stage.setX(current.getX() + (current.isFullScreen() ? 0 : 15));

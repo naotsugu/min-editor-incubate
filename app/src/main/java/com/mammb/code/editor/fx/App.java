@@ -36,7 +36,7 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         Parameters params = getParameters();
-        var appPane = new AppPane(new EditorPane());
+        var appPane = new AppPane();
         Scene scene = new Scene(appPane, 640, 480);
         scene.getStylesheets().add(css);
         stage.setScene(scene);
@@ -115,7 +115,7 @@ public class App extends Application {
                 -fx-padding: 0;
             }
             .tab-label {
-              -fx-font: 12px "Consolas";
+              -fx-font: 13px "Consolas";
             }
 
             """

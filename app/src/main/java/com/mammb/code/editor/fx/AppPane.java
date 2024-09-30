@@ -18,6 +18,8 @@ package com.mammb.code.editor.fx;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
+import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /**
  * The application pane.
@@ -27,17 +29,27 @@ public class AppPane extends BorderPane {
 
     private final TabPane tabPane = new TabPane();
 
-    public AppPane(EditorPane editorPane) {
+
+    public AppPane() {
+
         setCenter(tabPane);
         tabPane.setTabDragPolicy(TabPane.TabDragPolicy.REORDER);
-        tabPane.getTabs().add(createTab(editorPane));
         tabPane.focusedProperty().addListener((ob, o, focused) -> {
             if (focused && !tabPane.getTabs().isEmpty())
                 ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
         });
+
+        EditorPane editorPane = new EditorPane(consumer());
+        tabPane.getTabs().add(createTab(editorPane));
     }
 
-
+    public Consumer<Path> consumer() {
+        return path -> {
+            var tab = createTab(new EditorPane());
+            tabPane.getTabs().add(tab);
+            tabPane.getSelectionModel().select(tab);
+        };
+    }
 
     private Tab createTab(EditorPane editorPane) {
         var tab = new Tab();
