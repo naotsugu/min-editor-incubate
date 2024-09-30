@@ -35,17 +35,17 @@ public class AppPane extends BorderPane {
             if (focused && !tabPane.getTabs().isEmpty())
                 ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
         });
-
     }
+
+
 
     private Tab createTab(EditorPane editorPane) {
         var tab = new Tab();
         tab.setText(editorPane.fileNameProperty().get());
         tab.setContent(editorPane);
         tab.setOnClosed(e -> {
-            if (tabPane.getTabs().isEmpty()) {
+            if (tabPane.getTabs().isEmpty())
                 tabPane.getTabs().add(createTab(new EditorPane()));
-            }
         });
         editorPane.fileNameProperty().addListener((ob, o, n) -> tab.setText(n));
         return tab;
