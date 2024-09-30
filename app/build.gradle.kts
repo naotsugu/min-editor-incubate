@@ -1,6 +1,6 @@
 plugins {
     application
-    id("org.openjfx.javafxplugin") version "0.1.0"
+    id("org.openjfx.javafxplugin") version "0.1"
     id("org.gradlex.extra-java-module-info") version "1.8"
 }
 
@@ -16,7 +16,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(22)
+        languageVersion = JavaLanguageVersion.of(23)
     }
 }
 
@@ -24,7 +24,8 @@ application {
     mainClass = "com.mammb.code.editor.Main"
     mainModule = "code.editor"
     if (providers.systemProperty("debug").isPresent) {
-        applicationDefaultJvmArgs = applicationDefaultJvmArgs.plus(listOf("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"))
+        applicationDefaultJvmArgs = applicationDefaultJvmArgs.plus(
+            listOf("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"))
     }
 }
 
@@ -33,7 +34,7 @@ tasks.named<Test>("test") {
 }
 
 javafx {
-    version = "22"
+    version = "23"
     modules("javafx.controls")
 }
 

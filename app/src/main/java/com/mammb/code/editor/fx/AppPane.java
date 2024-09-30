@@ -15,15 +15,9 @@
  */
 package com.mammb.code.editor.fx;
 
-import javafx.geometry.Insets;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
