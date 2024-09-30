@@ -40,6 +40,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.input.InputMethodTextRun;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -75,6 +76,7 @@ public class EditorPane extends StackPane {
     public EditorPane(Consumer<Path> newOpenHandler) {
         this.newOpenHandler = newOpenHandler;
         canvas = new Canvas();
+        canvas.setManaged(false);
         canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
         model = EditorModel.of(draw.fontMetrics(), screenScroll());

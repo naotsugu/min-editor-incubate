@@ -15,9 +15,15 @@
  */
 package com.mammb.code.editor.fx;
 
+import javafx.geometry.Insets;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
@@ -38,14 +44,14 @@ public class AppPane extends BorderPane {
             if (focused && !tabPane.getTabs().isEmpty())
                 ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
         });
-
         EditorPane editorPane = new EditorPane(consumer());
         tabPane.getTabs().add(createTab(editorPane));
     }
 
     public Consumer<Path> consumer() {
         return path -> {
-            var tab = createTab(new EditorPane());
+            var editorPane = new EditorPane();
+            var tab = createTab(editorPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
         };
