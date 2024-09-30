@@ -36,15 +36,12 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         Parameters params = getParameters();
-        var appPane = new AppPane();
-        var editorPane = new EditorPane();
-        appPane.setMain(editorPane);
+        var appPane = new AppPane(new EditorPane());
         Scene scene = new Scene(appPane, 640, 480);
         scene.getStylesheets().add(css);
         stage.setScene(scene);
         stage.setTitle("min-editor");
         stage.show();
-        scene.focusOwnerProperty().addListener((ob, o, n) -> editorPane.focus() );
     }
 
     private static String css = String.join(",", "data:text/css;base64",

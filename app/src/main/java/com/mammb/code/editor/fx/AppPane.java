@@ -18,8 +18,6 @@ package com.mammb.code.editor.fx;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 
 /**
  * The application pane.
@@ -27,23 +25,30 @@ import javafx.scene.layout.Priority;
  */
 public class AppPane extends BorderPane {
 
-    private final GridPane gridPane = new GridPane();
     private final TabPane tabPane = new TabPane();
 
-    public AppPane() {
+    public AppPane(EditorPane editorPane) {
+        setCenter(tabPane);
         tabPane.setTabDragPolicy(TabPane.TabDragPolicy.REORDER);
+        tabPane.getTabs().add(createTab(editorPane));
+        tabPane.focusedProperty().addListener((ob, o, focused) -> {
+            if (focused && !tabPane.getTabs().isEmpty())
+                ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
+        });
+
     }
 
-    public void setMain(EditorPane editorPane) {
+    private Tab createTab(EditorPane editorPane) {
         var tab = new Tab();
         tab.setText(editorPane.fileNameProperty().get());
         tab.setContent(editorPane);
-        tabPane.getTabs().add(tab);
-        gridPane.add(tabPane, 0, 0);
-        setCenter(gridPane);
+        tab.setOnClosed(e -> {
+            if (tabPane.getTabs().isEmpty()) {
+                tabPane.getTabs().add(createTab(new EditorPane()));
+            }
+        });
         editorPane.fileNameProperty().addListener((ob, o, n) -> tab.setText(n));
-        GridPane.setHgrow(tabPane, Priority.ALWAYS);
-        GridPane.setVgrow(tabPane, Priority.ALWAYS);
+        return tab;
     }
 
 }
