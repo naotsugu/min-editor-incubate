@@ -1,6 +1,6 @@
 plugins {
     application
-    id("org.openjfx.javafxplugin") version "0.1"
+    id("org.openjfx.javafxplugin") version "0.1.0"
     id("org.gradlex.extra-java-module-info") version "1.8"
 }
 
