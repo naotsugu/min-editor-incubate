@@ -15,7 +15,6 @@
  */
 package com.mammb.code.editor.core.syntax;
 
-import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import java.util.List;
 
@@ -25,9 +24,20 @@ import java.util.List;
  */
 public interface Syntax {
 
+    /**
+     * Get the name
+     * @return the name
+     */
     String name();
 
+    /**
+     * Apply syntax highlights
+     * @param row the number of row
+     * @param text the row text
+     * @return the list of StyleSpan
+     */
     List<StyleSpan> apply(int row, String text);
+
 
     static Syntax of(String name) {
         return switch (name.toLowerCase()) {
