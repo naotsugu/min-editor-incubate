@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.core.syntax;
 
+import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public interface Syntax {
         return switch (name.toLowerCase()) {
             case "java" -> new JavaSyntax();
             case "md" -> new MarkdownSyntax();
+            case "sql" -> new SqlSyntax();
             default -> new PassThrough(name);
         };
     }
