@@ -44,6 +44,7 @@ public interface Syntax {
             case "java" -> new JavaSyntax();
             case "md" -> new MarkdownSyntax();
             case "sql" -> new SqlSyntax();
+            case "py" -> new PythonSyntax();
             default -> new PassThrough(name);
         };
     }
