@@ -16,36 +16,30 @@
 package com.mammb.code.editor.core.syntax;
 
 import com.mammb.code.editor.core.text.Style.StyleSpan;
-import com.mammb.code.editor.core.syntax.BlockScopes.BlockType;
-import com.mammb.code.editor.core.syntax.BlockScopes.BlockType.Range;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
- * The sql syntax.
+ * The python syntax.
  * @author Naotsugu Kobayashi
  */
-public class SqlSyntax implements Syntax {
+public class PythonSyntax implements Syntax {
 
     private final Trie keywords = Trie.of("""
-        add,all,alter,and,any,as,asc,backup,between,by,case,check,column,constraint,create,
-        database,default,delete,desc,distinct,drop,exec,exists,foreign,from,full,group,
-        having,in,index,insert,into,is,join,key,left,like,limit,not,null,or,order,outer,
-        primary,procedure,replace,right,rownum,select,set,table,top,truncate,union,unique,
-        update,values,view,where""");
-    static final Range blockComment = BlockType.range("/*", "*/");
-    private final BlockScopes scopes = new BlockScopes();
+        False,await,else,import,pass,None,break,except,in,raise,True,class,finally,is,return,
+        and,continue,for,lambda,try,as,def,from,nonlocal,while,assert,del,global,not,with,
+        async,elif,if,or,yield
+        match, case
+        """);
 
     @Override
     public String name() {
-        return "sql";
+        return "python";
     }
 
     @Override
     public List<StyleSpan> apply(int row, String text) {
-        scopes.clear(row);
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
         }
@@ -54,21 +48,11 @@ public class SqlSyntax implements Syntax {
         while (source.hasNext()) {
             var peek = source.peek();
             char ch = peek.ch();
-            Optional<BlockType> block = scopes.inScope(source.row(), peek.index());
-            if (block.filter(t -> t == blockComment).isPresent()) {
-                var span = source.readBlockClose(scopes, blockComment, Palette.darkGreen);
-                spans.add(span);
-            } else if (ch == '/' && source.match("/*")) {
-                scopes.putOpen(source.row(), peek.index(), blockComment);
-                var span = source.readBlockClose(scopes, blockComment, Palette.darkGreen);
-                spans.add(span);
-            } else if (ch == '*' && source.match("*/")) {
-                scopes.putClose(source.row(), peek.index(), blockComment);
-            } else if (ch == '-' && source.match("--")) {
+            if (ch == '#') {
                 var s = source.nextRemaining();
                 var span = new StyleSpan(Palette.gray, s.index(), s.length());
                 spans.add(span);
-            } else if (Character.isAlphabetic(ch)) {
+            } else if (isIdentifierStart(ch)) {
                 var s = source.nextIdentifierPart();
                 if (keywords.match(s.string())) {
                     var span = new StyleSpan(Palette.darkOrange, s.index(), s.length());
@@ -76,7 +60,28 @@ public class SqlSyntax implements Syntax {
                 }
             }
         }
+        source.commitPeek();
         return spans;
+    }
+
+    /**
+     * Determines if the character (Unicode code point) is permissible as the first character in an identifier.
+     * <p>
+     *   id_start ::= <all characters in general categories Lu, Ll, Lt, Lm, Lo, Nl, the underscore, and characters with the Other_ID_Start property>
+     * </p>
+     * @param cp the character (Unicode code point) to be tested
+     * @return {@code true}, if the character may start an identifier
+     */
+    public static boolean isIdentifierStart(int cp) {
+        int type = Character.getType(cp);
+        return Character.isUnicodeIdentifierStart(cp)
+                || type == Character.UPPERCASE_LETTER // Lu
+                || type == Character.LOWERCASE_LETTER // Ll
+                || type == Character.TITLECASE_LETTER // Lt
+                || type == Character.MODIFIER_LETTER  // Lm
+                || type == Character.OTHER_LETTER     // Lo
+                || type == Character.LETTER_NUMBER    // Nl
+                || cp == '_';
     }
 
 }
