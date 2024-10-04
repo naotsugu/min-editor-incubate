@@ -15,11 +15,7 @@
  */
 package com.mammb.code.editor.fx;
 
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import java.nio.file.Path;
-import java.util.function.Consumer;
 
 /**
  * The application pane.
@@ -27,40 +23,12 @@ import java.util.function.Consumer;
  */
 public class AppPane extends BorderPane {
 
-    private final TabPane tabPane = new TabPane();
-
+    private final DndTabPane tabPane = new DndTabPane();
 
     public AppPane() {
-
         setCenter(tabPane);
-        tabPane.setTabDragPolicy(TabPane.TabDragPolicy.REORDER);
-        tabPane.focusedProperty().addListener((ob, o, focused) -> {
-            if (focused && !tabPane.getTabs().isEmpty())
-                ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
-        });
-        EditorPane editorPane = new EditorPane(consumer());
-        tabPane.getTabs().add(createTab(editorPane));
-    }
-
-    public Consumer<Path> consumer() {
-        return path -> {
-            var editorPane = new EditorPane();
-            var tab = createTab(editorPane);
-            tabPane.getTabs().add(tab);
-            tabPane.getSelectionModel().select(tab);
-        };
-    }
-
-    private Tab createTab(EditorPane editorPane) {
-        var tab = new Tab();
-        tab.setText(editorPane.fileNameProperty().get());
-        tab.setContent(editorPane);
-        tab.setOnClosed(e -> {
-            if (tabPane.getTabs().isEmpty())
-                tabPane.getTabs().add(createTab(new EditorPane()));
-        });
-        editorPane.fileNameProperty().addListener((ob, o, n) -> tab.setText(n));
-        return tab;
+        EditorPane editorPane = new EditorPane(path -> tabPane.add(new EditorPane()));
+        tabPane.add(editorPane);
     }
 
 }
