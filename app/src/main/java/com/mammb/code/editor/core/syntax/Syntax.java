@@ -45,6 +45,7 @@ public interface Syntax {
             case "md" -> new MarkdownSyntax();
             case "sql" -> new SqlSyntax();
             case "py" -> new PythonSyntax();
+            case "js", "json" -> new JsSyntax();
             default -> new PassThrough(name);
         };
     }
@@ -55,5 +56,27 @@ public interface Syntax {
             return List.of();
         }
     }
+
+    /**
+     * Determines if the character (Unicode code point) is permissible
+     * as the first character in an identifier.
+     * <p>
+     * Letter L :
+     *   lowercase Ll
+     *   modifier Lm,
+     *   titlecase Lt,
+     *   uppercase Lu,
+     *   other Lo.
+     * </p>
+     * @param cp the character (Unicode code point) to be tested
+     * @return {@code true}, if the character may start an identifier
+     */
+    static boolean isUnicodeLetter(int cp) {
+        int type = Character.getType(cp);
+        return (type == Character.UPPERCASE_LETTER || type == Character.LOWERCASE_LETTER ||
+                type == Character.TITLECASE_LETTER || type == Character.MODIFIER_LETTER ||
+                type == Character.OTHER_LETTER || type == Character.LETTER_NUMBER);
+    }
+
 
 }

@@ -22,28 +22,29 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The rust syntax.
+ * The javascript syntax.
  * @author Naotsugu Kobayashi
  */
-public class RustSyntax implements Syntax {
+public class JsSyntax implements Syntax {
 
     private final Trie keywords = Trie.of("""
-        as,break,const,continue,crate,else,enum,extern,false,fn,for,if,impl,in,
-        let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,super,
-        trait,true,type,unsafe,use,where,while,async,await,dyn,try,
-        abstract,become,box,do,final,macro,override,priv,typeof,unsized,virtual,yield
+        abstract,arguments,await,boolean,break,byte,case,catch,char,class,const,continue,
+        debugger,default,delete,do,double,else,enum,eval,export,extends,false,final,finally,
+        float,for,function,goto,if,implements,import,in,instanceof,int,interface,let,long,
+        native,new,null,package,private,protected,public,return,short,static,super,switch,
+        synchronized,this,throw,throws,transient,true,try,typeof,var,void,volatile,while,
+        with,yield
         """);
     static final BlockScopes.BlockType.Range blockComment = BlockScopes.BlockType.range("/*", "*/");
     private final BlockScopes scopes = new BlockScopes();
 
     @Override
     public String name() {
-        return "rust";
+        return "javascript";
     }
 
     @Override
     public List<Style.StyleSpan> apply(int row, String text) {
-
         scopes.clear(row);
 
         if (text == null || text.isBlank()) {
@@ -75,10 +76,6 @@ public class RustSyntax implements Syntax {
                 var span = new Style.StyleSpan(Palette.gray, s.index(), s.length());
                 spans.add(span);
 
-            } else if (ch == '"' && !source.match("\"\"\"")) {
-                var span = source.readInlineBlock('"', '\\', Palette.darkGreen);
-                if (span != null) spans.add(span);
-
             } else if (ch == '\'') {
                 var span = source.readInlineBlock('\'', '\\', Palette.darkPale);
                 if (span != null) spans.add(span);
@@ -104,24 +101,18 @@ public class RustSyntax implements Syntax {
         return spans;
     }
 
-
     public static boolean isIdentifierStart(int cp) {
-        return Syntax.isUnicodeLetter(cp);
+        return cp == '$' || cp == '_' || Syntax.isUnicodeLetter(cp);
+        // || '\\' UnicodeEscapeSequence
     }
 
-    /**
-     * Determines if the specified character may be part of a rust identifier
-     * as other than the first character.
-     * @param cp the character to be tested
-     * @return {@code true}, if the character may be part of a rust identifier
-     */
     public static boolean isIdentifierPart(int cp) {
         int type = Character.getType(cp);
-        return (type == Character.UPPERCASE_LETTER || type == Character.LOWERCASE_LETTER ||
-                type == Character.TITLECASE_LETTER || type == Character.MODIFIER_LETTER ||
-                type == Character.OTHER_LETTER ||  type == Character.LETTER_NUMBER ||
-                type == Character.NON_SPACING_MARK ||  type == Character.COMBINING_SPACING_MARK ||
-                type == Character.DECIMAL_DIGIT_NUMBER || type == Character.CONNECTOR_PUNCTUATION);
+        return isIdentifierStart(cp) ||
+                type == Character.NON_SPACING_MARK ||      // [\p{Mn}]
+                type == Character.DECIMAL_DIGIT_NUMBER ||  // [\p{Nd}]
+                type == Character.CONNECTOR_PUNCTUATION || // [\p{Pc}]
+                cp == '\u200C' || cp == '\u200D';
     }
 
 }

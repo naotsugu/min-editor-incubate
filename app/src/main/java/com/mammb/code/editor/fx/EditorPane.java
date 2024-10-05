@@ -91,6 +91,7 @@ public class EditorPane extends StackPane {
         setOnMouseDragged(this::handleMouseDragged);
         setOnKeyPressed(this::handleKeyAction);
         setOnKeyTyped(this::handleKeyAction);
+        setOnDragDetected(this::handleDragDetect);
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
 
@@ -147,6 +148,9 @@ public class EditorPane extends StackPane {
 
     private void handleKeyAction(KeyEvent e) {
         execute(FxActions.of(e));
+    }
+
+    private void handleDragDetect(MouseEvent e) {
     }
 
     private void handleDragOver(DragEvent e) {
