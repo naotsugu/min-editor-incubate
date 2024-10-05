@@ -71,12 +71,26 @@ public interface Syntax {
      * @param cp the character (Unicode code point) to be tested
      * @return {@code true}, if the character may start an identifier
      */
-    static boolean isUnicodeLetter(int cp) {
+    static boolean isXidStart(int cp) {
         int type = Character.getType(cp);
         return (type == Character.UPPERCASE_LETTER || type == Character.LOWERCASE_LETTER ||
                 type == Character.TITLECASE_LETTER || type == Character.MODIFIER_LETTER ||
                 type == Character.OTHER_LETTER || type == Character.LETTER_NUMBER);
     }
 
+    /**
+     * Determines if the specified character may be part of a rust identifier
+     * as other than the first character.
+     * @param cp the character to be tested
+     * @return {@code true}, if the character may be part of a rust identifier
+     */
+    static boolean isXidContinue(int cp) {
+        int type = Character.getType(cp);
+        return (type == Character.UPPERCASE_LETTER || type == Character.LOWERCASE_LETTER ||
+                type == Character.TITLECASE_LETTER || type == Character.MODIFIER_LETTER ||
+                type == Character.OTHER_LETTER ||  type == Character.LETTER_NUMBER ||
+                type == Character.NON_SPACING_MARK ||  type == Character.COMBINING_SPACING_MARK ||
+                type == Character.DECIMAL_DIGIT_NUMBER || type == Character.CONNECTOR_PUNCTUATION);
+    }
 
 }

@@ -102,7 +102,7 @@ public class JsSyntax implements Syntax {
     }
 
     public static boolean isIdentifierStart(int cp) {
-        return cp == '$' || cp == '_' || Syntax.isUnicodeLetter(cp);
+        return cp == '$' || cp == '_' || Syntax.isXidStart(cp);
         // || '\\' UnicodeEscapeSequence
     }
 
