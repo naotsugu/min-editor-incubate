@@ -23,12 +23,18 @@ import javafx.scene.layout.BorderPane;
  */
 public class AppPane extends BorderPane {
 
-    private final DndTabPane tabPane = new DndTabPane();
+    private final DynSplitPane container = new DynSplitPane();
 
     public AppPane() {
-        setCenter(tabPane);
+        container.addRight(emptyTabPane());
+        setCenter(container);
+    }
+
+    private DndTabPane emptyTabPane() {
+        DndTabPane tabPane = new DndTabPane();
         EditorPane editorPane = new EditorPane(path -> tabPane.add(new EditorPane()));
         tabPane.add(editorPane);
+        return tabPane;
     }
 
 }
