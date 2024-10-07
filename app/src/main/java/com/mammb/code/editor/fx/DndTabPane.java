@@ -16,6 +16,9 @@
 package com.mammb.code.editor.fx;
 
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Label;
@@ -28,16 +31,24 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Polyline;
 import java.util.Objects;
 
-public class DndTabPane extends TabPane {
+public class DndTabPane extends StackPane {
 
     private static final DataFormat tabMove = new DataFormat("DnDTabPane:tabMove");
+    private static final Polyline marker = new Polyline();
+    private final TabPane tabPane = new TabPane();
 
     public DndTabPane() {
-        focusedProperty().addListener(this::handleFocused);
+        getChildren().addAll(tabPane, marker);
+        tabPane.focusedProperty().addListener(this::handleFocused);
+        marker.setStroke(Color.DARKORANGE);
+        marker.setManaged(false);
         setOnDragOver(this::handleDragOver);
+        setOnDragDone(this::handleDragDone);
     }
 
     public void add(EditorPane editorPane) {
@@ -47,16 +58,16 @@ public class DndTabPane extends TabPane {
         var tab = new Tab();
         tab.setContent(editorPane);
         tab.setGraphic(label);
-        tab.setOnClosed(e -> { if (getTabs().isEmpty()) add(new EditorPane()); });
-        getTabs().add(tab);
-        getSelectionModel().select(tab);
+        tab.setOnClosed(e -> { if (tabPane.getTabs().isEmpty()) add(new EditorPane()); });
+        tabPane.getTabs().add(tab);
+        tabPane.getSelectionModel().select(tab);
         editorPane.fileNameProperty().addListener((ob, o, n) -> label.setText(n));
 
     }
 
     private void handleFocused(ObservableValue<? extends Boolean> ob, Boolean o, Boolean focused) {
-        if (focused && !getTabs().isEmpty()) {
-            ((EditorPane) getSelectionModel().getSelectedItem().getContent()).focus();
+        if (focused && !tabPane.getTabs().isEmpty()) {
+            ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
         }
     }
 
@@ -72,9 +83,47 @@ public class DndTabPane extends TabPane {
     }
 
     private void handleDragOver(DragEvent e) {
+        Dragboard db = e.getDragboard();
+        Object content = db.getContent(tabMove);
+        if (Objects.nonNull(content) && content instanceof String cont) {
+            Bounds bounds = tabPane.getLayoutBounds();
+            if (isRightIn(e)) {
+                marker.getPoints().addAll(
+                        bounds.getCenterX(), 0.0,
+                        bounds.getMaxX(), 0.0,
+                        bounds.getMaxX(), bounds.getMaxY(),
+                        bounds.getCenterX(), bounds.getMaxY()
+                );
+            } else if (isLeftIn(e)) {
+                marker.getPoints().addAll(
+                        0.0, 0.0,
+                        bounds.getCenterX(), 0.0,
+                        bounds.getCenterX(), bounds.getMaxY(),
+                        0.0, bounds.getMaxY()
+                );
+            } else if (isBottomIn(e)) {
+                marker.getPoints().addAll(
+                        0.0, bounds.getCenterY(),
+                        bounds.getMaxX(), bounds.getCenterY(),
+                        bounds.getMaxX(), bounds.getMaxY(),
+                        bounds.getMinX(), bounds.getMaxY()
+                );
+            } else if (isTopIn(e)) {
+                marker.getPoints().addAll(
+                        0.0, 0.0,
+                        bounds.getMaxX(), 0.0,
+                        bounds.getMaxX(), bounds.getCenterY(),
+                        0.0, bounds.getCenterY()
+                );
+            } else {
+                marker.getPoints().clear();
+            }
+        }
     }
 
+
     private void handleDragDone(DragEvent e) {
+        marker.getPoints().clear();
     }
 
     private Image tabImage(Node node) {
@@ -90,8 +139,56 @@ public class DndTabPane extends TabPane {
     }
 
     private Node tabHeader() {
-        if (getTabs().isEmpty()) return null;
-        return getTabs().getFirst().getGraphic().getParent().getParent();
+        if (tabPane.getTabs().isEmpty()) return null;
+        return tabPane.getTabs().getFirst().getGraphic().getParent().getParent();
+    }
+
+    private boolean isRightIn(DragEvent e) {
+        Bounds paneBounds = localToScreen(getBoundsInLocal());
+        double w = paneBounds.getWidth() / 4;
+        double h = paneBounds.getHeight() / 4;
+        return new BoundingBox(
+                paneBounds.getMaxX() - w,
+                paneBounds.getMinY() + h,
+                w,
+                paneBounds.getHeight() - h * 2
+        ).contains(e.getScreenX(), e.getScreenY());
+    }
+
+    private boolean isLeftIn(DragEvent e) {
+        Bounds paneBounds = localToScreen(getBoundsInLocal());
+        double w = paneBounds.getWidth() / 4;
+        double h = paneBounds.getHeight() / 4;
+        return new BoundingBox(
+                paneBounds.getMinX(),
+                paneBounds.getMinY() + h,
+                w,
+                paneBounds.getHeight() - h * 2
+        ).contains(e.getScreenX(), e.getScreenY());
+    }
+
+    private boolean isBottomIn(DragEvent e) {
+        Bounds paneBounds = localToScreen(getBoundsInLocal());
+        double w = paneBounds.getWidth() / 4;
+        double h = paneBounds.getHeight() / 4;
+        return new BoundingBox(
+                paneBounds.getMinX() + w,
+                paneBounds.getMaxY() - h,
+                paneBounds.getWidth() - w * 2,
+                h
+        ).contains(e.getScreenX(), e.getScreenY());
+    }
+
+    private boolean isTopIn(DragEvent e) {
+        Bounds paneBounds = localToScreen(getBoundsInLocal());
+        double w = paneBounds.getWidth() / 4;
+        double h = paneBounds.getHeight() / 4;
+        return new BoundingBox(
+                paneBounds.getMinX() + w,
+                paneBounds.getMinY(),
+                paneBounds.getWidth() - w * 2,
+                h
+        ).contains(e.getScreenX(), e.getScreenY());
     }
 
 }

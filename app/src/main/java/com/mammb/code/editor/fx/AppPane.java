@@ -26,8 +26,8 @@ public class AppPane extends BorderPane {
     private final DynSplitPane container = new DynSplitPane();
 
     public AppPane() {
-        container.addRight(emptyTabPane());
         setCenter(container);
+        container.addRight(emptyTabPane());
     }
 
     private DndTabPane emptyTabPane() {
