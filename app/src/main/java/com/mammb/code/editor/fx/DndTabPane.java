@@ -18,7 +18,6 @@ package com.mammb.code.editor.fx;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Label;
@@ -34,6 +33,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class DndTabPane extends StackPane {
@@ -86,13 +87,27 @@ public class DndTabPane extends StackPane {
         Dragboard db = e.getDragboard();
         Object content = db.getContent(tabMove);
         if (Objects.nonNull(content) && content instanceof String cont) {
+            marker.getPoints().clear();
             Bounds bounds = tabPane.getLayoutBounds();
-            if (isRightIn(e)) {
+            if (isTabHeaderIn(e)) {
+                Tab tab = tabSelectOn(e);
+                if (tab == null) {
+                    Node tabNode = tabNode(tabPane.getTabs().getLast());
+                    Bounds ins = screenToLocal(tabNode.localToScreen(tabNode.getBoundsInLocal()));
+                    marker.getPoints().addAll(ins.getMaxX() + 2, 0.0, ins.getMaxX() + 2, ins.getHeight());
+                } else {
+                    Node tabNode = tabNode(tab);
+                    Bounds ins = screenToLocal(tabNode.localToScreen(tabNode.getBoundsInLocal()));
+                    marker.getPoints().addAll(ins.getMinX() + 2, 0.0, ins.getMinX() + 2, ins.getHeight());
+                }
+
+            } else if (isRightIn(e)) {
                 marker.getPoints().addAll(
                         bounds.getCenterX(), 0.0,
                         bounds.getMaxX(), 0.0,
                         bounds.getMaxX(), bounds.getMaxY(),
-                        bounds.getCenterX(), bounds.getMaxY()
+                        bounds.getCenterX(), bounds.getMaxY(),
+                        bounds.getCenterX(), 0.0
                 );
             } else if (isLeftIn(e)) {
                 marker.getPoints().addAll(
@@ -115,8 +130,6 @@ public class DndTabPane extends StackPane {
                         bounds.getMaxX(), bounds.getCenterY(),
                         0.0, bounds.getCenterY()
                 );
-            } else {
-                marker.getPoints().clear();
             }
         }
     }
@@ -138,9 +151,41 @@ public class DndTabPane extends StackPane {
         return node.snapshot(snapshotParams, null);
     }
 
+    private Node tabNode(Tab tab) {
+        Node node = tab.getGraphic();
+        for (;;) {
+            node = node.getParent();
+            if (Objects.equals(
+                    node.getClass().getSimpleName(),
+                    "TabHeaderSkin")) return node;
+        }
+    }
+
     private Node tabHeader() {
         if (tabPane.getTabs().isEmpty()) return null;
         return tabPane.getTabs().getFirst().getGraphic().getParent().getParent();
+    }
+
+    private Tab tabSelectOn(DragEvent e) {
+        for (Tab tab : tabPane.getTabs()) {
+            Node tabNode = tabNode(tab);
+            Bounds bounds = tabNode.localToScreen(tabNode.getBoundsInLocal());
+            if (e.getScreenX() < bounds.getCenterX()) {
+                return tab;
+            }
+        }
+        return null;
+    }
+
+    private boolean isTabHeaderIn(DragEvent e) {
+        Bounds paneBounds = localToScreen(getBoundsInLocal());
+        double h = tabHeader().getLayoutBounds().getHeight();
+        return new BoundingBox(
+                paneBounds.getMinX(),
+                paneBounds.getMinY(),
+                paneBounds.getWidth(),
+                h + 20
+        ).contains(e.getScreenX(), e.getScreenY());
     }
 
     private boolean isRightIn(DragEvent e) {
