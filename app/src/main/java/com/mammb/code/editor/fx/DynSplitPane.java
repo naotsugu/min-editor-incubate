@@ -34,6 +34,7 @@ public class DynSplitPane extends StackPane {
         pane.getItems().add(node);
     }
 
+
     public void addRight(Node node) {
         if (pane.getItems().isEmpty()) {
             pane.getItems().add(node);

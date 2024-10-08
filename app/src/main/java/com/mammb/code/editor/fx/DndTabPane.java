@@ -33,11 +33,12 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DndTabPane extends StackPane {
+
+    private static final AtomicReference<Tab> draggedTab = new AtomicReference<>();
 
     private static final DataFormat tabMove = new DataFormat("DnDTabPane:tabMove");
     private static final Polyline marker = new Polyline();
@@ -49,6 +50,8 @@ public class DndTabPane extends StackPane {
         marker.setStroke(Color.DARKORANGE);
         marker.setManaged(false);
         setOnDragOver(this::handleDragOver);
+        setOnDragDropped(this::handleDragDropped);
+        setOnDragExited(this::handleDragExited);
         setOnDragDone(this::handleDragDone);
     }
 
@@ -80,27 +83,29 @@ public class DndTabPane extends StackPane {
             Image image = tabImage(label);
             db.setDragView(image, image.getWidth(), -image.getHeight());
             db.setContent(cc);
+            Tab tab = tabPane.getTabs().stream().filter(t -> t.getGraphic().equals(label)).findFirst().get();
+            draggedTab.set(tab);
         }
     }
 
     private void handleDragOver(DragEvent e) {
         Dragboard db = e.getDragboard();
-        Object content = db.getContent(tabMove);
-        if (Objects.nonNull(content) && content instanceof String cont) {
+        Tab dragged = draggedTab.get();
+        if (db.hasContent(tabMove) && dragged != null) {
             marker.getPoints().clear();
             Bounds bounds = tabPane.getLayoutBounds();
             if (isTabHeaderIn(e)) {
                 Tab tab = tabSelectOn(e);
                 if (tab == null) {
-                    Node tabNode = tabNode(tabPane.getTabs().getLast());
+                    Node tabNode = tabNode(tabPane.getTabs().getLast().getGraphic());
                     Bounds ins = screenToLocal(tabNode.localToScreen(tabNode.getBoundsInLocal()));
                     marker.getPoints().addAll(ins.getMaxX() + 2, 0.0, ins.getMaxX() + 2, ins.getHeight());
                 } else {
-                    Node tabNode = tabNode(tab);
+                    Node tabNode = tabNode(tab.getGraphic());
                     Bounds ins = screenToLocal(tabNode.localToScreen(tabNode.getBoundsInLocal()));
                     marker.getPoints().addAll(ins.getMinX() + 2, 0.0, ins.getMinX() + 2, ins.getHeight());
                 }
-
+                e.acceptTransferModes(TransferMode.MOVE);
             } else if (isRightIn(e)) {
                 marker.getPoints().addAll(
                         bounds.getCenterX(), 0.0,
@@ -109,50 +114,83 @@ public class DndTabPane extends StackPane {
                         bounds.getCenterX(), bounds.getMaxY(),
                         bounds.getCenterX(), 0.0
                 );
+                e.acceptTransferModes(TransferMode.MOVE);
             } else if (isLeftIn(e)) {
                 marker.getPoints().addAll(
                         0.0, 0.0,
                         bounds.getCenterX(), 0.0,
                         bounds.getCenterX(), bounds.getMaxY(),
-                        0.0, bounds.getMaxY()
+                        0.0, bounds.getMaxY(),
+                        0.0, 0.0
                 );
+                e.acceptTransferModes(TransferMode.MOVE);
             } else if (isBottomIn(e)) {
                 marker.getPoints().addAll(
                         0.0, bounds.getCenterY(),
                         bounds.getMaxX(), bounds.getCenterY(),
                         bounds.getMaxX(), bounds.getMaxY(),
-                        bounds.getMinX(), bounds.getMaxY()
+                        bounds.getMinX(), bounds.getMaxY(),
+                        0.0, bounds.getCenterY()
                 );
+                e.acceptTransferModes(TransferMode.MOVE);
             } else if (isTopIn(e)) {
                 marker.getPoints().addAll(
                         0.0, 0.0,
                         bounds.getMaxX(), 0.0,
                         bounds.getMaxX(), bounds.getCenterY(),
-                        0.0, bounds.getCenterY()
+                        0.0, bounds.getCenterY(),
+                        0.0, 0.0
                 );
+                e.acceptTransferModes(TransferMode.MOVE);
             }
         }
     }
 
-
-    private void handleDragDone(DragEvent e) {
-        marker.getPoints().clear();
+    private void handleDragDropped(DragEvent e) {
+        var db = e.getDragboard();
+        Tab dragged = draggedTab.get();
+        if (db.hasContent(tabMove) && dragged != null) {
+            marker.getPoints().clear();
+            if (isRightIn(e)) {
+                TabPane tabPane = dragged.getTabPane();
+                if (tabPane.getTabs().size() < 2) {
+                    return;
+                }
+                tabPane.getTabs().remove(dragged);
+                DndTabPane newTabPane = new DndTabPane();
+                newTabPane.add((EditorPane) dragged.getContent());
+                ((DynSplitPane) tabPane.getParent().getParent().getParent().getParent())
+                        .addRight(newTabPane);
+            }
+        }
     }
 
-    private Image tabImage(Node node) {
+    private void handleDragExited(DragEvent e) {
+        marker.getPoints().clear();
+    }
+    private void handleDragDone(DragEvent e) {
+        marker.getPoints().clear();
+        draggedTab.set(null);
+    }
+
+    private DynSplitPane parentDynSplitPane() {
+        Node node = this;
         for (;;) {
             node = node.getParent();
-            if (Objects.equals(
-                    node.getClass().getSimpleName(),
-                    "TabHeaderSkin")) break;
+            if (Objects.equals(node.getClass(), DynSplitPane.class))
+                return (DynSplitPane) node;
         }
+    }
+
+
+    private Image tabImage(Node node) {
+        node = tabNode(node);
         var snapshotParams = new SnapshotParameters();
         snapshotParams.setFill(Color.TRANSPARENT);
         return node.snapshot(snapshotParams, null);
     }
 
-    private Node tabNode(Tab tab) {
-        Node node = tab.getGraphic();
+    private Node tabNode(Node node) {
         for (;;) {
             node = node.getParent();
             if (Objects.equals(
@@ -168,7 +206,7 @@ public class DndTabPane extends StackPane {
 
     private Tab tabSelectOn(DragEvent e) {
         for (Tab tab : tabPane.getTabs()) {
-            Node tabNode = tabNode(tab);
+            Node tabNode = tabNode(tab.getGraphic());
             Bounds bounds = tabNode.localToScreen(tabNode.getBoundsInLocal());
             if (e.getScreenX() < bounds.getCenterX()) {
                 return tab;
@@ -181,7 +219,7 @@ public class DndTabPane extends StackPane {
         Bounds paneBounds = localToScreen(getBoundsInLocal());
         double h = tabHeader().getLayoutBounds().getHeight();
         return new BoundingBox(
-                paneBounds.getMinX(),
+                paneBounds.getMinX() - 20,
                 paneBounds.getMinY(),
                 paneBounds.getWidth(),
                 h + 20
