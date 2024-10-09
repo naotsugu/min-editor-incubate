@@ -68,12 +68,9 @@ public class EditorPane extends StackPane {
     /** The file name property. */
     private final SimpleStringProperty fileNameProperty = new SimpleStringProperty("Untitled");
 
-    private final Consumer<Path> newOpenHandler;
+    private Consumer<Path> newOpenHandler;
 
-    public EditorPane() { this(null); }
-
-    public EditorPane(Consumer<Path> newOpenHandler) {
-        this.newOpenHandler = newOpenHandler;
+    public EditorPane() {
         canvas = new Canvas();
         canvas.setManaged(false);
         canvas.setFocusTraversable(true);
@@ -103,6 +100,10 @@ public class EditorPane extends StackPane {
 
     public ReadOnlyStringProperty fileNameProperty() {
         return fileNameProperty;
+    }
+
+    public void setNewOpenHandler(Consumer<Path> newOpenHandler) {
+        this.newOpenHandler = newOpenHandler;
     }
 
     public void focus() {

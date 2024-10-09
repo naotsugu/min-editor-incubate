@@ -32,7 +32,8 @@ public class AppPane extends BorderPane {
 
     private DndTabPane emptyTabPane() {
         DndTabPane tabPane = new DndTabPane();
-        EditorPane editorPane = new EditorPane(path -> tabPane.add(new EditorPane()));
+        EditorPane editorPane = new EditorPane();
+        editorPane.setNewOpenHandler(path -> tabPane.add(new EditorPane()));
         tabPane.add(editorPane);
         return tabPane;
     }

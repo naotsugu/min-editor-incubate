@@ -218,6 +218,7 @@ public class DndTabPane extends StackPane {
     private boolean isTabHeaderIn(DragEvent e) {
         Bounds paneBounds = localToScreen(getBoundsInLocal());
         double h = tabHeader().getLayoutBounds().getHeight();
+        System.out.println(h);
         return new BoundingBox(
                 paneBounds.getMinX() - 20,
                 paneBounds.getMinY(),
