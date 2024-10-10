@@ -59,8 +59,8 @@ public class PythonSyntax implements Syntax {
                     spans.add(span);
                 }
             }
+            source.commitPeek();
         }
-        source.commitPeek();
         return spans;
     }
 

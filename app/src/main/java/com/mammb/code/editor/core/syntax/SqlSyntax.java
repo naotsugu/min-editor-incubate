@@ -75,6 +75,7 @@ public class SqlSyntax implements Syntax {
                     spans.add(span);
                 }
             }
+            source.commitPeek();
         }
         return spans;
     }
