@@ -157,6 +157,7 @@ public class EditorPane extends StackPane {
     private void handleDragOver(DragEvent e) {
         if (e.getDragboard().hasFiles()) {
             e.acceptTransferModes(TransferMode.COPY);
+            e.consume();
         }
     }
 
@@ -168,6 +169,7 @@ public class EditorPane extends StackPane {
             if (path.isPresent()) {
                 if (!canDiscardCurrent()) return;
                 e.setDropCompleted(true);
+                e.consume();
                 open(path.get());
                 draw();
                 return;

@@ -63,6 +63,16 @@ public class SplitTabPane extends StackPane {
         pane.getItems().clear();
         pane.getItems().add(new DndTabPane(this, node));
     }
+    public void removeFirst() {
+        if (pane.getItems().size() > 1) {
+            pane.getItems().remove(pane.getItems().getFirst());
+        }
+    }
+    public void removeSecond() {
+        if (pane.getItems().size() > 1) {
+            pane.getItems().remove(pane.getItems().getLast());
+        }
+    }
     public void addRight(EditorPane node) {
         if (pane.getItems().isEmpty()) {
             add(node);
@@ -111,6 +121,7 @@ public class SplitTabPane extends StackPane {
         DndTabPane(SplitTabPane parent, EditorPane node) {
             this.parent = parent;
             getChildren().addAll(tabPane, marker);
+            marker.setFill(Color.GRAY.deriveColor(0, 0, 0, 0.3));
             marker.setStroke(Color.DARKORANGE);
             marker.setManaged(false);
             tabPane.focusedProperty().addListener(this::handleFocused);
@@ -166,6 +177,7 @@ public class SplitTabPane extends StackPane {
             Dragboard db = e.getDragboard();
             Tab dragged = draggedTab.get();
             if (!db.hasContent(tabMove) || dragged == null) return;
+            e.acceptTransferModes(TransferMode.MOVE);
             Bounds bounds = tabPane.getLayoutBounds();
             marker.setX(0.0);
             marker.setY(0.0);
@@ -173,6 +185,7 @@ public class SplitTabPane extends StackPane {
             marker.setHeight(bounds.getHeight());
             marker.setVisible(true);
             switch (dropPoint(this, e)) {
+                case ANY -> e.acceptTransferModes(TransferMode.NONE);
                 case HEADER -> {}
                 case RIGHT -> {
                     marker.setX(bounds.getCenterX());
@@ -189,8 +202,32 @@ public class SplitTabPane extends StackPane {
                     marker.setHeight(bounds.getHeight() / 2);
                 }
             }
+            e.consume();
         }
         private void handleDragDropped(DragEvent e) {
+            var db = e.getDragboard();
+            Tab dragged = draggedTab.get();
+            if (!db.hasContent(tabMove) || dragged == null) {
+                e.setDropCompleted(false);
+                return;
+            }
+            marker.setVisible(false);
+            switch (dropPoint(this, e)) {
+                case RIGHT -> {
+                    DndTabPane from = (DndTabPane) dragged.getTabPane().getParent();
+                    if (from == this) {
+                        if (from.tabPane.getTabs().size() > 1) {
+                            from.tabPane.getTabs().remove(dragged);
+                            parent.addRight((EditorPane) dragged.getContent());
+                        }
+                    } else {
+
+
+                    }
+                }
+            }
+            e.consume();
+            e.setDropCompleted(true);
         }
         private void handleDragExited(DragEvent e) {
             marker.setVisible(false);
@@ -226,7 +263,7 @@ public class SplitTabPane extends StackPane {
                 h).contains(e.getScreenX(), e.getScreenY())) {
             return DropPoint.BOTTOM;
         } else if (new BoundingBox(
-                paneBounds.getMaxX() - w,
+                paneBounds.getMinX(),
                 paneBounds.getMinY() + h,
                 w,
                 paneBounds.getHeight() - h * 2).contains(e.getScreenX(), e.getScreenY())) {
