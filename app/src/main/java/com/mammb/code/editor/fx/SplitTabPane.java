@@ -36,6 +36,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -185,21 +186,25 @@ public class SplitTabPane extends StackPane {
             marker.setHeight(bounds.getHeight());
             marker.setVisible(true);
             switch (dropPoint(this, e)) {
+                case LEFT -> marker.setWidth(bounds.getWidth() / 2);
+                case TOP -> marker.setHeight(bounds.getHeight() / 2);
                 case ANY -> e.acceptTransferModes(TransferMode.NONE);
-                case HEADER -> {}
                 case RIGHT -> {
                     marker.setX(bounds.getCenterX());
-                    marker.setWidth(bounds.getWidth() / 2);
-                }
-                case LEFT -> {
                     marker.setWidth(bounds.getWidth() / 2);
                 }
                 case BOTTOM -> {
                     marker.setY(bounds.getCenterY());
                     marker.setHeight(bounds.getHeight() / 2);
                 }
-                case TOP -> {
-                    marker.setHeight(bounds.getHeight() / 2);
+                case HEADER -> {
+                    int insertionIndex = insertionIndex(e);
+                    int tabIndex = Math.min(tabPane.getTabs().size() - 1, insertionIndex);
+                    Node tabNode = tabNode(tabPane.getTabs().get(tabIndex).getGraphic());
+                    Bounds ins = screenToLocal(tabNode.localToScreen(tabNode.getBoundsInLocal()));
+                    marker.setX((insertionIndex > tabIndex) ? ins.getMaxX() : ins.getMinX());
+                    marker.setHeight(ins.getHeight());
+                    marker.setWidth(2);
                 }
             }
             e.consume();
@@ -212,17 +217,27 @@ public class SplitTabPane extends StackPane {
                 return;
             }
             marker.setVisible(false);
+            DndTabPane from = (DndTabPane) dragged.getTabPane().getParent();
             switch (dropPoint(this, e)) {
+                case HEADER -> {
+                    if (from == this) {
+                        int insertionIndex = insertionIndex(e);
+                        int fromIndex = tabPane.getTabs().indexOf(dragged);
+                        int toIndex = Math.min(tabPane.getTabs().size() - 1, insertionIndex);
+                        if (fromIndex == toIndex) return;
+                        tabPane.getTabs().remove(dragged);
+                        tabPane.getTabs().add(toIndex, dragged);
+                        tabPane.getSelectionModel().select(dragged);
+                    }
+                }
                 case RIGHT -> {
-                    DndTabPane from = (DndTabPane) dragged.getTabPane().getParent();
                     if (from == this) {
                         if (from.tabPane.getTabs().size() > 1) {
                             from.tabPane.getTabs().remove(dragged);
                             parent.addRight((EditorPane) dragged.getContent());
                         }
                     } else {
-
-
+                        // TODO
                     }
                 }
             }
@@ -235,6 +250,28 @@ public class SplitTabPane extends StackPane {
         private void handleDragDone(DragEvent e) {
             marker.setVisible(false);
             draggedTab.set(null);
+        }
+        private int insertionIndex(DragEvent e) {
+            int insertion = 0;
+            for (Tab tab : tabPane.getTabs()) {
+                Node tabNode = tabNode(tab.getGraphic());
+                Bounds bounds = tabNode.localToScreen(tabNode.getBoundsInLocal());
+                if (e.getScreenX() < bounds.getCenterX()) {
+                    return insertion;
+                }
+                insertion++;
+            }
+            return insertion;
+        }
+        private Tab tabSelect(DragEvent e) {
+            for (Tab tab : tabPane.getTabs()) {
+                Node tabNode = tabNode(tab.getGraphic());
+                Bounds bounds = tabNode.localToScreen(tabNode.getBoundsInLocal());
+                if (e.getScreenX() < bounds.getCenterX()) {
+                    return tab;
+                }
+            }
+            return null;
         }
     }
 
