@@ -88,7 +88,7 @@ public class SplitTabPane extends StackPane {
         if (pane.getItems().isEmpty()) {
             add(node);
         } else {
-            var item = (EditorPane) pane.getItems().getFirst();
+            var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.HORIZONTAL);
             pane.getItems().addAll(new SplitTabPane(node), new SplitTabPane(item));
@@ -98,7 +98,7 @@ public class SplitTabPane extends StackPane {
         if (pane.getItems().isEmpty()) {
             add(node);
         } else {
-            var item = (EditorPane) pane.getItems().getFirst();
+            var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.VERTICAL);
             pane.getItems().addAll(new SplitTabPane(node), new SplitTabPane(item));
@@ -108,7 +108,7 @@ public class SplitTabPane extends StackPane {
         if (pane.getItems().isEmpty()) {
             add(node);
         } else {
-            var item = (EditorPane) pane.getItems().getFirst();
+            var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.VERTICAL);
             pane.getItems().addAll(new SplitTabPane(item), new SplitTabPane(node));
@@ -145,6 +145,7 @@ public class SplitTabPane extends StackPane {
             tab.setOnClosed(this::handleOnTabClosed);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
+            tabPane.getSelectionModel().selectedItemProperty().addListener(this::handleSelectedTabItem);
             node.fileNameProperty().addListener(
                     (ob, o, n) -> label.setText(n));
             node.setNewOpenHandler(path -> add(new EditorPane()));
@@ -155,6 +156,11 @@ public class SplitTabPane extends StackPane {
                 if (!tabPane.getTabs().isEmpty()) {
                     ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
                 }
+            }
+        }
+        void handleSelectedTabItem(ObservableValue<? extends Tab> ob, Tab o, Tab tab) {
+            if (tab != null) {
+                ((EditorPane) tab.getContent()).focus();
             }
         }
         private void handleOnTabClosed(Event e) {
@@ -218,28 +224,38 @@ public class SplitTabPane extends StackPane {
             }
             marker.setVisible(false);
             DndTabPane from = (DndTabPane) dragged.getTabPane().getParent();
-            switch (dropPoint(this, e)) {
-                case HEADER -> {
-                    if (from == this) {
+            if (from == this) {
+                if (from.tabPane.getTabs().size() <= 1) {
+                    e.setDropCompleted(true);
+                    return;
+                }
+                switch (dropPoint(this, e)) {
+                    case HEADER -> {
                         int insertionIndex = insertionIndex(e);
                         int fromIndex = tabPane.getTabs().indexOf(dragged);
                         int toIndex = Math.min(tabPane.getTabs().size() - 1, insertionIndex);
                         if (fromIndex == toIndex) return;
                         tabPane.getTabs().remove(dragged);
                         tabPane.getTabs().add(toIndex, dragged);
-                        tabPane.getSelectionModel().select(dragged);
+                    }
+                    case RIGHT -> {
+                        from.tabPane.getTabs().remove(dragged);
+                        parent.addRight((EditorPane) dragged.getContent());
+                    }
+                    case LEFT -> {
+                        from.tabPane.getTabs().remove(dragged);
+                        parent.addLeft((EditorPane) dragged.getContent());
+                    }
+                    case TOP -> {
+                        from.tabPane.getTabs().remove(dragged);
+                        parent.addTop((EditorPane) dragged.getContent());
+                    }
+                    case BOTTOM -> {
+                        from.tabPane.getTabs().remove(dragged);
+                        parent.addBottom((EditorPane) dragged.getContent());
                     }
                 }
-                case RIGHT -> {
-                    if (from == this) {
-                        if (from.tabPane.getTabs().size() > 1) {
-                            from.tabPane.getTabs().remove(dragged);
-                            parent.addRight((EditorPane) dragged.getContent());
-                        }
-                    } else {
-                        // TODO
-                    }
-                }
+                tabPane.getSelectionModel().select(dragged);
             }
             e.consume();
             e.setDropCompleted(true);
