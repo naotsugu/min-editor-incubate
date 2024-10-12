@@ -36,7 +36,6 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -48,6 +47,7 @@ public class SplitTabPane extends StackPane {
     private static final DataFormat tabMove = new DataFormat("SplitTabPane:tabMove");
 
     private SplitPane pane = new SplitPane();
+    private SplitTabPane parent;
 
     public SplitTabPane() {
         getChildren().add(pane);
@@ -60,18 +60,31 @@ public class SplitTabPane extends StackPane {
         this();
         pane.getItems().add(node.parentWith(this));
     }
+    private SplitTabPane parentWith(SplitTabPane parent) {
+        this.parent = parent;
+        return this;
+    }
     public void add(EditorPane node) {
         pane.getItems().clear();
-        pane.getItems().add(new DndTabPane(this, node));
+        DndTabPane dndTabPane = new DndTabPane(this, node);
+        pane.getItems().add(dndTabPane);
+    }
+    public void remove(SplitTabPane splitTabPane) {
+        pane.getItems().remove(splitTabPane);
+        var first = (SplitTabPane) pane.getItems().getFirst();
+        pane.getItems().clear();
+        getChildren().clear();
+        pane = first.pane;
+        getChildren().add(pane);
     }
     public void removeFirst() {
         if (pane.getItems().size() > 1) {
-            pane.getItems().remove(pane.getItems().getFirst());
+            remove((SplitTabPane) pane.getItems().getFirst());
         }
     }
     public void removeSecond() {
         if (pane.getItems().size() > 1) {
-            pane.getItems().remove(pane.getItems().getLast());
+            remove((SplitTabPane) pane.getItems().getLast());
         }
     }
     public void addRight(EditorPane node) {
@@ -81,7 +94,9 @@ public class SplitTabPane extends StackPane {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.HORIZONTAL);
-            pane.getItems().addAll(new SplitTabPane(item), new SplitTabPane(node));
+            pane.getItems().addAll(
+                    new SplitTabPane(item).parentWith(this),
+                    new SplitTabPane(node).parentWith(this));
         }
     }
     public void addLeft(EditorPane node) {
@@ -91,7 +106,9 @@ public class SplitTabPane extends StackPane {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.HORIZONTAL);
-            pane.getItems().addAll(new SplitTabPane(node), new SplitTabPane(item));
+            pane.getItems().addAll(
+                    new SplitTabPane(node).parentWith(this),
+                    new SplitTabPane(item).parentWith(this));
         }
     }
     public void addTop(EditorPane node) {
@@ -101,7 +118,9 @@ public class SplitTabPane extends StackPane {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.VERTICAL);
-            pane.getItems().addAll(new SplitTabPane(node), new SplitTabPane(item));
+            pane.getItems().addAll(
+                    new SplitTabPane(node).parentWith(this),
+                    new SplitTabPane(item).parentWith(this));
         }
     }
     public void addBottom(EditorPane node) {
@@ -111,7 +130,9 @@ public class SplitTabPane extends StackPane {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.VERTICAL);
-            pane.getItems().addAll(new SplitTabPane(item), new SplitTabPane(node));
+            pane.getItems().addAll(
+                    new SplitTabPane(item).parentWith(this),
+                    new SplitTabPane(node).parentWith(this));
         }
     }
 
@@ -165,7 +186,11 @@ public class SplitTabPane extends StackPane {
         }
         private void handleOnTabClosed(Event e) {
             if (tabPane.getTabs().isEmpty()) {
-                add(new EditorPane());
+                if (parent.parent == null) {
+                    add(new EditorPane());
+                } else {
+                    parent.parent.remove(parent);
+                }
             }
         }
         private void handleTabDragDetected(MouseEvent e) {
