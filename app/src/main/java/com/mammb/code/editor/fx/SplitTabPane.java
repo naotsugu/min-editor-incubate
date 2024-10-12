@@ -69,23 +69,15 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
     }
     public void remove(SplitTabPane splitTabPane) {
         pane.getItems().remove(splitTabPane);
-        var first = (SplitTabPane) pane.getItems().getFirst();
-        pane.getItems().clear();
-        getChildren().clear();
-        pane = first.pane;
-        getChildren().add(pane);
+        var node = pane.getItems().getFirst();
+        if (node instanceof SplitTabPane stp) {
+            pane.getItems().clear();
+            getChildren().clear();
+            pane = stp.pane;
+            getChildren().add(pane);
+        }
         pane.getItems()
                 .forEach(i -> ((Hierarchical) i).setParent(this));
-    }
-    public void removeFirst() {
-        if (pane.getItems().size() > 1) {
-            remove((SplitTabPane) pane.getItems().getFirst());
-        }
-    }
-    public void removeSecond() {
-        if (pane.getItems().size() > 1) {
-            remove((SplitTabPane) pane.getItems().getLast());
-        }
     }
     public void addRight(EditorPane node) {
         if (pane.getItems().isEmpty()) {
@@ -294,21 +286,38 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                 tabPane.getSelectionModel().select(dragged);
             } else {
                 // drop to another Pane
+                boolean unplug = dragged.getTabPane().getTabs().size() <= 1;
                 switch (dropPoint(this, e)) {
                     case HEADER -> {
                         int insertionIndex = insertionIndex(e);
-                        boolean del = dragged.getTabPane().getTabs().size() <= 1;
                         dragged.getTabPane().getTabs().remove(dragged);
                         tabPane.getTabs().add(insertionIndex, dragged);
-                        if (del) {
+                        if (unplug) {
                             from.parent.parent.remove(from.parent);
                         }
                         initTab(dragged);
                     }
                     case RIGHT -> {
-
+                        dragged.getTabPane().getTabs().remove(dragged);
+                        parent.addRight((EditorPane) dragged.getContent());
+                    }
+                    case LEFT -> {
+                        dragged.getTabPane().getTabs().remove(dragged);
+                        parent.addLeft((EditorPane) dragged.getContent());
+                    }
+                    case TOP -> {
+                        dragged.getTabPane().getTabs().remove(dragged);
+                        parent.addTop((EditorPane) dragged.getContent());
+                    }
+                    case BOTTOM -> {
+                        dragged.getTabPane().getTabs().remove(dragged);
+                        parent.addBottom((EditorPane) dragged.getContent());
                     }
                 }
+                if (unplug) {
+                    from.parent.parent.remove(from.parent);
+                }
+                initTab(dragged);
             }
             e.consume();
             e.setDropCompleted(true);
