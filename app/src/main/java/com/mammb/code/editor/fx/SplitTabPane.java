@@ -214,6 +214,11 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         private void handleDragOver(DragEvent e) {
 
             if (e.getDragboard().hasFiles() && dropPoint(this, e) == DropPoint.HEADER) {
+                marker.setX(0.0);
+                marker.setY(0.0);
+                marker.setWidth(tabPane.getLayoutBounds().getWidth());
+                marker.setHeight(25);
+                marker.setVisible(true);
                 e.acceptTransferModes(TransferMode.COPY);
                 e.consume();
                 return;
