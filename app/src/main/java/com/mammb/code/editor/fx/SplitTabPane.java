@@ -26,7 +26,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
@@ -36,6 +38,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -140,7 +144,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         DndTabPane(SplitTabPane parent, EditorPane node) {
             this.parent = parent;
             getChildren().addAll(tabPane, marker);
-            marker.setFill(Color.GRAY.deriveColor(0, 0, 0, 0.3));
+            marker.setFill(Color.TRANSPARENT);
             marker.setStroke(Color.DARKORANGE);
             marker.setManaged(false);
             tabPane.focusedProperty().addListener(this::handleFocused);
@@ -208,6 +212,13 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         }
 
         private void handleDragOver(DragEvent e) {
+
+            if (e.getDragboard().hasFiles() && dropPoint(this, e) == DropPoint.HEADER) {
+                e.acceptTransferModes(TransferMode.COPY);
+                e.consume();
+                return;
+            }
+
             Dragboard db = e.getDragboard();
             Tab dragged = draggedTab.get();
             if (!db.hasContent(tabMove) || dragged == null) return;
@@ -243,7 +254,17 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
             e.consume();
         }
         private void handleDragDropped(DragEvent e) {
+
             var db = e.getDragboard();
+            if (db.hasFiles() && dropPoint(this, e) == DropPoint.HEADER) {
+                var path = db.getFiles().stream().map(File::toPath)
+                        .filter(Files::isReadable).filter(Files::isRegularFile)
+                        .findFirst().orElse(null);
+                add(new EditorPane(path));
+                e.setDropCompleted(false);
+                return;
+            }
+
             Tab dragged = draggedTab.get();
             if (!db.hasContent(tabMove) || dragged == null) {
                 e.setDropCompleted(false);
@@ -391,7 +412,8 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         node = tabNode(node);
         var snapshotParams = new SnapshotParameters();
         snapshotParams.setFill(Color.TRANSPARENT);
-        return node.snapshot(snapshotParams, null);
+        var snapshot = node.snapshot(snapshotParams, null);
+        return snapshot;
     }
 
     private static Node tabNode(Node node) {

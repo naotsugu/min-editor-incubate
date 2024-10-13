@@ -71,11 +71,16 @@ public class EditorPane extends StackPane {
     private Consumer<Path> newOpenHandler;
 
     public EditorPane() {
+        this(null);
+    }
+    public EditorPane(Path path) {
         canvas = new Canvas();
         canvas.setManaged(false);
         canvas.setFocusTraversable(true);
         draw = new FxDraw(canvas.getGraphicsContext2D());
-        model = EditorModel.of(draw.fontMetrics(), screenScroll());
+        model = (path == null)
+                ? EditorModel.of(draw.fontMetrics(), screenScroll())
+                : EditorModel.of(path, draw.fontMetrics(), screenScroll());
         vScroll.setOrientation(Orientation.VERTICAL);
         hScroll.setOrientation(Orientation.HORIZONTAL);
         StackPane.setAlignment(vScroll, Pos.TOP_RIGHT);
@@ -96,6 +101,8 @@ public class EditorPane extends StackPane {
         hScroll.valueProperty().addListener(this::handleHorizontalScroll);
         canvas.setInputMethodRequests(inputMethodRequests());
         canvas.setOnInputMethodTextChanged(this::handleInputMethodTextChanged);
+
+        fileNameProperty.setValue((path == null) ? "Untitled" : path.getFileName().toString());
     }
 
     public ReadOnlyStringProperty fileNameProperty() {
