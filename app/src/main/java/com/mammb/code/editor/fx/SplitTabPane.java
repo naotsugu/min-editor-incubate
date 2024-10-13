@@ -15,10 +15,12 @@
  */
 package com.mammb.code.editor.fx;
 
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
@@ -26,9 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
@@ -178,9 +178,16 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         }
         void handleFocused(ObservableValue<? extends Boolean> ob, Boolean o, Boolean focused) {
             if (focused) {
+                var active = activePane.get();
+                if (active != null) {
+                    active.getStyleClass().remove("app-tab-pane-active");
+                }
+                getStyleClass().add("app-tab-pane-active");
                 activePane.set(this);
                 if (!tabPane.getTabs().isEmpty()) {
-                    ((EditorPane) tabPane.getSelectionModel().getSelectedItem().getContent()).focus();
+                    var tab = tabPane.getSelectionModel().getSelectedItem();
+                    var editorPane = (EditorPane) tab.getContent();
+                    editorPane.focus();
                 }
             }
         }
@@ -344,6 +351,8 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     from.parent.parent.remove(from.parent);
                 }
                 initTab(dragged);
+                tabPane.getSelectionModel().select(dragged);
+
             }
             e.consume();
             e.setDropCompleted(true);

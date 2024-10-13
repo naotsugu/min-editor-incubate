@@ -93,18 +93,17 @@ public class App extends Application {
             -fx-padding:0;
         }
 
-        .tab-pane > .tab-header-area > .headers-region > .tab:top {
-            -fx-background-color: derive(-fx-box-border,30%)
+        .tab-pane > .tab-header-area > .headers-region > .tab {
+            -fx-background-color: -fx-hover-base;
         }
-
+        .app-tab-pane-active > .tab-pane > .tab-header-area > .headers-region > .tab:selected {
+            -fx-background-color: derive(-fx-box-border, 30%);
+        }
         .tab-pane > .tab-header-area > .headers-region > .tab:selected {
             -fx-color: -fx-hover-base;
         }
         .tab-pane > .tab-header-area > .tab-header-background {
             -fx-background-color: derive(-fx-text-box-border, 30%);
-        }
-        .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
-            -fx-border-width: 0;
         }
         .tab-pane > .tab-header-area {
             -fx-padding: 0;
@@ -112,7 +111,6 @@ public class App extends Application {
         .tab-label {
           -fx-font: 13px "Consolas";
         }
-
         """
         .replaceAll("app-base", Theme.dark.baseColor())
         .replaceAll("app-text", Theme.dark.fgColor())
