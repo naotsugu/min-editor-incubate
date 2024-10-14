@@ -23,11 +23,11 @@ import javafx.scene.layout.BorderPane;
  */
 public class AppPane extends BorderPane {
 
-    private final SplitTabPane container = new SplitTabPane();
+    private SplitTabPane container;
 
     public AppPane() {
+        container = new SplitTabPane(new EditorPane());
         setCenter(container);
-        container.addRight(new EditorPane());
     }
 
 }

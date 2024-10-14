@@ -15,12 +15,10 @@
  */
 package com.mammb.code.editor.fx;
 
-import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
@@ -56,6 +54,10 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
     public SplitTabPane() {
         getChildren().add(pane);
     }
+    public SplitTabPane(EditorPane node) {
+        this();
+        add(node);
+    }
     private SplitTabPane(EditorPane node, SplitTabPane parent) {
         this();
         add(node);
@@ -63,21 +65,17 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
     }
     private SplitTabPane(DndTabPane node, SplitTabPane parent) {
         this();
-        pane.getItems().add(node.parentWith(this));
+        pane.getItems().add(node);
         this.parent = parent;
+        node.setParent(this);
     }
-    private Node first() {
-        return pane.getItems().isEmpty() ? null : pane.getItems().getFirst();
-    }
-    private Node second() {
-        return pane.getItems().size() < 2 ? null : pane.getItems().getLast();
-    }
-    public void add(EditorPane node) {
+    private DndTabPane add(EditorPane node) {
         pane.getItems().clear();
         DndTabPane dndTabPane = new DndTabPane(this, node);
         pane.getItems().add(dndTabPane);
+        return dndTabPane;
     }
-    public void remove(SplitTabPane splitTabPane) {
+    private void remove(SplitTabPane splitTabPane) {
         pane.getItems().remove(splitTabPane);
         var node = pane.getItems().getFirst();
         if (node instanceof SplitTabPane stp) {
@@ -89,52 +87,56 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         pane.getItems()
                 .forEach(i -> ((Hierarchical) i).setParent(this));
     }
-    public void addRight(EditorPane node) {
+    private DndTabPane addRight(EditorPane node) {
         if (pane.getItems().isEmpty()) {
-            add(node);
+            return add(node);
         } else {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.HORIZONTAL);
-            pane.getItems().addAll(
-                    new SplitTabPane(item, this),
-                    new SplitTabPane(node, this));
+            var left  = new SplitTabPane(item, this);
+            var right = new SplitTabPane(node, this);
+            pane.getItems().addAll(left, right);
+            return (DndTabPane) right.pane.getItems().getFirst();
         }
     }
-    public void addLeft(EditorPane node) {
+    private DndTabPane addLeft(EditorPane node) {
         if (pane.getItems().isEmpty()) {
-            add(node);
+            return add(node);
         } else {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.HORIZONTAL);
-            pane.getItems().addAll(
-                    new SplitTabPane(node, this),
-                    new SplitTabPane(item, this));
+            var left  = new SplitTabPane(node, this);
+            var right = new SplitTabPane(item, this);
+            pane.getItems().addAll(left, right);
+            return (DndTabPane) left.pane.getItems().getFirst();
         }
     }
-    public void addTop(EditorPane node) {
+    private DndTabPane addTop(EditorPane node) {
         if (pane.getItems().isEmpty()) {
-            add(node);
+            return add(node);
         } else {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.VERTICAL);
-            pane.getItems().addAll(
-                    new SplitTabPane(node, this),
-                    new SplitTabPane(item, this));
+            var top = new SplitTabPane(node, this);
+            var bottom = new SplitTabPane(item, this);
+            pane.getItems().addAll(top, bottom);
+            return (DndTabPane) top.pane.getItems().getFirst();
         }
     }
-    public void addBottom(EditorPane node) {
+    private DndTabPane addBottom(EditorPane node) {
         if (pane.getItems().isEmpty()) {
-            add(node);
+            return add(node);
         } else {
             var item = (DndTabPane) pane.getItems().getFirst();
             pane.getItems().clear();
             pane.setOrientation(Orientation.VERTICAL);
-            pane.getItems().addAll(
-                    new SplitTabPane(item, this),
-                    new SplitTabPane(node, this));
+            var top = new SplitTabPane(item, this);
+            var bottom = new SplitTabPane(node, this);
+            pane.getItems().addAll(top, bottom);
+            return (DndTabPane) bottom.pane.getItems().getFirst();
         }
     }
 
@@ -160,10 +162,6 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
             setOnDragDone(this::handleDragDone);
             add(node);
         }
-        DndTabPane parentWith(SplitTabPane parent) {
-            this.parent = parent;
-            return this;
-        }
         void add(EditorPane node) {
             var tab = new Tab();
             tab.setContent(node);
@@ -182,22 +180,23 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     (ob, o, n) -> label.setText(n));
             node.setNewOpenHandler(path -> add(new EditorPane()));
         }
-        void handleFocused(ObservableValue<? extends Boolean> ob, Boolean o, Boolean focused) {
-            if (focused) {
-                var active = activePane.get();
-                if (active != null) {
-                    active.getStyleClass().remove("app-tab-pane-active");
-                }
-                getStyleClass().add("app-tab-pane-active");
-                activePane.set(this);
-                if (!tabPane.getTabs().isEmpty()) {
-                    var tab = tabPane.getSelectionModel().getSelectedItem();
-                    var editorPane = (EditorPane) tab.getContent();
-                    editorPane.focus();
-                }
+        private void handleFocused(ObservableValue<? extends Boolean> ob, Boolean o, Boolean focused) {
+            if (focused) focus();
+        }
+        private void focus() {
+            var active = activePane.get();
+            if (active != null) {
+                active.getStyleClass().remove("app-tab-pane-active");
+            }
+            getStyleClass().add("app-tab-pane-active");
+            activePane.set(this);
+            if (!tabPane.getTabs().isEmpty()) {
+                var tab = tabPane.getSelectionModel().getSelectedItem();
+                var editorPane = (EditorPane) tab.getContent();
+                editorPane.focus();
             }
         }
-        void handleSelectedTabItem(ObservableValue<? extends Tab> ob, Tab o, Tab tab) {
+        private void handleSelectedTabItem(ObservableValue<? extends Tab> ob, Tab o, Tab tab) {
             if (tab != null) {
                 ((EditorPane) tab.getContent()).focus();
             }
@@ -225,7 +224,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         }
 
         private void handleDragOver(DragEvent e) {
-
+            marker.setVisible(false);
             if (e.getDragboard().hasFiles() && dropPoint(this, e) == DropPoint.HEADER) {
                 marker.setX(0.0);
                 marker.setY(0.0);
@@ -307,22 +306,21 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     }
                     case RIGHT -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addRight((EditorPane) dragged.getContent());
+                        parent.addRight((EditorPane) dragged.getContent()).focus();
                     }
                     case LEFT -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addLeft((EditorPane) dragged.getContent());
+                        parent.addLeft((EditorPane) dragged.getContent()).focus();
                     }
                     case TOP -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addTop((EditorPane) dragged.getContent());
+                        parent.addTop((EditorPane) dragged.getContent()).focus();
                     }
                     case BOTTOM -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addBottom((EditorPane) dragged.getContent());
+                        parent.addBottom((EditorPane) dragged.getContent()).focus();
                     }
                 }
-                tabPane.getSelectionModel().select(dragged);
             } else {
                 // drop to another Pane
                 boolean unplug = dragged.getTabPane().getTabs().size() <= 1;
@@ -334,19 +332,19 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     }
                     case RIGHT -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addRight((EditorPane) dragged.getContent());
+                        parent.addRight((EditorPane) dragged.getContent()).focus();
                     }
                     case LEFT -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addLeft((EditorPane) dragged.getContent());
+                        parent.addLeft((EditorPane) dragged.getContent()).focus();
                     }
                     case TOP -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addTop((EditorPane) dragged.getContent());
+                        parent.addTop((EditorPane) dragged.getContent()).focus();
                     }
                     case BOTTOM -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addBottom((EditorPane) dragged.getContent());
+                        parent.addBottom((EditorPane) dragged.getContent()).focus();
                     }
                 }
                 if (unplug) {
@@ -389,7 +387,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         double w = paneBounds.getWidth() / 4;
         double h = paneBounds.getHeight() / 4;
         if (new BoundingBox(
-                paneBounds.getMinX() - 25,
+                paneBounds.getMinX(),
                 paneBounds.getMinY(),
                 paneBounds.getWidth(),
                 25 * 2).contains(e.getScreenX(), e.getScreenY())) {
