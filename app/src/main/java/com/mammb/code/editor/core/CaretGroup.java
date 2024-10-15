@@ -32,8 +32,8 @@ public interface CaretGroup {
     List<Caret> carets();
     List<Range> marked();
     void at(List<Point> points);
+    void add(List<Point> points);
     int size();
-
 
     static CaretGroup of() {
         return new CaretGroupImpl();
@@ -77,7 +77,12 @@ public interface CaretGroup {
         @Override
         public void at(List<Point> points) {
             carets.clear();
-            points.forEach(p -> Caret.of(p.row(), p.col()));
+            add(points);
+        }
+
+        @Override
+        public void add(List<Point> points) {
+            points.forEach(p -> carets.add(Caret.of(p.row(), p.col())));
         }
 
         @Override
@@ -85,4 +90,5 @@ public interface CaretGroup {
             return carets.size();
         }
     }
+
 }

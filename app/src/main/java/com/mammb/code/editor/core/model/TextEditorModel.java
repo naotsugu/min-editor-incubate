@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * The text editor model.
@@ -271,6 +272,25 @@ public class TextEditorModel implements EditorModel {
         c.clearMark();
         int line = view.yToLineOnScreen(y - marginTop);
         c.at(view.lineToRow(line), view.xToCol(line, x - marginLeft));
+    }
+
+    @Override
+    public void ctrlClick(double x, double y) {
+        if (x < marginLeft) {
+            Caret caret = carets.unique();
+            int clickLine = view.yToLineOnScreen(y - marginTop);
+            int caretLine = view.rowToLine(caret.row(), caret.col());
+            double caretX = view.xOnLayout(caretLine, caret.col());
+            if (clickLine == caretLine) return;
+            var stream = (clickLine < caretLine)
+                    ? IntStream.rangeClosed(clickLine, caretLine - 1)
+                    : IntStream.rangeClosed(caretLine + 1, clickLine);
+            carets.add(stream
+                    .mapToObj(line -> Point.of(
+                            view.lineToRow(line),
+                            view.xToCol(line, caretX)))
+                    .toList());
+        }
     }
 
     @Override
