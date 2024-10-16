@@ -15,6 +15,7 @@
  */
 package com.mammb.code.editor.fx;
 
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
@@ -216,7 +217,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                 ClipboardContent cc = new ClipboardContent();
                 cc.put(tabMove, String.valueOf(System.identityHashCode(label)));
                 Image image = tabImage(label);
-                db.setDragView(image, image.getWidth(), -image.getHeight());
+                db.setDragView(image, image.getWidth() / 2, image.getHeight() / 2);
                 db.setContent(cc);
                 Tab tab = getTabPane().getTabs().stream().filter(t -> t.getGraphic().equals(label)).findFirst().get();
                 draggedTab.set(tab);
@@ -306,19 +307,23 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     }
                     case RIGHT -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addRight((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addRight((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                     case LEFT -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addLeft((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addLeft((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                     case TOP -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addTop((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addTop((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                     case BOTTOM -> {
                         from.tabPane.getTabs().remove(dragged);
-                        parent.addBottom((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addBottom((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                 }
             } else {
@@ -329,22 +334,27 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                         int insertionIndex = insertionIndex(e);
                         dragged.getTabPane().getTabs().remove(dragged);
                         tabPane.getTabs().add(insertionIndex, dragged);
+                        tabPane.requestFocus();
                     }
                     case RIGHT -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addRight((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addRight((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                     case LEFT -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addLeft((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addLeft((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                     case TOP -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addTop((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addTop((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                     case BOTTOM -> {
                         dragged.getTabPane().getTabs().remove(dragged);
-                        parent.addBottom((EditorPane) dragged.getContent()).focus();
+                        var dndTabPane = parent.addBottom((EditorPane) dragged.getContent());
+                        Platform.runLater(dndTabPane::focus);
                     }
                 }
                 if (unplug) {
