@@ -31,6 +31,7 @@ public interface CaretGroup {
     List<Point> points();
     List<Caret> carets();
     List<Range> marked();
+    boolean hasMarked();
     void at(List<Point> points);
     void add(List<Point> points);
     int size();
@@ -72,6 +73,11 @@ public interface CaretGroup {
         @Override
         public List<Range> marked() {
             return carets.stream().filter(Caret::isMarked).map(Caret::markedRange).toList();
+        }
+
+        @Override
+        public boolean hasMarked() {
+            return carets.stream().anyMatch(Caret::isMarked);
         }
 
         @Override

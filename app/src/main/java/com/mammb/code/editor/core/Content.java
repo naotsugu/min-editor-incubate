@@ -32,6 +32,7 @@ import java.util.Optional;
 public interface Content {
 
     Point insert(Point point, String text);
+    List<Point> insert(List<Point> points, String text);
     String delete(Point point);
     Point backspace(Point point);
     Point replace(Point start, Point end, String text);
@@ -81,6 +82,13 @@ public interface Content {
         public Point insert(Point point, String text) {
             var pos = edit.insert(point.row(), point.col(), text);
             return new PointRec(pos.row(), pos.col());
+        }
+
+        @Override
+        public List<Point> insert(List<Point> points, String text) {
+            var pos = edit.insert(points.stream()
+                    .map(p -> new TextEdit.Pos(p.row(), p.col())).toList(), text);
+            return pos.stream().map(p -> (Point) new PointRec(p.row(), p.col())).toList();
         }
 
         @Override

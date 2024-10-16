@@ -33,6 +33,8 @@ import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -344,7 +346,15 @@ public class TextEditorModel implements EditorModel {
                 caret.at(pos);
             }
         } else {
-            // TODO
+            if (carets.hasMarked()) {
+                // TODO marked
+            } else {
+                var points = content.insert(carets.points(), text);
+                view.refreshBuffer(
+                        Collections.min(points).row(),
+                        Collections.max(points).row() + 1);
+                carets.at(points);
+            }
         }
     }
 
