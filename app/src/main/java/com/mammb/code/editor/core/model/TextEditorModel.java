@@ -290,6 +290,10 @@ public class TextEditorModel implements EditorModel {
                             view.lineToRow(line),
                             view.xToCol(line, caretX)))
                     .toList());
+        } else {
+            int line = view.yToLineOnScreen(y - marginTop);
+            carets.add(List.of(
+                    Point.of(view.lineToRow(line), view.xToCol(line, x - marginLeft))));
         }
     }
 
