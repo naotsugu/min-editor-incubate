@@ -46,7 +46,6 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
 
     private static final AtomicReference<Tab> draggedTab = new AtomicReference<>();
     private static final AtomicReference<DndTabPane> activePane = new AtomicReference<>();
-
     private static final DataFormat tabMove = new DataFormat("SplitTabPane:tabMove");
 
     private SplitPane pane = new SplitPane();

@@ -70,7 +70,7 @@ public class SqlSyntax implements Syntax {
                 spans.add(span);
             } else if (Character.isAlphabetic(ch)) {
                 var s = source.nextIdentifierPart();
-                if (keywords.match(s.string())) {
+                if (keywords.match(s.string().toLowerCase())) {
                     var span = new StyleSpan(Palette.darkOrange, s.index(), s.length());
                     spans.add(span);
                 }
