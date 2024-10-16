@@ -38,7 +38,7 @@ public interface Content {
     Point backspace(Point point);
     List<Point> backspace(List<Point> points);
     Point replace(Point start, Point end, String text);
-    List<Point> deleteRanges(List<Range> ranges);
+    List<Point> replace(List<Range> ranges, String text);
 
     /**
      * Undo.
@@ -125,13 +125,13 @@ public interface Content {
         }
 
         @Override
-        public List<Point> deleteRanges(List<Range> ranges) {
-            // TODO transaction delete
+        public List<Point> replace(List<Range> ranges, String text) {
+            // TODO transaction replace
             return ranges.stream().sorted(Comparator.reverseOrder())
                     .map(range -> edit.replace(
                             range.min().row(), range.min().col(),
                             range.max().row(), range.max().col(),
-                            ""))
+                            text))
                     .map(pos -> new PointRec(pos.row(), pos.col()))
                     .map(Point.class::cast)
                     .toList();

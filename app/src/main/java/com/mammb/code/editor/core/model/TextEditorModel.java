@@ -346,7 +346,12 @@ public class TextEditorModel implements EditorModel {
             }
         } else {
             if (carets.hasMarked()) {
-                // TODO marked
+                var ranges = carets.ranges();
+                var points = content.replace(ranges, text);
+                view.refreshBuffer(
+                        Collections.min(points).row(),
+                        Collections.max(points).row() + 1);
+                carets.at(points);
             } else {
                 var points = content.insert(carets.points(), text);
                 view.refreshBuffer(
@@ -369,7 +374,12 @@ public class TextEditorModel implements EditorModel {
             }
         } else {
             if (carets.hasMarked()) {
-                // TODO marked
+                var ranges = carets.ranges();
+                var points = content.replace(ranges, "");
+                view.refreshBuffer(
+                        Collections.min(points).row(),
+                        Collections.max(points).row() + 1);
+                carets.at(points);
             } else {
                 var points = content.delete(carets.points());
                 view.refreshBuffer(
@@ -393,7 +403,12 @@ public class TextEditorModel implements EditorModel {
             }
         } else {
             if (carets.hasMarked()) {
-                // TODO marked
+                var ranges = carets.ranges();
+                var points = content.replace(ranges, "");
+                view.refreshBuffer(
+                        Collections.min(points).row(),
+                        Collections.max(points).row() + 1);
+                carets.at(points);
             } else {
                 var points = content.backspace(carets.points());
                 view.refreshBuffer(
@@ -445,7 +460,7 @@ public class TextEditorModel implements EditorModel {
     @Override
     public void cutToClipboard() {
         copyToClipboard();
-        content.deleteRanges(carets.marked());
+        content.replace(carets.marked(), "");
     }
 
     @Override
