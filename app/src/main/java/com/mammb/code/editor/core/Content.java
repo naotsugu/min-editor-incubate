@@ -34,9 +34,11 @@ public interface Content {
     Point insert(Point point, String text);
     List<Point> insert(List<Point> points, String text);
     String delete(Point point);
+    List<Point> delete(List<Point> points);
     Point backspace(Point point);
+    List<Point> backspace(List<Point> points);
     Point replace(Point start, Point end, String text);
-    List<Point> delete(List<Range> ranges);
+    List<Point> deleteRanges(List<Range> ranges);
 
     /**
      * Undo.
@@ -97,9 +99,23 @@ public interface Content {
         }
 
         @Override
+        public List<Point> delete(List<Point> points) {
+            var pos = edit.delete(points.stream()
+                    .map(p -> new TextEdit.Pos(p.row(), p.col())).toList());
+            return pos.stream().map(p -> (Point) new PointRec(p.row(), p.col())).toList();
+        }
+
+        @Override
         public Point backspace(Point point) {
             var pos = edit.backspace(point.row(), point.col());
             return new PointRec(pos.row(), pos.col());
+        }
+
+        @Override
+        public List<Point> backspace(List<Point> points) {
+            var pos = edit.backspace(points.stream()
+                    .map(p -> new TextEdit.Pos(p.row(), p.col())).toList());
+            return pos.stream().map(p -> (Point) new PointRec(p.row(), p.col())).toList();
         }
 
         @Override
@@ -109,7 +125,7 @@ public interface Content {
         }
 
         @Override
-        public List<Point> delete(List<Range> ranges) {
+        public List<Point> deleteRanges(List<Range> ranges) {
             // TODO transaction delete
             return ranges.stream().sorted(Comparator.reverseOrder())
                     .map(range -> edit.replace(
