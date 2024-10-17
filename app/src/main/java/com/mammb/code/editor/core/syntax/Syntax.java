@@ -46,6 +46,7 @@ public interface Syntax {
             case "sql" -> new SqlSyntax();
             case "py" -> new PythonSyntax();
             case "js", "json" -> new JsSyntax();
+            case "kotlin", "kt", "kts" -> new KotlinSyntax();
             default -> new PassThrough(name);
         };
     }
