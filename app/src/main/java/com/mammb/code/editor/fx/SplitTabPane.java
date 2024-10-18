@@ -17,6 +17,7 @@ package com.mammb.code.editor.fx;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -186,6 +187,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         private void focus() {
             var active = activePane.get();
             if (active != null) {
+                if (active == this) return;
                 active.getStyleClass().remove("app-tab-pane-active");
             }
             getStyleClass().add("app-tab-pane-active");
@@ -307,22 +309,22 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     case RIGHT -> {
                         from.tabPane.getTabs().remove(dragged);
                         var dndTabPane = parent.addRight((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                     case LEFT -> {
                         from.tabPane.getTabs().remove(dragged);
                         var dndTabPane = parent.addLeft((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                     case TOP -> {
                         from.tabPane.getTabs().remove(dragged);
                         var dndTabPane = parent.addTop((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                     case BOTTOM -> {
                         from.tabPane.getTabs().remove(dragged);
                         var dndTabPane = parent.addBottom((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                 }
             } else {
@@ -338,22 +340,22 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     case RIGHT -> {
                         dragged.getTabPane().getTabs().remove(dragged);
                         var dndTabPane = parent.addRight((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                     case LEFT -> {
                         dragged.getTabPane().getTabs().remove(dragged);
                         var dndTabPane = parent.addLeft((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                     case TOP -> {
                         dragged.getTabPane().getTabs().remove(dragged);
                         var dndTabPane = parent.addTop((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                     case BOTTOM -> {
                         dragged.getTabPane().getTabs().remove(dragged);
                         var dndTabPane = parent.addBottom((EditorPane) dragged.getContent());
-                        Platform.runLater(dndTabPane::focus);
+                        ensureFocus(dndTabPane);
                     }
                 }
                 if (unplug) {
@@ -371,6 +373,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
         private void handleDragDone(DragEvent e) {
             marker.setVisible(false);
             draggedTab.set(null);
+            e.consume();
         }
         private int insertionIndex(DragEvent e) {
             int insertion = 0;
@@ -445,6 +448,20 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
                     node.getClass().getSimpleName(),
                     "TabHeaderSkin")) return node;
         }
+    }
+
+    private static void ensureFocus(DndTabPane dndTabPane) {
+        new Thread(new Task<Void>() {
+            @Override
+            protected Void call() {
+                try {
+                    Thread.sleep(17);
+                } catch (InterruptedException ignore) {
+                }
+                Platform.runLater(dndTabPane::focus);
+                return null;
+            }
+        }).start();
     }
 
 }
