@@ -16,7 +16,9 @@
 package com.mammb.code.editor.core.syntax;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -89,9 +91,11 @@ public class BlockScopes {
     private record StartToken(BlockType.Range type) implements Token { }
     private record EndToken(BlockType.Range type) implements Token { }
 
+
     public interface BlockType {
         String open();
         String close();
+        default Object attribute() { return null; }
         interface Neutral extends BlockType {
             default String close() { return open(); }
         }
@@ -101,10 +105,15 @@ public class BlockScopes {
             record NeutralRecord(String open) implements Neutral { }
             return new NeutralRecord(open);
         }
+        static Neutral neutral(String open, Syntax syntax) {
+            record NeutralRecord(String open, Syntax attribute) implements Neutral { }
+            return new NeutralRecord(open, syntax);
+        }
         static Range range(String open, String close) {
             record RangeRecord(String open, String close) implements Range { }
             return new RangeRecord(open, close);
         }
     }
+
 
 }
