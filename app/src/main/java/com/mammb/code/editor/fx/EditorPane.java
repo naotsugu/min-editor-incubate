@@ -101,6 +101,10 @@ public class EditorPane extends StackPane {
         hScroll.valueProperty().addListener(this::handleHorizontalScroll);
         canvas.setInputMethodRequests(inputMethodRequests());
         canvas.setOnInputMethodTextChanged(this::handleInputMethodTextChanged);
+        canvas.focusedProperty().addListener((ob, o, n) -> {
+            model.setCaretVisible(n);
+            draw();
+        });
 
         fileNameProperty.setValue((path == null) ? "Untitled" : path.getFileName().toString());
     }

@@ -64,6 +64,7 @@ public interface EditorModel {
     void clickDouble(double x, double y);
     void clickTriple(double x, double y);
     void moveDragged(double x, double y);
+    void setCaretVisible(boolean visible);
 
     void input(String text);
     void delete();

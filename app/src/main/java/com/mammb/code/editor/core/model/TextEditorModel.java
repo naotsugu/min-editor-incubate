@@ -47,6 +47,7 @@ import java.util.stream.IntStream;
 public class TextEditorModel implements EditorModel {
 
     private double marginTop = 5, marginLeft = 70;
+    private boolean caretVisible = true;
     private final Content content;
     private final ScreenLayout view;
     private final Syntax syntax;
@@ -85,16 +86,18 @@ public class TextEditorModel implements EditorModel {
             }
             y += text.height();
         }
-        for (Caret c : carets.carets()) {
-            Point p = c.pointFlush();
-            view.locationOn(p.row(), p.col()).ifPresent(loc -> {
-                draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop);
-                if (c.hasFlush()) {
-                    view.locationOn(c.point().row(), c.point().col()).ifPresent(org ->
-                            draw.underline(org.x() + marginLeft - scroll.xVal(), org.y() + marginTop,
-                                           loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
-                }
-            });
+        if (caretVisible) {
+            for (Caret c : carets.carets()) {
+                Point p = c.pointFlush();
+                view.locationOn(p.row(), p.col()).ifPresent(loc -> {
+                    draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop);
+                    if (c.hasFlush()) {
+                        view.locationOn(c.point().row(), c.point().col()).ifPresent(org ->
+                                draw.underline(org.x() + marginLeft - scroll.xVal(), org.y() + marginTop,
+                                        loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
+                    }
+                });
+            }
         }
         drawLeftGarter(draw);
 
@@ -331,6 +334,11 @@ public class TextEditorModel implements EditorModel {
         Caret caret = carets.getFirst();
         caret.floatAt(row, col);
         caret.markIf(true);
+    }
+
+    @Override
+    public void setCaretVisible(boolean visible) {
+        this.caretVisible = visible;
     }
 
     @Override
