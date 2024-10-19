@@ -61,6 +61,7 @@ public abstract class FxActions {
         else if (SC_X.match(e)) return Action.of(Action.Type.CUT);
         else if (SC_Z.match(e)) return Action.of(Action.Type.UNDO);
         else if (SC_Y.match(e) || SC_SZ.match(e)) return Action.of(Action.Type.REDO);
+        else if (SC_A.match(e)) return Action.of(Action.Type.SELECT_ALL);
         else if (SC_O.match(e)) return Action.of(Action.Type.OPEN);
         else if (SC_S.match(e)) return Action.of(Action.Type.SAVE);
         else if (SC_SA.match(e)) return Action.of(Action.Type.SAVE_AS);
@@ -86,6 +87,7 @@ public abstract class FxActions {
         return Action.of(Action.Type.EMPTY);
     }
 
+    private static final KeyCombination SC_A = new KeyCharacterCombination("a", KeyCombination.SHORTCUT_DOWN);
     private static final KeyCombination SC_C = new KeyCharacterCombination("c", KeyCombination.SHORTCUT_DOWN);
     private static final KeyCombination SC_V = new KeyCharacterCombination("v", KeyCombination.SHORTCUT_DOWN);
     private static final KeyCombination SC_X = new KeyCharacterCombination("x", KeyCombination.SHORTCUT_DOWN);

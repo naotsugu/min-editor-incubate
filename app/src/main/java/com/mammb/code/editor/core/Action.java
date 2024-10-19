@@ -49,14 +49,17 @@ public interface Action {
         HOME, SELECT_HOME, END, SELECT_END,
         PAGE_UP, SELECT_PAGE_UP,
         PAGE_DOWN, SELECT_PAGE_DOWN,
+        SELECT_ALL,
         COPY, PASTE, CUT,
         UNDO, REDO,
         OPEN, SAVE, SAVE_AS, NEW,
+        WRAP,
         ESC, EMPTY,
         ;
 
         public boolean syncCaret() {
-            return !(this == OPEN || this == SAVE || this ==  SAVE_AS || this ==  NEW || this == ESC || this ==  EMPTY);
+            return !(this == OPEN || this == SAVE || this ==  SAVE_AS ||
+                    this ==  NEW || this == ESC || this ==  EMPTY);
         }
     }
 

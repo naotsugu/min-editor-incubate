@@ -177,8 +177,7 @@ public class SplitTabPane extends StackPane implements Hierarchical<SplitTabPane
             tab.setGraphic(label);
             label.setOnDragDetected(this::handleTabDragDetected);
             tab.setOnClosed(this::handleOnTabClosed);
-            node.fileNameProperty().addListener(
-                    (ob, o, n) -> label.setText(n));
+            node.fileNameProperty().addListener((ob, o, n) -> label.setText(n));
             node.setNewOpenHandler(path -> add(new EditorPane()));
         }
         private void handleFocused(ObservableValue<? extends Boolean> ob, Boolean o, Boolean focused) {
