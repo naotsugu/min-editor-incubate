@@ -66,6 +66,8 @@ public abstract class FxActions {
         else if (SC_S.match(e)) return Action.of(Action.Type.SAVE);
         else if (SC_SA.match(e)) return Action.of(Action.Type.SAVE_AS);
         else if (SC_N.match(e)) return Action.of(Action.Type.NEW);
+        else if (SC_W.match(e)) return Action.of(Action.Type.WRAP);
+        else if (SC_F.match(e)) return Action.of(Action.Type.FIND);
 
         else {
             if (keyInput.test(e)) {
@@ -100,6 +102,8 @@ public abstract class FxActions {
     private static final KeyCombination SC_O = new KeyCharacterCombination("o", KeyCombination.SHORTCUT_DOWN);
     private static final KeyCombination SC_S = new KeyCharacterCombination("s", KeyCombination.SHORTCUT_DOWN);
     private static final KeyCombination SC_SA= new KeyCharacterCombination("s", KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
+    private static final KeyCombination SC_W = new KeyCharacterCombination("w", KeyCombination.SHORTCUT_DOWN);
+    private static final KeyCombination SC_F = new KeyCharacterCombination("f", KeyCombination.SHORTCUT_DOWN);
 
     private static final Predicate<KeyEvent> controlKeysFilter = e ->
             System.getProperty("os.name").toLowerCase().startsWith("windows")

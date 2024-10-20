@@ -252,6 +252,7 @@ public class EditorPane extends StackPane {
             case SAVE -> save();
             case SAVE_AS -> saveAs();
             case NEW -> newEdit();
+            case FIND -> find();
         }
         if (action.type().syncCaret()) {
             model.scrollToCaret();
@@ -356,6 +357,10 @@ public class EditorPane extends StackPane {
         stage.setScene(scene);
         stage.setTitle("min-editor");
         stage.show();
+    }
+
+    private void find() {
+
     }
 
     private InputMethodRequests inputMethodRequests() {

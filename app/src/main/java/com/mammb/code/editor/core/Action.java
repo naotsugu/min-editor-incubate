@@ -54,6 +54,7 @@ public interface Action {
         UNDO, REDO,
         OPEN, SAVE, SAVE_AS, NEW,
         WRAP,
+        FIND,
         ESC, EMPTY,
         ;
 

@@ -491,6 +491,11 @@ public class TextEditorModel implements EditorModel {
     }
 
     @Override
+    public void wrap() {
+        // TODO
+    }
+
+    @Override
     public Optional<Loc> imeOn() {
         Caret caret = carets.getFirst();
         caret.flushAt(caret.point());
