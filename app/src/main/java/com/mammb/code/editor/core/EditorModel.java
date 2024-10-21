@@ -85,6 +85,8 @@ public interface EditorModel {
     boolean isImeOn();
     void inputImeComposed(String text);
 
+    void findAll(String text);
+
     private static String extension(Path path) {
         return Optional.of(path.getFileName().toString())
                 .filter(f -> f.contains("."))

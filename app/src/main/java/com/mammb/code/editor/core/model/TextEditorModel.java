@@ -18,6 +18,7 @@ package com.mammb.code.editor.core.model;
 import com.mammb.code.editor.core.Caret;
 import com.mammb.code.editor.core.CaretGroup;
 import com.mammb.code.editor.core.Content;
+import com.mammb.code.editor.core.Decorate;
 import com.mammb.code.editor.core.Draw;
 import com.mammb.code.editor.core.EditorModel;
 import com.mammb.code.editor.core.FontMetrics;
@@ -50,14 +51,14 @@ public class TextEditorModel implements EditorModel {
     private boolean caretVisible = true;
     private final Content content;
     private final ScreenLayout view;
-    private final Syntax syntax;
     private final CaretGroup carets = CaretGroup.of();
+    private final Decorate decorate;
     private final ScreenScroll scroll;
 
     public TextEditorModel(Content content, FontMetrics fm, Syntax syntax, ScreenScroll scroll) {
         this.content = content;
         this.view = ScreenLayout.of(content, fm);
-        this.syntax = syntax;
+        this.decorate = Decorate.of(syntax);
         this.scroll = scroll;
     }
 
@@ -79,8 +80,7 @@ public class TextEditorModel implements EditorModel {
         double y = 0;
         for (Text text : view.texts()) {
             double x = 0;
-            var spans = syntax.apply(text.row(), text.value());
-            for (StyledText st : StyledText.of(text).putAll(spans).build()) {
+            for (StyledText st : StyledText.of(text).putAll(decorate.apply(text)).build()) {
                 draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
                 x += st.width();
             }
@@ -521,6 +521,14 @@ public class TextEditorModel implements EditorModel {
         var pos = content.insertFlush(caret.point(), text);
         view.refreshBuffer(caret.row(), pos.row() + 1);
         caret.flushAt(pos);
+    }
+
+    @Override
+    public void findAll(String text) {
+        var ranges = content.findAll(text).stream().map(point ->
+            new Range(point, Point.of(point.row(), point.row() + text.length()))
+        ).toList();
+        decorate.add(ranges, new Style.BgColor("#FFFF0066"));
     }
 
 }
