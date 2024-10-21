@@ -60,7 +60,7 @@ public interface Content {
     boolean isModified();
     Point insertFlush(Point point, String text);
     void clearFlush();
-
+    List<Point> findAll(String text);
 
     static Content of() {
         return new ContentImpl();
@@ -68,6 +68,7 @@ public interface Content {
     static Content of(Path path) {
         return new ContentImpl(path);
     }
+
 
     class ContentImpl implements Content {
         private final TextEdit edit;
@@ -207,6 +208,15 @@ public interface Content {
             flushes.clear();
         }
 
-        private record PointText(Point point, String text) {}
+        @Override
+        public List<Point> findAll(String text) {
+            var founds = edit.findAll(text);
+            return founds.stream()
+                    .map(found -> (Point) new PointRec(found.row(), found.col()))
+                    .toList();
+        }
+
+        record PointText(Point point, String text) {}
+
     }
 }

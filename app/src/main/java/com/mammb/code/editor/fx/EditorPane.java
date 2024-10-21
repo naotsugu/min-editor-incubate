@@ -29,6 +29,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -360,7 +362,12 @@ public class EditorPane extends StackPane {
     }
 
     private void find() {
-
+        var dialog = new Dialog<>();
+        dialog.initOwner(getScene().getWindow());
+        dialog.setTitle("Find");
+        DialogPane pane = dialog.getDialogPane();
+        pane.getButtonTypes().addAll(ButtonType.CLOSE);
+        dialog.show();
     }
 
     private InputMethodRequests inputMethodRequests() {
