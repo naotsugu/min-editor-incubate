@@ -28,6 +28,7 @@ public interface SubText extends Text {
     int toIndex();
     SubText prev();
     SubText next();
+    Text parent();
     default boolean hasPrev() {
         return prev() != null;
     }
@@ -93,48 +94,24 @@ public interface SubText extends Text {
         }
 
         @Override
-        public int row() {
-            return parent.row();
-        }
-
+        public int row() { return parent.row(); }
         @Override
-        public String value() {
-            return parent.value().substring(fromIndex, toIndex);
-        }
-
+        public String value() { return parent.value().substring(fromIndex, toIndex); }
         @Override
-        public double[] advances() {
-            return Arrays.copyOfRange(parent.advances(), fromIndex, toIndex);
-        }
-
+        public double[] advances() { return Arrays.copyOfRange(parent.advances(), fromIndex, toIndex); }
         @Override
-        public double width() {
-            return width;
-        }
-
+        public double width() { return width; }
         @Override
-        public double height() {
-            return parent.height();
-        }
-
+        public double height() { return parent.height(); }
         @Override
-        public int fromIndex() {
-            return fromIndex;
-        }
-
+        public int fromIndex() { return fromIndex; }
         @Override
-        public int toIndex() {
-            return toIndex;
-        }
-
+        public int toIndex() { return toIndex; }
         @Override
-        public SubText prev() {
-            return prev;
-        }
-
+        public SubText prev() { return prev; }
         @Override
-        public SubText next() {
-            return next;
-        }
+        public SubText next() { return next; }
+        @Override
+        public Text parent() { return parent; }
     }
 }

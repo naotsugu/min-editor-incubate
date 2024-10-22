@@ -29,6 +29,7 @@ import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.syntax.Syntax;
 import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.StyledText;
+import com.mammb.code.editor.core.text.SubText;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
@@ -66,6 +67,13 @@ public class TextEditorModel implements EditorModel {
     public void draw(Draw draw) {
         view.applyScreenScroll(scroll);
         draw.clear();
+        drawSelection(draw);
+        drawText(draw);
+        if (caretVisible) drawCaret(draw);
+        drawLeftGarter(draw);
+    }
+
+    private void drawSelection(Draw draw) {
         for (Range r : carets.marked()) {
             Loc l1 = view.locationOn(r.min().row(), r.min().col()).orElse(null);
             Loc l2 = view.locationOn(r.max().row(), r.max().col()).orElse(null);
@@ -77,30 +85,49 @@ public class TextEditorModel implements EditorModel {
                     l2.x() + marginLeft - scroll.xVal(), l2.y() + marginTop,
                     marginLeft - scroll.xVal(), view.screenWidth() + marginLeft);
         }
-        double y = 0;
+    }
+
+    private void drawText(Draw draw) {
+        double x = 0, y = 0;
         for (Text text : view.texts()) {
-            double x = 0;
+            x = 0;
             for (StyledText st : StyledText.of(text).putAll(decorate.apply(text)).build()) {
                 draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
                 x += st.width();
             }
             y += text.height();
         }
-        if (caretVisible) {
-            for (Caret c : carets.carets()) {
-                Point p = c.pointFlush();
-                view.locationOn(p.row(), p.col()).ifPresent(loc -> {
-                    draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop);
-                    if (c.hasFlush()) {
-                        view.locationOn(c.point().row(), c.point().col()).ifPresent(org ->
-                                draw.underline(org.x() + marginLeft - scroll.xVal(), org.y() + marginTop,
-                                        loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
-                    }
-                });
+    }
+
+    private void drawText2(Draw draw) {
+        double x = 0, y = 0;
+        for (Text text : view.texts()) {
+            if (text instanceof SubText sub) {
+
+
+            } else {
+                x = 0;
+                for (StyledText st : StyledText.of(text).putAll(decorate.apply(text)).build()) {
+                    draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
+                    x += st.width();
+                }
+                y += text.height();
             }
         }
-        drawLeftGarter(draw);
+    }
 
+    private void drawCaret(Draw draw) {
+        for (Caret c : carets.carets()) {
+            Point p = c.pointFlush();
+            view.locationOn(p.row(), p.col()).ifPresent(loc -> {
+                draw.caret(loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop);
+                if (c.hasFlush()) {
+                    view.locationOn(c.point().row(), c.point().col()).ifPresent(org ->
+                            draw.underline(org.x() + marginLeft - scroll.xVal(), org.y() + marginTop,
+                                    loc.x() + marginLeft - scroll.xVal(), loc.y() + marginTop));
+                }
+            });
+        }
     }
 
     private void drawLeftGarter(Draw draw) {
