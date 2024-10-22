@@ -30,13 +30,11 @@ import com.mammb.code.editor.core.syntax.Syntax;
 import com.mammb.code.editor.core.text.Style;
 import com.mammb.code.editor.core.text.Style.StyleSpan;
 import com.mammb.code.editor.core.text.StyledText;
-import com.mammb.code.editor.core.text.SubText;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -90,25 +88,10 @@ public class TextEditorModel implements EditorModel {
     }
 
     private void drawText(Draw draw) {
-        double x = 0, y = 0;
+        double x, y = 0;
         for (Text text : view.texts()) {
             x = 0;
-            List<StyleSpan> spans = new ArrayList<>();
-            if (text instanceof SubText sub) {
-                for (StyleSpan span : decorate.apply(sub.parent())) {
-                    if (span.offset() + span.length() <= sub.fromIndex() ||
-                        sub.toIndex() <= span.offset()) {
-                        continue;
-                    }
-                    spans.add(new StyleSpan(
-                            span.style(),
-                            Math.max(0, span.offset() - sub.fromIndex()),
-                            span.length()
-                    ));
-                }
-            } else {
-                spans = decorate.apply(text);
-            }
+            List<StyleSpan> spans = decorate.apply(text);
             for (StyledText st : StyledText.of(text).putAll(spans).build()) {
                 draw.text(st.value(),
                         x + marginLeft - scroll.xVal(),
@@ -519,6 +502,7 @@ public class TextEditorModel implements EditorModel {
     @Override
     public void escape() {
         carets.unique().clearMark();
+        decorate.clear();
     }
 
     @Override
@@ -556,10 +540,13 @@ public class TextEditorModel implements EditorModel {
 
     @Override
     public void findAll(String text) {
-        var ranges = content.findAll(text).stream().map(point ->
-            new Range(point, Point.of(point.row(), point.row() + text.length()))
-        ).toList();
-        decorate.add(ranges, new Style.BgColor("#FFFF0066"));
+        for (Point point : content.findAll(text)) {
+            decorate.add(point.row(), new StyleSpan(
+                    new Style.BgColor("#FFFF0066"),
+                    point.col(),
+                    text.length())
+            );
+        }
     }
 
 }
