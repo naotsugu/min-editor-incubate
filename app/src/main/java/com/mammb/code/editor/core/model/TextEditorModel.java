@@ -28,6 +28,7 @@ import com.mammb.code.editor.core.layout.ScreenLayout;
 import com.mammb.code.editor.core.layout.Loc;
 import com.mammb.code.editor.core.syntax.Syntax;
 import com.mammb.code.editor.core.text.Style;
+import com.mammb.code.editor.core.text.Style.StyleSpan;
 import com.mammb.code.editor.core.text.StyledText;
 import com.mammb.code.editor.core.text.SubText;
 import com.mammb.code.editor.core.text.Text;
@@ -35,6 +36,7 @@ import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
 import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -91,28 +93,30 @@ public class TextEditorModel implements EditorModel {
         double x = 0, y = 0;
         for (Text text : view.texts()) {
             x = 0;
-            for (StyledText st : StyledText.of(text).putAll(decorate.apply(text)).build()) {
-                draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
+            List<StyleSpan> spans = new ArrayList<>();
+            if (text instanceof SubText sub) {
+                for (StyleSpan span : decorate.apply(sub.parent())) {
+                    if (span.offset() + span.length() <= sub.fromIndex() ||
+                        sub.toIndex() <= span.offset()) {
+                        continue;
+                    }
+                    spans.add(new StyleSpan(
+                            span.style(),
+                            Math.max(0, span.offset() - sub.fromIndex()),
+                            span.length()
+                    ));
+                }
+            } else {
+                spans = decorate.apply(text);
+            }
+            for (StyledText st : StyledText.of(text).putAll(spans).build()) {
+                draw.text(st.value(),
+                        x + marginLeft - scroll.xVal(),
+                        y + marginTop,
+                        st.width(), st.styles());
                 x += st.width();
             }
             y += text.height();
-        }
-    }
-
-    private void drawText2(Draw draw) {
-        double x = 0, y = 0;
-        for (Text text : view.texts()) {
-            if (text instanceof SubText sub) {
-
-
-            } else {
-                x = 0;
-                for (StyledText st : StyledText.of(text).putAll(decorate.apply(text)).build()) {
-                    draw.text(st.value(), x + marginLeft - scroll.xVal(), y + marginTop, st.width(), st.styles());
-                    x += st.width();
-                }
-                y += text.height();
-            }
         }
     }
 
