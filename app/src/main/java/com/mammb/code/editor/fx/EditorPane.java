@@ -32,6 +32,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.TextField;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.InputMethodEvent;
@@ -45,6 +46,7 @@ import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -363,12 +365,14 @@ public class EditorPane extends StackPane {
     }
 
     private void find() {
-        var dialog = new Dialog<>();
-        dialog.initOwner(getScene().getWindow());
-        dialog.setTitle("Find");
-        DialogPane pane = dialog.getDialogPane();
-        pane.getButtonTypes().addAll(ButtonType.CLOSE);
-        dialog.show();
+        var dialog = new CommandPalette(this);
+        var command = dialog.showAndWait();
+        command.ifPresent(c -> {
+            switch (c) {
+                case CommandPalette.FindAll findAll -> model.findAll(findAll.text());
+                default -> {}
+            }
+        });
     }
 
     private InputMethodRequests inputMethodRequests() {

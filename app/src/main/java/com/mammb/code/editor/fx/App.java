@@ -58,6 +58,21 @@ public class App extends Application {
         .text-input, .label {
           -fx-font: 14px "Consolas";
         }
+        
+        .text-input {
+            -fx-padding: 0.333333em;
+            -fx-background-color:
+                derive(-fx-control-inner-background,10%),
+                -fx-control-inner-background;
+        }
+        .text-input:focused {
+            -fx-background-color:
+                derive(-fx-control-inner-background,30%),
+                -fx-control-inner-background;
+        }
+        .dialog-pane > .button-bar > .container {
+            -fx-padding: 0;
+        }
         .menu-bar {
           -fx-use-system-menu-bar:true;
           -fx-background-color:derive(-fx-control-inner-background,20%);
