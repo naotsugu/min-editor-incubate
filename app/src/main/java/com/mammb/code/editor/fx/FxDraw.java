@@ -51,12 +51,32 @@ public class FxDraw implements Draw {
 
     @Override
     public void text(String text, double x, double y, double w, List<Style> styles) {
-        Color color = color(styles.stream().filter(Style.TextColor.class::isInstance)
-                .map(Style.TextColor.class::cast).findFirst()
-                .map(Style.TextColor::colorString).orElse(Theme.dark.fgColor()));
-        gc.setStroke(color);
-        gc.setFill(color);
+        Color bgColor = bgColor(styles);
+        gc.setFill(bgColor);
+        gc.fillRect(x, y, w, fontMetrics.getLineHeight());
+
+        Color textColor = textColor(styles);
+        gc.setStroke(textColor);
+        gc.setFill(textColor);
         gc.fillText(text, x, y + fontMetrics.getAscent());
+    }
+
+    private Color textColor(List<Style> styles) {
+        return color(styles.stream()
+                .filter(Style.TextColor.class::isInstance)
+                .map(Style.TextColor.class::cast)
+                .findFirst()
+                .map(Style.TextColor::colorString)
+                .orElse(Theme.dark.fgColor()));
+    }
+
+    private Color bgColor(List<Style> styles) {
+        return color(styles.stream()
+                .filter(Style.BgColor.class::isInstance)
+                .map(Style.BgColor.class::cast)
+                .findFirst()
+                .map(Style.BgColor::colorString)
+                .orElse("#00000000"));
     }
 
     @Override

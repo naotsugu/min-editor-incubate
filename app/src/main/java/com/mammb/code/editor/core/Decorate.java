@@ -76,7 +76,9 @@ public interface Decorate {
         }
 
         private List<StyleSpan> apply(int row, String text) {
-            return syntax.apply(row, text);
+            List<StyleSpan> spans = highlights.getOrDefault(row, new ArrayList<>());
+            spans.addAll(syntax.apply(row, text));
+            return spans;
         }
 
         @Override

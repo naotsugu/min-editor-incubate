@@ -96,7 +96,8 @@ public class TextEditorModel implements EditorModel {
                 draw.text(st.value(),
                         x + marginLeft - scroll.xVal(),
                         y + marginTop,
-                        st.width(), st.styles());
+                        st.width(),
+                        st.styles());
                 x += st.width();
             }
             y += text.height();
@@ -541,8 +542,9 @@ public class TextEditorModel implements EditorModel {
     @Override
     public void findAll(String text) {
         for (Point point : content.findAll(text)) {
+            System.out.println(point);
             decorate.add(point.row(), new StyleSpan(
-                    new Style.BgColor("#FFFF0066"),
+                    new Style.BgColor("#BBBB00"),
                     point.col(),
                     text.length())
             );
