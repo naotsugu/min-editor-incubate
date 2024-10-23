@@ -365,8 +365,8 @@ public class EditorPane extends StackPane {
     }
 
     private void find() {
-        var dialog = new CommandPalette(this);
-        var command = dialog.showAndWait();
+        var cp = new CommandPalette(this);
+        var command = cp.showAndWait();
         command.ifPresent(c -> {
             switch (c) {
                 case CommandPalette.FindAll findAll -> model.findAll(findAll.text());
