@@ -542,8 +542,7 @@ public class TextEditorModel implements EditorModel {
     @Override
     public void findAll(String text) {
         for (Point point : content.findAll(text)) {
-            System.out.println(point);
-            decorate.add(point.row(), new StyleSpan(
+            decorate.addHighlights(point.row(), new StyleSpan(
                     new Style.BgColor("#BBBB00"),
                     point.col(),
                     text.length())

@@ -31,7 +31,7 @@ import java.util.Map;
 public interface Decorate {
 
     List<StyleSpan> apply(Text text);
-    void add(int row, StyleSpan span);
+    void addHighlights(int row, StyleSpan span);
     void clear();
 
     static Decorate of(Syntax syntax) {
@@ -54,7 +54,7 @@ public interface Decorate {
         }
 
         @Override
-        public void add(int row, StyleSpan span) {
+        public void addHighlights(int row, StyleSpan span) {
             highlights.computeIfAbsent(row,
                     r -> new ArrayList<>()).add(span);
         }

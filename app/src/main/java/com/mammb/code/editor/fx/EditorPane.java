@@ -76,6 +76,7 @@ public class EditorPane extends StackPane {
         this(null);
     }
     public EditorPane(Path path) {
+
         canvas = new Canvas();
         canvas.setManaged(false);
         canvas.setFocusTraversable(true);
