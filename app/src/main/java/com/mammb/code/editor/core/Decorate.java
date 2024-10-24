@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The Decorate.
@@ -33,6 +34,7 @@ public interface Decorate {
     List<StyleSpan> apply(Text text);
     void addHighlights(int row, StyleSpan span);
     void clear();
+    Set<Integer> highlightsRows();
 
     static Decorate of(Syntax syntax) {
         return new DecorateImpl(syntax);
@@ -84,6 +86,11 @@ public interface Decorate {
         @Override
         public void clear() {
             highlights.clear();
+        }
+
+        @Override
+        public Set<Integer> highlightsRows() {
+            return highlights.keySet();
         }
 
     }

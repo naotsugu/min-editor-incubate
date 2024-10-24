@@ -26,6 +26,7 @@ import javafx.scene.text.Font;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The draw.
@@ -51,14 +52,23 @@ public class FxDraw implements Draw {
 
     @Override
     public void text(String text, double x, double y, double w, List<Style> styles) {
-        Color bgColor = bgColor(styles);
-        gc.setFill(bgColor);
-        gc.fillRect(x, y, w, fontMetrics.getLineHeight());
-
-        Color textColor = textColor(styles);
-        gc.setStroke(textColor);
-        gc.setFill(textColor);
-        gc.fillText(text, x, y + fontMetrics.getAscent());
+        var bgColor = bgColor(styles);
+        if (bgColor.isPresent()) {
+            var bg = bgColor.get();
+            gc.setFill(bgColor.get());
+            gc.fillRect(x, y, w, fontMetrics.getLineHeight());
+            Color textColor = (bg.getBrightness() > 0.5)
+                    ? textColor(styles).darker()
+                    : textColor(styles).brighter();
+            gc.setStroke(textColor);
+            gc.setFill(textColor);
+            gc.fillText(text, x, y + fontMetrics.getAscent());
+        } else {
+            Color textColor = textColor(styles);
+            gc.setStroke(textColor);
+            gc.setFill(textColor);
+            gc.fillText(text, x, y + fontMetrics.getAscent());
+        }
     }
 
     private Color textColor(List<Style> styles) {
@@ -70,13 +80,13 @@ public class FxDraw implements Draw {
                 .orElse(Theme.dark.fgColor()));
     }
 
-    private Color bgColor(List<Style> styles) {
-        return color(styles.stream()
+    private Optional<Color> bgColor(List<Style> styles) {
+        return styles.stream()
                 .filter(Style.BgColor.class::isInstance)
                 .map(Style.BgColor.class::cast)
                 .findFirst()
                 .map(Style.BgColor::colorString)
-                .orElse("#00000000"));
+                .map(this::color);
     }
 
     @Override
@@ -122,6 +132,13 @@ public class FxDraw implements Draw {
         gc.setStroke(Color.LIGHTGRAY);
         gc.setLineWidth(1);
         gc.strokeLine(x1, y1 + height, x2, y2 + height);
+    }
+
+    @Override
+    public void hLine(double x, double y, double w) {
+        gc.setStroke(Color.ORANGE);
+        gc.setLineWidth(2);
+        gc.strokeLine(x, y, x + w, y);
     }
 
     @Override

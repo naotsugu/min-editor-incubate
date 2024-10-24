@@ -69,6 +69,7 @@ public class TextEditorModel implements EditorModel {
         draw.clear();
         drawSelection(draw);
         drawText(draw);
+        drawMap(draw);
         if (caretVisible) drawCaret(draw);
         drawLeftGarter(draw);
     }
@@ -101,6 +102,13 @@ public class TextEditorModel implements EditorModel {
                 x += st.width();
             }
             y += text.height();
+        }
+    }
+
+    private void drawMap(Draw draw) {
+        for (int row : decorate.highlightsRows()) {
+            double y = (view.screenHeight() - marginTop) * row / (content.rows() + view.screenLineSize());
+            draw.hLine(view.screenWidth() + marginLeft - 12, y, 12);
         }
     }
 
@@ -543,7 +551,7 @@ public class TextEditorModel implements EditorModel {
     public void findAll(String text) {
         for (Point point : content.findAll(text)) {
             decorate.addHighlights(point.row(), new StyleSpan(
-                    new Style.BgColor("#BBBB00"),
+                    new Style.BgColor("#FDD835"),
                     point.col(),
                     text.length())
             );
