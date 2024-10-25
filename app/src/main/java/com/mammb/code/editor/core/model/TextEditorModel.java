@@ -17,6 +17,7 @@ package com.mammb.code.editor.core.model;
 
 import com.mammb.code.editor.core.Caret;
 import com.mammb.code.editor.core.CaretGroup;
+import com.mammb.code.editor.core.Clipboard;
 import com.mammb.code.editor.core.Content;
 import com.mammb.code.editor.core.Decorate;
 import com.mammb.code.editor.core.Draw;
@@ -33,11 +34,9 @@ import com.mammb.code.editor.core.text.StyledText;
 import com.mammb.code.editor.core.text.Text;
 import com.mammb.code.editor.core.Caret.Point;
 import com.mammb.code.editor.core.Caret.Range;
-import javafx.scene.input.DataFormat;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -471,26 +470,24 @@ public class TextEditorModel implements EditorModel {
     }
 
     @Override
-    public void pasteFromClipboard() {
-        var clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
-        var text = clipboard.hasString() ? clipboard.getString() : "";
+    public void pasteFromClipboard(Clipboard clipboard) {
+        var text = clipboard.getString();
         if (text.isEmpty()) return;
         input(text);
     }
 
     @Override
-    public void copyToClipboard() {
+    public void copyToClipboard(Clipboard clipboard) {
         String copy = carets.marked().stream()
                 .map(range -> content.getText(range.min(), range.max()))
                 .collect(Collectors.joining(System.lineSeparator()));
         if (copy.isEmpty()) return;
-        javafx.scene.input.Clipboard.getSystemClipboard()
-                .setContent(Map.of(DataFormat.PLAIN_TEXT, copy));
+        clipboard.setPlainText(copy);
     }
 
     @Override
-    public void cutToClipboard() {
-        copyToClipboard();
+    public void cutToClipboard(Clipboard clipboard) {
+        copyToClipboard(clipboard);
         content.replace(carets.marked(), "");
     }
 
