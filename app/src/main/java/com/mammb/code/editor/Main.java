@@ -15,7 +15,7 @@
  */
 package com.mammb.code.editor;
 
-import com.mammb.code.editor.fx.App;
+import com.mammb.code.editor.fx.AppLauncher;
 import java.util.Locale;
 
 /**
@@ -40,7 +40,7 @@ public class Main {
                 "java.util.logging.SimpleFormatter.format",
                 "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL %4$s %2$s %5$s%6$s%n");
 
-        App.launch(App.class, args);
+        new AppLauncher().launch(args);
     }
 
 }
